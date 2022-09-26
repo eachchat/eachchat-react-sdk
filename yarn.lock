@@ -7071,9 +7071,9 @@ matrix-events-sdk@^0.0.1-beta.7:
   resolved "https://registry.npmmirror.com/matrix-events-sdk/-/matrix-events-sdk-0.0.1-beta.7.tgz#5ffe45eba1f67cc8d7c2377736c728b322524934"
   integrity sha512-9jl4wtWanUFSy2sr2lCjErN/oC8KTAtaeaozJtrgot1JiQcEI4Rda9OLgQ7nLKaqb4Z/QUx/fR3XpDzm5Jy1JA==
 
-"matrix-js-sdk@ssh://git@git.internal.yunify.com:dtd/matrix-js-sdk.git":
-  version "19.7.0"
-  resolved "ssh://git@git.internal.yunify.com:dtd/matrix-js-sdk.git#281bec135cdf2511adb92c8e3093228af61f76dd"
+"matrix-js-sdk@github:matrix-org/matrix-js-sdk#develop":
+  version "19.5.0"
+  resolved "https://codeload.github.com/matrix-org/matrix-js-sdk/tar.gz/dacef048bea9188eeae831dc5a9349a48db18d9d"
   dependencies:
     "@babel/runtime" "^7.12.5"
     another-json "^0.2.0"
