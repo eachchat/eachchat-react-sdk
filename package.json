@@ -139,7 +139,7 @@
     "@babel/preset-typescript": "^7.12.7",
     "@babel/register": "^7.12.10",
     "@babel/traverse": "^7.12.12",
-    "@matrix-org/olm": "ssh://git@git.internal.yunify.com:dtd/matrix-org-olm.git",
+    "@matrix-org/olm": "./olm-3.2.12.tgz",
     "@peculiar/webcrypto": "^1.1.4",
     "@percy/cli": "^1.3.0",
     "@percy/cypress": "^3.1.1",
