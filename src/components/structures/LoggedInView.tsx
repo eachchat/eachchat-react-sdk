@@ -663,6 +663,12 @@ class LoggedInView extends React.Component<IProps, IState> {
             );
         });
 
+        const getIsMinimized = () => {
+            const maxWidth = 480;
+            const screenWidth = window.screen.availWidth;
+            const flag = screenWidth<maxWidth?true:false;
+            return this.props.collapseLhs || flag;
+        };
         return (
             <MatrixClientContext.Provider value={this._matrixClient}>
                 <div
@@ -691,7 +697,7 @@ class LoggedInView extends React.Component<IProps, IState> {
                                 >
                                     <LeftPanel
                                         pageType={this.props.page_type as PageTypes}
-                                        isMinimized={this.props.collapseLhs || false}
+                                        isMinimized={getIsMinimized()}
                                         resizeNotifier={this.props.resizeNotifier}
                                     />
                                 </div>

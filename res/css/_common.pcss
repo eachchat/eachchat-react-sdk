@@ -805,3 +805,326 @@ legend {
     }
 
 }
+
+
+
+/* 移动端适配 */
+@media only screen and (max-width: 480px) {
+    .mx_AuthPage{
+        .mx_AuthBody{
+            width: calc(100vw - 20px);
+        }
+        .mx_AuthPage_modalContent{
+            margin-top: 20px;
+        }
+        .mx_AuthPage_modal{
+            width: 100%;
+        }
+        .mx_AuthPage_modalContent{
+            width: calc(100% - 20px);
+            margin-left: 10px;
+        }
+
+
+        .mx_CompleteSecurityBody{
+            width: 100%;
+        }
+        .mx_CreateCrossSigningDialog{
+            width: 100%;
+        }
+    }
+    
+    .mx_Dialog{
+        margin: 10px;
+        width: 96%;
+        .mx_ServerPickerDialog{
+            width: auto;
+        }
+        .mx_UserSettingsDialog, .mx_RoomSettingsDialog, .mx_SpaceSettingsDialog, .mx_SpacePreferencesDialog{
+            width: 100%;
+        }
+        .mx_Dialog_fixedWidth{
+            width: 100%;
+        }
+
+        .mx_TabbedView_tabsOnLeft .mx_TabbedView_maskedIcon{
+            margin-right: 4px;
+        }
+
+        .mx_TabbedView_tabsOnLeft .mx_TabbedView_tabLabels{
+            max-width: 70px;
+        }
+        .mx_TabbedView_tabsOnLeft .mx_TabbedView_tabPanel{
+            margin-left: 90px;
+
+            .mx_SettingsTab{
+                min-width: auto;
+                padding-right: 10px;
+            }
+            .mx_ProfileSettings .mx_ProfileSettings_profile{
+                flex-wrap: wrap;
+            }
+            .mx_SettingsTab_section .mx_SettingsFlag .mx_ToggleSwitch{
+                position: relative;
+                left: -90px;
+            }
+           
+        }
+
+        .mx_SpacePublicShare .mx_AccessibleButton{
+            width: auto;
+        }
+        .mx_CreateSubspaceDialog{
+            width: auto;
+        }
+        .mx_AddExistingToSpaceDialog{
+            width: auto;
+        }
+        .mx_CreateRoomDialog.mx_Dialog_fixedWidth{
+            width: auto;
+        }
+        .mx_ForwardDialog{
+            width: auto;
+        }
+        .mx_ScrollableBaseDialog{
+            width: auto;
+        }
+
+        .mx_AppDownloadDialog.mx_Dialog_fixedWidth{
+            width: auto;
+        }
+        .mx_AppDownloadDialog .mx_AppDownloadDialog_mobile{
+            flex-wrap: wrap;
+        }
+       
+        .mx_LayoutSwitcher .mx_LayoutSwitcher_RadioButtons{
+            flex-wrap: wrap;
+        }
+
+        .mx_ImageSizePanel .mx_ImageSizePanel_radios{
+            flex-wrap: wrap;
+        }
+
+        .mx_AppearanceUserSettingsTab .mx_Field{
+            width: auto;
+        }
+        
+        .mx_DeviceTile{
+            flex-wrap: wrap;
+        }
+
+        .mx_SettingsTab_subsectionText{
+            margin-inline-end: 0px;
+        }
+
+        .mx_UserNotifSettings legend {
+            font-size: 1em;
+        }
+
+        .mx_CopyableText.mx_CopyableText_border{
+            word-break: break-all;
+        }
+        
+    }
+    .mx_Dialog_wrapper .mx_Dialog .mx_TabbedView_tabsOnLeft .mx_TabbedView_tabPanel .mx_SettingsTab_section .mx_SettingsFlag .mx_ToggleSwitch{
+        left: 0;
+    }
+
+   
+    .mx_MatrixChat{
+        .mx_SpacePanel{
+            max-width: 40px;
+            .mx_UserMenu{
+                margin: 12px auto 18px;
+            }
+            .mx_SpacePanel_toggleCollapse{
+                display: none;
+            }
+            &:hover {
+                .mx_SpacePanel_toggleCollapse {
+                    display: none;
+                }
+            }
+            .mx_SpaceItem:not(.hasSubSpaces) > .mx_SpaceButton{
+                margin-left: 0px ;
+            }
+           
+        }
+        .mx_LeftPanel_wrapper{
+            .mx_LeftPanel_wrapper--user{
+                width: auto !important;
+                .mx_LeftPanel{
+                    .mx_RoomSublist .mx_RoomSublist_headerContainer .mx_RoomSublist_menuButton{
+                        display: none;
+                    }
+                }
+            }
+
+            .mx_RoomList{
+                padding-right: 0;
+            }
+            .mx_RoomSublist{
+                margin-left: 0;
+            }
+            .mx_RoomSublist .mx_RoomSublist_headerContainer .mx_RoomSublist_headerText{
+                max-width: 100%;
+                font-size: 1rem;
+                display: flex;
+                white-space: break-spaces;
+            }
+            .mx_RoomSublist .mx_RoomSublist_headerContainer .mx_RoomSublist_headerText .mx_RoomSublist_collapseBtn{
+                margin-right: 2px;
+            }
+            .mx_RoomSublist .mx_RoomSublist_headerContainer .mx_RoomSublist_headerText{
+                display: flex;
+                align-items: baseline;
+            }
+
+            .mx_RoomSublist.mx_RoomSublist_minimized .mx_RoomSublist_headerContainer .mx_RoomSublist_stickable{
+                width:  100% !important;
+            }
+        }
+        
+        .mx_RoomView_wrapper{
+            .mx_UserOnboardingHeader{
+                margin: 0;
+                padding: 10px;
+            }
+            .mx_UserOnboardingList{
+                margin: 0;
+            }
+            .mx_RoomView{
+                .mx_EventTile .mx_DisambiguatedProfile{
+                    margin-left: 46px;
+                    max-width: calc(100% - 46px);
+                }
+                .mx_EventTile_line{
+                    margin-right: 0;
+                    padding-left: 46px;
+                }
+                .mx_RoomView_MessageList{
+                    padding: 5px;
+                }
+            }
+            .mx_RoomView_timeline_rr_enabled .mx_EventTile[data-layout="group"] .mx_ThreadSummary, 
+            .mx_RoomView_timeline_rr_enabled .mx_EventTile[data-layout="group"] .mx_ThreadSummary_icon, 
+            .mx_RoomView_timeline_rr_enabled .mx_EventTile[data-layout="group"] .mx_EventTile_line{
+                margin-right: 0;
+            }
+
+            .mx_SpaceRoomView .mx_MainSplit > div:first-child{
+                padding: 80px 10px;
+            }
+            .mx_SpaceRoomView .mx_MainSplit > div:first-child .mx_SpaceRoomView_buttons{
+                width: auto;
+            }
+            .mx_SpacePublicShare .mx_AccessibleButton{
+                width: auto;
+            }
+            .mx_SpacePanel .mx_SpaceButton .mx_SpaceButton_menuButton::before{
+                display: none !important;
+            }
+
+            .mx_SpacePanel .mx_SpaceTreeLevel .mx_SpaceTreeLevel{
+                width: auto;
+            }
+        }
+
+        .mx_MPollBody_schema{
+            .ant-form .ant-form-item .ant-form-item-label, 
+            .ant-form .ant-form-item .ant-form-item-control{
+                flex: auto;
+            }
+            .ant-form-item{
+                width: 100%;
+            }
+            .ant-row{
+                height: 26px;
+            }
+            .mx_MPollBody_allOptions_schema .mx_MPollBody_option{
+                max-width: 46%;
+                padding: 6px;
+            }
+            .mx_MPollBody_schema_deal_reason_wrap .deal_reason_text, .mx_MPollBody_schema_deal_reason_wrap textarea{
+                word-break: break-all;
+            }
+        }
+
+        .mx_NewRoomIntro{
+            margin: 40px 0 48px 24px;
+        }
+        .mx_EventTileBubble{
+            max-width: 90%;
+        }
+        .mx_EventTile[data-layout="group"] .mx_EventTile_e2eIcon{
+            inset: 4px 0 0 40px;
+        }
+        .mx_ServerPicker_helpDialog .mx_Dialog_content{
+            width: auto;
+        }
+        .mx_CreateSecretStorageDialog{
+            width: auto;
+        }
+        .mx_SpacePanel .mx_SpaceButton.mx_SpaceButton_active.mx_SpaceButton_narrow .mx_SpaceButton_selectionWrapper{
+            padding: 0;
+        }
+        .mx_MatrixChat .mx_RoomView_wrapper .mx_UserOnboardingHeader{
+            padding: 12px;
+        }
+        .mx_UserOnboardingPage{
+            padding: 48px 12px;
+        }
+
+       
+        .mx_SpacePanel .mx_SpaceButton .mx_SpaceButton_menuButton::before{
+            display: none;
+        }
+        .mx_SpacePanel .mx_SpaceButton .mx_SpaceButton_menuButton::before{
+            padding-left: 4px;
+        }
+        
+        .mx_SpacePanel .mx_SpaceButton .mx_SpaceButton_toggleCollapse{
+            width: 12px;
+            min-width: 12px;
+        }
+    }
+
+    #mx_ContextualMenu_Container{
+        .mx_ContextualMenu_wrapper{
+            left: 10px !important;
+            right: 10px !important;
+        }
+        .mx_SpaceCreateMenu_wrapper .mx_ContextualMenu{
+            width: auto ;
+        }
+        .mx_SpaceCreateMenu_wrapper .mx_ContextualMenu .mx_SpaceCreateMenuType{
+            width: auto;
+        }
+        .mx_SpaceCreateMenu_wrapper .mx_ContextualMenu_background{
+            left: 0;
+        }
+    }
+
+ 
+    .mx_LeftPanel.mx_LeftPanel_minimized .mx_LeftPanel_roomListContainer{
+        max-width: 50px;
+    }
+    .mx_HomePage_default .mx_HomePage_default_buttons{
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .mx_HomePage_default .mx_MiniAvatarUploader{
+        margin: 0 0px;
+    }
+    
+    .mx_MPollBody_allOptions_schema .mx_StyledRadioButton{
+        padding: 0 !important;
+    }
+    .mx_MPollBody_schema_deal_reason_wrap .ant-input{
+        background-color: transparent;
+        color: $primary-content;
+    }
+}
+
+
