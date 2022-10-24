@@ -23,6 +23,7 @@ import SettingsStore from "../settings/SettingsStore";
 import { haveRendererForEvent, JitsiEventFactory, JSONEventFactory, pickFactory } from "../events/EventTileFactory";
 import { MatrixClientPeg } from "../MatrixClientPeg";
 import { getMessageModerationState, isLocationEvent, MessageModerationState } from "./EventUtils";
+import { CustomEventTypeShowArr } from "../CustomConstant";
 
 export function getEventDisplayInfo(mxEvent: MatrixEvent, showHiddenEvents: boolean, hideEvent?: boolean): {
     isInfoMessage: boolean;
@@ -73,7 +74,8 @@ export function getEventDisplayInfo(mxEvent: MatrixEvent, showHiddenEvents: bool
         eventType !== EventType.Sticker &&
         eventType !== EventType.RoomCreate &&
         !M_POLL_START.matches(eventType) &&
-        !M_BEACON_INFO.matches(eventType)
+        !M_BEACON_INFO.matches(eventType) &&
+        !CustomEventTypeShowArr.includes(eventType)
     );
     // Some non-info messages want to be rendered in the appropriate bubble column but without the bubble background
     const noBubbleEvent = (
