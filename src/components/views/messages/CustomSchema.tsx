@@ -1,10 +1,9 @@
 /* eslint-disable camelcase */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     SchemaForm,
     FormEffectHooks,
     createAsyncFormActions,
-    createFormActions,
 } from '@formily/antd';
 import {
     MegaLayout,
@@ -15,14 +14,11 @@ import { Button, Input, Select } from 'antd';
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { doMaybeLocalRoomAction } from '../../../utils/local-room';
 import CustomDatePicker from "./CustomSchemaComponent/DatePicker";
-import CustomUpload from './CustomSchemaComponent/Upload';
-import CustomDownload from './CustomSchemaComponent/Download';
-import { CustomEventType } from '../../../CustomConstant';
 
 const { TextArea } = Input;
 
 const schemaFormActions = createAsyncFormActions();
-const { onFieldValueChange$, onFormValuesChange$ } = FormEffectHooks;
+const { onFormValuesChange$ } = FormEffectHooks;
 const components = {
     Input,
     TextArea,
@@ -30,15 +26,15 @@ const components = {
     CustomDatePicker,
     MegaLayout,
     DatePicker,
-    // CustomUpload,
-    // CustomDownload,
 };
+
 
 const CustomSchema = (props) => {
     const mxEv = props?.mxEvent?.event || {};
-    const { type, content, event_id }= mxEv;
+    const { type, content, event_id } = mxEv;
     const [submitData, setSubmitData] = useState({});
     let schemaData; let schemaButtons;
+
     try {
         const schema = JSON.parse(content[type]?.schema) || {};
         schemaData = schema?.schemaData;
@@ -47,14 +43,24 @@ const CustomSchema = (props) => {
         console.log(error);
     }
 
-    const submitForm =(submit: any) => {
+    const getSubmitObj = () => {
+        const { properties }=schemaData;
+        const submitObj = {};
+        for (const key in properties) {
+            if (properties[key]?.isSubmit) {
+                submitObj[key]=null;
+            }
+        }
+        return submitObj;
+    };
+
+    const submitForm = (submit: any) => {
         const data = {
             type: `${type}.submit`,
             content: {
-                "kind": content[type]?.kind,
+                "kind": submit,
                 "data": {
                     ...submitData,
-                    submit,
                 },
                 "m.relates_to": {
                     event_id,
@@ -87,16 +93,25 @@ const CustomSchema = (props) => {
             ),
             MatrixClientPeg.get(),
         ).then(
-            (res) => {console.log(res); },
+            (res) => { console.log(res); },
         ).catch(e => {
             console.error(e);
         });
     };
 
     const handleEffects = () => {
-        onFormValuesChange$().subscribe(({ values }) => {
-            console.log('onFormValuesChange', values);
-            setSubmitData({ ...values });
+        onFormValuesChange$().subscribe((data) => {
+            try {
+                const { values }=data;
+                const submitObj = getSubmitObj();
+                for (const key in submitObj) {
+                    submitObj[key]=values[key];
+                }
+                setSubmitData({ ...submitObj });
+            } catch (error) {
+                console.log(error)
+            }
+           
         });
     };
 

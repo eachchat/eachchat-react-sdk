@@ -18,6 +18,11 @@ interface IProps {
 const AM = '上午';
 const PM = '下午';
 
+enum meridiem{
+    AM=1,
+    PM=2,
+}
+
 const mapMeridiem = {
     1: AM,
     2: PM,
@@ -60,7 +65,7 @@ const CustomDatePicker = (props: IProps) => {
 
     const handleChange = (date, dateString) => {
         initFlag && setInitFlag(false);
-        onChange && onChange(dateString);
+        onChange && onChange(dateString.replace(AM, meridiem.AM).replace(PM, meridiem.PM));
     };
 
     return <div className='custom-schema-component'>
