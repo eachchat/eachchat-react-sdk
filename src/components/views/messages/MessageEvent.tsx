@@ -44,6 +44,8 @@ import MBeaconBody from "./MBeaconBody";
 import { IEventTileOps } from "../rooms/EventTile";
 import SMPollBody from "./MPollBodySchema";
 import { SchemaType } from './schema/const';
+import { CustomEventTypeShowArr } from '../../../CustomConstant';
+import CustomSchema from './CustomSchema';
 
 // onMessageAllowed is handled internally
 interface IProps extends Omit<IBodyProps, "onMessageAllowed" | "mediaEventHelper"> {
@@ -91,7 +93,6 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
 
     public constructor(props: IProps, context: React.ContextType<typeof MatrixClientContext>) {
         super(props, context);
-        // console.log('mxEvent=========', this.props.mxEvent);
         if (MediaEventHelper.isEligible(this.props.mxEvent)) {
             this.mediaHelper = new MediaEventHelper(this.props.mxEvent);
         }
@@ -204,6 +205,11 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
                     BodyType = MjolnirBody;
                 }
             }
+        }
+
+        // 自定义类型
+        if (type && CustomEventTypeShowArr.includes(type)) {
+            BodyType = CustomSchema;
         }
 
         // @ts-ignore - this is a dynamic react component

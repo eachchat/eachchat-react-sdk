@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /*
 Copyright 2022 The Matrix.org Foundation C.I.C.
 
@@ -39,6 +40,9 @@ import RoomContext from '../../../contexts/RoomContext';
 import { useDispatcher } from "../../../hooks/useDispatcher";
 import { chromeFileInputFix } from "../../../utils/BrowserWorkarounds";
 import IconizedContextMenu, { IconizedContextMenuOptionList } from '../context_menus/IconizedContextMenu';
+import CustomButton from './CustomMsgComposerButton';
+import { doMaybeLocalRoomAction } from '../../../utils/local-room';
+import { CustomEventType } from '../../../CustomConstant';
 
 interface IProps {
     addEmoji: (emoji: string) => boolean;
@@ -91,6 +95,8 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
             showLocationButton(props, room, roomId, matrixClient),
         ];
     }
+
+    moreButtons.push(leaveButton(room, matrixClient, props)); //请假
 
     mainButtons = mainButtons.filter((x: ReactElement) => x);
     moreButtons = moreButtons.filter((x: ReactElement) => x);
@@ -356,6 +362,48 @@ class PollButton extends React.PureComponent<IPollButtonProps> {
         );
     }
 }
+
+/** 自定义请假 start */
+
+function leaveButton(room: Room, matrixClient, props?: IProps): ReactElement {
+    const { relation, toggleButtonMenu } = props;
+    const { rel_type, event_id }= relation || {};
+    const handleClick = () => {
+        const data = {
+            type: CustomEventType.QuanXiangSubmit,
+            content: {
+                "kind": "leaveOfAbsence",
+                "data": { "schema": "" },
+            },
+        };
+        const threadId = rel_type === THREAD_RELATION_TYPE.name
+            ? event_id
+            : null;
+        toggleButtonMenu();
+        doMaybeLocalRoomAction(
+            room.roomId,
+            (actualRoomId: string) => matrixClient.sendEvent(
+                actualRoomId,
+                threadId,
+                data.type,
+                data.content,
+            ),
+            matrixClient,
+        ).then((res) => {console.log(res);},
+        ).catch(e => {console.log(e);});
+    };
+
+    return <CustomButton
+        key="leave"
+        iconClassName='mx_MessageComposer_poll'
+        room={room}
+        relation={relation}
+        title="请假"
+        onClick={handleClick}
+    />;
+}
+
+/** 自定义请假 end */
 
 function showLocationButton(
     props: IProps,
