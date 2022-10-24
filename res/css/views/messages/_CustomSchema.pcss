@@ -93,6 +93,8 @@
         flex-wrap: wrap;
         .ant-form-item{
             min-width: 50%;
+            flex: auto;
+            flex-wrap: wrap;
             .ant-row{
                 width: calc(100% - 20px);
             }
@@ -143,6 +145,16 @@
 }
 
 /* 移动端适配 */
+@media only screen and (max-width: 480px) {
+    .mx_Custom_schema{
+        .custom-schema-leave{
+            .ant-form-item{
+                width: 100%;
+            }
+        }
+    }
+}
+
 @media only screen and (max-width: 480px) {
     .mx_Custom_schema{
         .custom-schema-leave{
