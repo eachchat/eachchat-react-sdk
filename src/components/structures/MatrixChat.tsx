@@ -1949,6 +1949,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
 
         PerformanceMonitor.instance.stop(PerformanceEntryNames.LOGIN);
         PerformanceMonitor.instance.stop(PerformanceEntryNames.REGISTER);
+        this.viewHome();
     };
 
     // complete security / e2e setup has finished

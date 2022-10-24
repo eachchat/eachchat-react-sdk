@@ -43,6 +43,7 @@ export const showToast = (fromMessageSend: boolean) => {
         component: GenericToast,
         priority: 30,
     });
+    ToastStore.sharedInstance().dismissToast(TOAST_KEY);
 };
 
 export const hideToast = () => {

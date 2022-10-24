@@ -113,6 +113,7 @@ export const showToast = (kind: Kind) => {
         component: GenericToast,
         priority: kind === Kind.VERIFY_THIS_SESSION ? 95 : 40,
     });
+    ToastStore.sharedInstance().dismissToast(TOAST_KEY);
 };
 
 export const hideToast = () => {
