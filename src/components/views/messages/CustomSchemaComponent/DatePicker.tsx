@@ -29,43 +29,45 @@ const mapMeridiem = {
 };
 
 const CustomDatePicker = (props: IProps) => {
-    const [initFlag, setInitFlag]=useState(true);
+    // const [initFlag, setInitFlag]=useState(true);
     const { dateType, onChange, defaultValue }=props;
-    let showTime: boolean|object = false;
+    // let showTime: boolean|object = false;
 
-    if (dateType===IDateType.use12Hours) {
-        moment.locale('zh-cn', {
-            meridiem: function(hour, minute) {
-                const hm = hour * 100 + minute;
-                if (hm < 1200) {
-                    return AM;
-                } else {
-                    return PM;
-                }
-            },
-        });
-        showTime ={
-            showNow: false,
-            format: 'a',
-            use12Hours: true,
-        };
-    }
+    // if (dateType===IDateType.use12Hours) {
+    //     moment.locale('zh-cn', {
+    //         meridiem: function(hour, minute) {
+    //             const hm = hour * 100 + minute;
+    //             if (hm < 1200) {
+    //                 return AM;
+    //             } else {
+    //                 return PM;
+    //             }
+    //         },
+    //     });
+    //     showTime ={
+    //         showNow: false,
+    //         format: 'a',
+    //         use12Hours: true,
+    //     };
+    // }
 
-    const customFormat: DatePickerProps['format'] = value => {
-        const m = moment(value);
-        const h =m.get('h');
-        const dateFormat = 'YYYY-MM-DD';
-        const meridiem = h<12 ? AM : PM;
-        if (initFlag && defaultValue) {
-            const dateArr = defaultValue.split(' ');
-            return `${dateArr[0]} ${mapMeridiem[dateArr[1]]}`;
-        }
-        return `${value.format(dateFormat)} ${meridiem}`;
-    };
+    // const customFormat: DatePickerProps['format'] = value => {
+    //     const m = moment(value);
+    //     const h =m.get('h');
+    //     const dateFormat = 'YYYY-MM-DD';
+    //     const meridiem = h<12 ? AM : PM;
+    //     if (initFlag && defaultValue) {
+    //         const dateArr = defaultValue.split(' ');
+    //         return `${dateArr[0]} ${mapMeridiem[dateArr[1]]}`;
+    //     }
+    //     return `${value.format(dateFormat)} ${meridiem}`;
+    // };
 
     const handleChange = (date, dateString) => {
-        initFlag && setInitFlag(false);
-        onChange && onChange(dateString.replace(AM, meridiem.AM).replace(PM, meridiem.PM));
+        // initFlag && setInitFlag(false);
+        // onChange && onChange(dateString.replace(AM, meridiem.AM).replace(PM, meridiem.PM));
+        onChange && onChange(dateString);
+
     };
 
     return <div className='custom-schema-component'>
@@ -74,10 +76,11 @@ const CustomDatePicker = (props: IProps) => {
             popupClassName='custom-schema-component'
             locale={locale}
             showNow={false}
-            showTime={showTime}
-            defaultValue={defaultValue && moment()}
-            format={customFormat}
-            onChange={handleChange} />
+            showTime={true}
+            // defaultValue={defaultValue && moment()}
+            format={'YYYY-MM-DD HH:mm'}
+            onChange={handleChange}
+        />
     </div>;
 };
 

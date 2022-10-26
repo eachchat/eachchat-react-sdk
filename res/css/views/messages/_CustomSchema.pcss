@@ -1,5 +1,6 @@
 .mx_Custom_schema {
     padding: 10px;
+    max-width: 650px;
     .submit-button{
         display: flex;
         justify-content: end;
@@ -37,6 +38,15 @@
                 padding: 4px 11px !important;
                 color: $primary-content !important;
                 font-weight: normal;
+            }
+            .ant-input-disabled{
+                border: none !important;
+            }
+            .ant-input-disabled:hover{
+                box-shadow: none !important;
+            }
+            .ant-form-item-label{
+                align-self: center;
             }
         }
         .ant-select:not(.ant-select-disabled):hover .ant-select-selector{
@@ -83,7 +93,11 @@
     .button-group{
         display: flex;
         flex-wrap: wrap;
-        justify-content: center;
+        width: 100%;
+        padding-top: 20px;
+        margin-top: 20px;
+        justify-content: space-around;
+        border-top: 1px dashed #ccc;
         .ant-btn{
             margin-right: 20px;
         }

@@ -96,7 +96,7 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
         ];
     }
 
-    moreButtons.push(leaveButton(room, matrixClient, props)); //请假
+    // moreButtons.push(leaveButton(room, matrixClient, props)); //请假
 
     mainButtons = mainButtons.filter((x: ReactElement) => x);
     moreButtons = moreButtons.filter((x: ReactElement) => x);
