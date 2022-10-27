@@ -57,8 +57,6 @@ import { IReadReceiptInfo } from "../views/rooms/ReadReceiptMarker";
 import { haveRendererForEvent } from "../../events/EventTileFactory";
 import { editorRoomKey } from "../../Editing";
 import { hasThreadSummary } from "../../utils/EventUtils";
-import { CustomEventTypeShowArr } from "../../CustomConstant";
-
 
 const CONTINUATION_MAX_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const continuedTypes = [EventType.Sticker, EventType.RoomMessage];
@@ -601,9 +599,9 @@ export default class MessagePanel extends React.Component<IProps, IState> {
     }
 
     // MessagePanel
-    // TODO:
     private getEventTiles(): ReactNode[] {
         let i;
+
         // first figure out which is the last event in the list which we're
         // actually going to show; this allows us to behave slightly
         // differently for the last event in the list. (eg show timestamp)
@@ -615,8 +613,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         let lastShownNonLocalEchoIndex = -1;
         for (i = this.props.events.length-1; i >= 0; i--) {
             const mxEv = this.props.events[i];
-            // 显示自定义type
-            if (!(CustomEventTypeShowArr.includes(mxEv.event.type)) && !this.shouldShowEvent(mxEv)) {
+            if (!this.shouldShowEvent(mxEv)) {
                 continue;
             }
 
@@ -646,6 +643,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         }
 
         let grouper: BaseGrouper = null;
+
         for (i = 0; i < this.props.events.length; i++) {
             const mxEv = this.props.events[i];
             const eventId = mxEv.getId();
@@ -673,7 +671,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
                 }
             }
             if (!grouper) {
-                if (this.shouldShowEvent(mxEv) || CustomEventTypeShowArr.includes(mxEv.event.type)) {
+                if (this.shouldShowEvent(mxEv)) {
                     // make sure we unpack the array returned by getTilesForEvent,
                     // otherwise React will auto-generate keys, and we will end up
                     // replacing all the DOM elements every time we paginate.
@@ -688,8 +686,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         if (grouper) {
             ret.push(...grouper.getTiles());
         }
-        // console.log('message schema render  ret========================',ret)
-        // console.log('message schema render  events',this.props.events)
+        // console.log('message schema render  2========================',ret)
         return ret;
     }
 
@@ -703,7 +700,6 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         nextEvent?: MatrixEvent,
         nextEventWithTile?: MatrixEvent,
     ): ReactNode[] {
-        // console.log('getTilesForEvent', mxEv.event.type);
         const ret = [];
 
         const isEditing = this.props.editState?.getEvent().getId() === mxEv.getId();
@@ -776,8 +772,6 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         const callEventGrouper = this.props.callEventGroupers.get(mxEv.getContent().call_id);
         // use txnId as key if available so that we don't remount during sending
         // TODO:
-        // org.matrix.qingcloud.quanxiang
-        // console.log('mxEv===', mxEv.event.type);
         ret.push(
             <EventTile
                 key={mxEv.getTxnId() || eventId}
@@ -1011,7 +1005,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         const classes = classNames(this.props.className, {
             "mx_MessagePanel_narrow": this.context.narrow,
         });
-        // console.log('this.props.events',this.props.events)
+
         return (
             <ErrorBoundary>
                 <ScrollPanel
