@@ -30,11 +30,14 @@ const components = {
     MegaLayout,
 };
 
-const getSubmitObj = (schemaData) => {
-    const { properties }=schemaData;
+const getSubmitObj = (schema) => {
+    if (!schema) {
+        return {};
+    }
+    const { properties }=schema;
     const submitObj = {};
     for (const key in properties) {
-        if (properties[key]?.editable) {
+        if (properties[key]?.editable || !properties[key]?.readOnly) {
             submitObj[key]='';
         }
     }
@@ -46,8 +49,13 @@ const CustomSchema = (props) => {
 
     console.log('mxEv====', mxEv);
     const { type, content, event_id } = mxEv;
-    let activeBtn;
-    const { schema, buttons } = content[type];
+    let activeBtn; let schema; let buttons;
+    try {
+        schema = content[type]?.schema;
+        buttons = content[type]?.buttons;
+    } catch (error) {
+
+    }
     const submitData = getSubmitObj(schema);
 
     const submitForm = () => {
@@ -64,7 +72,6 @@ const CustomSchema = (props) => {
                 },
             },
         };
-
         doMaybeLocalRoomAction(
             props.mxEvent.getRoomId(),
             (actualRoomId: string) => MatrixClientPeg.get().sendEvent(
