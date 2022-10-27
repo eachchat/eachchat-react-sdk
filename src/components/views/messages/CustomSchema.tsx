@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
     SchemaForm,
     FormEffectHooks,
@@ -7,32 +7,34 @@ import {
 } from '@formily/antd';
 import {
     MegaLayout,
-    DatePicker,
 } from '@formily/antd-components';
-import { Button, Input, Select } from 'antd';
+import { Button, Input, Select, Radio, Checkbox, Switch } from 'antd';
+import { isArray } from 'lodash';
 
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { doMaybeLocalRoomAction } from '../../../utils/local-room';
-import CustomDatePicker from "./CustomSchemaComponent/DatePicker";
+import DatePicker from "./CustomSchemaComponent/DatePicker";
 
 const { TextArea } = Input;
 
 const schemaFormActions = createAsyncFormActions();
-const { onFormValuesChange$, onFormSubmitValidateSuccess$	 } = FormEffectHooks;
+const { onFormValuesChange$, onFormSubmitValidateSuccess$ } = FormEffectHooks;
 const components = {
     Input,
     TextArea,
     Select,
-    CustomDatePicker,
-    MegaLayout,
+    Radio,
+    Checkbox,
+    Switch,
     DatePicker,
+    MegaLayout,
 };
 
 const getSubmitObj = (schemaData) => {
     const { properties }=schemaData;
     const submitObj = {};
     for (const key in properties) {
-        if (properties[key]?.isSubmit) {
+        if (properties[key]?.editable) {
             submitObj[key]='';
         }
     }
@@ -41,27 +43,21 @@ const getSubmitObj = (schemaData) => {
 
 const CustomSchema = (props) => {
     const mxEv = props?.mxEvent?.event || {};
-    const { type, content, event_id } = mxEv;
-    let schemaData; let schemaButtons; let taskID; let kind='';
-    try {
-        const schema = JSON.parse(content[type]?.schema) || {};
-        schemaData = schema?.schemaData;
-        schemaButtons = schema?.schemaButtons;
-        taskID = schema?.taskID;
-    } catch (error) {
-        console.log(error);
-    }
 
-    const submitData = getSubmitObj(schemaData);
+    console.log('mxEv====', mxEv);
+    const { type, content, event_id } = mxEv;
+    let activeBtn;
+    const { schema, buttons } = content[type];
+    const submitData = getSubmitObj(schema);
 
     const submitForm = () => {
         const data = {
             type: `${type}.submit`,
             content: {
-                "kind": kind,
-                "data": {
-                    taskID,
+                "kind": activeBtn?.kind,
+                "params": {
                     ...submitData,
+                    ...activeBtn?.data,
                 },
                 "m.relates_to": {
                     event_id,
@@ -103,38 +99,32 @@ const CustomSchema = (props) => {
     };
 
     const handleClick = (data: any) => {
-        const { value, link }=data;
-        if (link) {
-            window.open(link);
-        } else {
-            kind = value;
-        }
+        activeBtn = data;
     };
-
     return <div className="mx_Custom_schema">
         {
-            schemaData &&
+            schema &&
             <SchemaForm
                 components={components}
-                schema={schemaData}
+                schema={schema}
                 effects={handleEffects}
                 actions={schemaFormActions}
             >
-                <div className='button-group'>
-                    {
-                        schemaButtons &&
-                    schemaButtons.map(item =>
-                        <Button
-                            key={item.value}
-                            value={item.value}
-                            type={item.type as any}
-                            htmlType={item?.link ? 'button' : 'submit'}
-                            onClick={() => handleClick(item)}
-                        >
-                            { item.text }
-                        </Button>)
-                    }
-                </div>
+                {
+                    isArray(buttons) &&
+                        <div className='button-group'>
+                            { buttons?.map(item =>
+                                <Button
+                                    key={item.value}
+                                    value={item.value}
+                                    type={item.type as any}
+                                    htmlType="submit"
+                                    onClick={() => handleClick(item)}
+                                >
+                                    { item.text }
+                                </Button>) }
+                        </div>
+                }
             </SchemaForm>
         }
     </div>;

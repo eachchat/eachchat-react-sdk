@@ -67,7 +67,6 @@ const CustomDatePicker = (props: IProps) => {
         // initFlag && setInitFlag(false);
         // onChange && onChange(dateString.replace(AM, meridiem.AM).replace(PM, meridiem.PM));
         onChange && onChange(dateString);
-
     };
 
     return <div className='custom-schema-component'>
@@ -76,9 +75,9 @@ const CustomDatePicker = (props: IProps) => {
             popupClassName='custom-schema-component'
             locale={locale}
             showNow={false}
-            showTime={true}
+            // showTime={true}
             // defaultValue={defaultValue && moment()}
-            format={'YYYY-MM-DD HH:mm'}
+            format="YYYY-MM-DD"
             onChange={handleChange}
         />
     </div>;
