@@ -43,7 +43,7 @@ import { getMessageModerationState, MessageModerationState } from "../utils/Even
 import HiddenBody from "../components/views/messages/HiddenBody";
 import ViewSourceEvent from "../components/views/messages/ViewSourceEvent";
 import { shouldDisplayAsBeaconTile } from "../utils/beacon/timeline";
-import { CustomEventTypeShowArr } from "../CustomConstant";
+import { CustomEventType } from "../CustomConstant";
 
 // Subset of EventTile's IProps plus some mixins
 export interface EventTileTypeProps {
@@ -94,7 +94,7 @@ const EVENT_TILE_TYPES = new Map<string, Factory>([
     [EventType.CallInvite, LegacyCallEventFactory], // note that this requires a special factory type
     // TODO:
     [M_POLL_START.name, MessageEventFactory],
-
+    [CustomEventType.QuanXiang, MessageEventFactory],
 ]);
 
 const STATE_EVENT_TILE_TYPES = new Map<string, Factory>([
@@ -156,11 +156,6 @@ export function pickFactory(
     asHiddenEv?: boolean,
 ): Optional<Factory> {
     const evType = mxEvent.getType(); // cache this to reduce call stack execution hits
-
-    // 自定义类型组件渲染
-    if (CustomEventTypeShowArr.includes(evType)) {
-        return MessageEventFactory;
-    }
 
     // Note: we avoid calling SettingsStore unless absolutely necessary - this code is on the critical path.
 
@@ -224,8 +219,6 @@ export function pickFactory(
         }
     }
 
-    
-
     // Try and pick a state event factory, if we can.
     if (mxEvent.isState()) {
         if (shouldDisplayAsBeaconTile(mxEvent)) {
@@ -252,11 +245,13 @@ export function pickFactory(
         return noEventFactoryFactory();
     }
 
-   
+    // // 自定义类型组件渲染
+    // if (CustomEventTypeShowArr.includes(evType)) {
+    //     return MessageEventFactory;
+    // }
 
     // TODO add type
     return EVENT_TILE_TYPES.get(evType) ?? noEventFactoryFactory();
-
 }
 
 /**

@@ -14,6 +14,8 @@ import { isArray } from 'lodash';
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { doMaybeLocalRoomAction } from '../../../utils/local-room';
 import DatePicker from "./CustomSchemaComponent/DatePicker";
+import ViewSource from '../../structures/ViewSource';
+import Modal from '../../../Modal';
 
 const { TextArea } = Input;
 
@@ -45,10 +47,10 @@ const getSubmitObj = (schema) => {
 };
 
 const CustomSchema = (props) => {
-    const mxEv = props?.mxEvent?.event || {};
-
-    console.log('mxEv====', mxEv);
-    const { type, content, event_id } = mxEv;
+    // const mxEv = props?.mxEvent?.event || {};
+    const newMxEv = props?.mxEvent?.replacingEvent() || props.mxEvent; // show the replacing event, not the original, if it is an edit
+    // console.log('CustomSchema newMxEv====', newMxEv);
+    const { type, content, event_id } = newMxEv?.event || {};
     let activeBtn; let schema; let buttons;
     try {
         schema = content[type]?.schema;
@@ -108,7 +110,15 @@ const CustomSchema = (props) => {
     const handleClick = (data: any) => {
         activeBtn = data;
     };
+
+    // const handleView = ()=>{
+    //     Modal.createDialog(ViewSource, {
+    //         mxEvent: props.mxEvent,
+    //     }, 'mx_Dialog_viewsource');
+    // }
+
     return <div className="mx_Custom_schema">
+        { /* <button onClick={handleView}>查看源代码</button> */ }
         {
             schema &&
             <SchemaForm
