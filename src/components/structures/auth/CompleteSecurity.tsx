@@ -96,7 +96,7 @@ export default class CompleteSecurity extends React.Component<IProps, IState> {
                 <AccessibleButton onClick={this.onSkipClick} className="mx_CompleteSecurity_skip" aria-label={_t("Skip verification for now")} />
             );
         }
-
+        this.props.onFinished();
         return (
             <AuthPage>
                 <CompleteSecurityBody>
