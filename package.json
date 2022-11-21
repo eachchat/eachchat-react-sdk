@@ -1,6 +1,6 @@
 {
   "name": "matrix-react-sdk",
-  "version": "3.54.0",
+  "version": "3.54.1",
   "description": "SDK for matrix.org using React icey-matrix-react-sdk",
   "author": "matrix.org",
   "repository": {
