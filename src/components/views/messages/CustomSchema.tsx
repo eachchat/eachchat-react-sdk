@@ -116,6 +116,19 @@ const CustomSchema = (props) => {
     //         mxEvent: props.mxEvent,
     //     }, 'mx_Dialog_viewsource');
     // }
+    const fromatSchema = (schema) => {
+        for (const key in schema?.properties) {
+            const _default = schema?.properties[key]?.default;
+            const _value = schema?.properties[key]?.['x-component-props']?.value;
+            delete schema.properties[key]?.default;
+            if (_value) {
+                schema.properties[key]['x-component-props'].defaultValue = _value;
+            } else {
+                schema.properties[key]['x-component-props'].defaultValue = _default;
+            }
+        }
+        return schema;
+    };
 
     return <div className="mx_Custom_schema">
         { /* <button onClick={handleView}>查看源代码</button> */ }
@@ -123,7 +136,7 @@ const CustomSchema = (props) => {
             schema &&
             <SchemaForm
                 components={components}
-                schema={schema}
+                schema={fromatSchema(schema)}
                 effects={handleEffects}
                 actions={schemaFormActions}
             >
