@@ -611,7 +611,7 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
                         onServerConfigChange={this.props.onServerConfigChange}
                     />
                     { this.renderLoginComponentForFlows() }
-                    {/* { footer } */}
+                    { footer }
                 </AuthBody>
             </AuthPage>
         );
