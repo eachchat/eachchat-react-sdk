@@ -126,7 +126,28 @@
         }
     }
     
+    .ant-radio-checked .ant-radio-inner{
+        border-color:$accent !important;
+    }
+    .ant-radio-inner::after{
+        background-color:$accent !important;
+    }
   
+    .ant-checkbox-checked .ant-checkbox-inner{
+        background-color: $accent !important;
+        border-color: $accent !important;
+    }
+    .ant-checkbox-wrapper:hover .ant-checkbox-inner, .ant-checkbox:hover .ant-checkbox-inner, .ant-checkbox-input:focus + .ant-checkbox-inner{
+        border-color:  $accent !important;
+    }
+
+    .ant-select-selector {
+        min-width: 200px;
+    }
+    .ant-select-selection-search-input{
+        margin: 0 !important;
+        border: none !important;
+    }
 }
 
 

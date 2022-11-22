@@ -30,7 +30,7 @@ const mapMeridiem = {
 
 const CustomDatePicker = (props: IProps) => {
     // const [initFlag, setInitFlag]=useState(true);
-    const { dateType, onChange, defaultValue }=props;
+    const { dateType, onChange, defaultValue, format, isNow, placeholder, showTime  }=props;
     // let showTime: boolean|object = false;
 
     // if (dateType===IDateType.use12Hours) {
@@ -74,11 +74,12 @@ const CustomDatePicker = (props: IProps) => {
             className='custom-schema-component'
             popupClassName='custom-schema-component'
             locale={locale}
-            showNow={false}
-            // showTime={true}
-            // defaultValue={defaultValue && moment()}
-            format="YYYY-MM-DD"
+            showNow={isNow}
+            showTime={showTime}
+            format={format || "YYYY-MM-DD"}
+            placeholder={placeholder}
             onChange={handleChange}
+            defaultValue={moment(defaultValue)}
         />
     </div>;
 };

@@ -7,8 +7,15 @@ import {
 } from '@formily/antd';
 import {
     MegaLayout,
+    Radio,
+    Checkbox,
+    Select,
 } from '@formily/antd-components';
-import { Button, Input, Select, Radio, Checkbox, Switch } from 'antd';
+import {
+    Button,
+    Input,
+    Switch,
+} from 'antd';
 import { isArray } from 'lodash';
 
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
@@ -16,6 +23,8 @@ import { doMaybeLocalRoomAction } from '../../../utils/local-room';
 import DatePicker from "./CustomSchemaComponent/DatePicker";
 import ViewSource from '../../structures/ViewSource';
 import Modal from '../../../Modal';
+import CheckboxGroup from './CustomSchemaComponent/CheckboxGroup';
+import MultipleSelect from './CustomSchemaComponent/MultipleSelect';
 
 const { TextArea } = Input;
 
@@ -26,10 +35,13 @@ const components = {
     TextArea,
     Select,
     Radio,
+    RadioGroup: Radio.Group,
     Checkbox,
+    CheckboxGroup,
     Switch,
     DatePicker,
     MegaLayout,
+    MultipleSelect,
 };
 
 const getSubmitObj = (schema) => {
