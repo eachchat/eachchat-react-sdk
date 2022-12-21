@@ -47,6 +47,7 @@ import { ButtonEvent } from "../views/elements/AccessibleButton";
 import PosthogTrackers from "../../PosthogTrackers";
 import PageType from "../../PageTypes";
 import { UserOnboardingButton } from "../views/user-onboarding/UserOnboardingButton";
+import YiQiaContact from "../views/yiqia/YiQiaContact";
 
 interface IProps {
     isMinimized: boolean;
@@ -385,30 +386,45 @@ export default class LeftPanel extends React.Component<IProps, IState> {
 
         return (
             <div className={containerClasses}>
-                <div className="mx_LeftPanel_roomListContainer">
-                    { this.renderSearchDialExplore() }
-                    { this.renderBreadcrumbs() }
-                    { !this.props.isMinimized && (
-                        <RoomListHeader
-                            onVisibilityChange={this.refreshStickyHeaders}
+
+                {
+                    this.state.activeSpace === MetaSpace.Home &&
+                    <div className="mx_LeftPanel_roomListContainer">
+                        { this.renderSearchDialExplore() }
+                        { this.renderBreadcrumbs() }
+                        { !this.props.isMinimized && (
+                            <RoomListHeader
+                                onVisibilityChange={this.refreshStickyHeaders}
+                            />
+                        ) }
+                        <UserOnboardingButton
+                            selected={this.props.pageType === PageType.HomePage}
+                            minimized={this.props.isMinimized}
                         />
-                    ) }
-                    <UserOnboardingButton
-                        selected={this.props.pageType === PageType.HomePage}
-                        minimized={this.props.isMinimized}
-                    />
-                    <div className="mx_LeftPanel_roomListWrapper">
-                        <div
-                            className={roomListClasses}
-                            ref={this.listContainerRef}
-                            // Firefox sometimes makes this element focusable due to
-                            // overflow:scroll;, so force it out of tab order.
-                            tabIndex={-1}
-                        >
-                            { roomList }
+                        <div className="mx_LeftPanel_roomListWrapper">
+                            <div
+                                className={roomListClasses}
+                                ref={this.listContainerRef}
+                                // Firefox sometimes makes this element focusable due to
+                                // overflow:scroll;, so force it out of tab order.
+                                tabIndex={-1}
+                            >
+                                { roomList }
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
+
+                {
+                    this.state.activeSpace === MetaSpace.Contact &&
+                    <div className="mx_LeftPanel_roomListContainer">
+                        {/* { this.renderSearchDialExplore() }
+                        { this.renderBreadcrumbs() } */}
+                        <YiQiaContact />
+                    </div>
+
+                }
+
             </div>
         );
     }

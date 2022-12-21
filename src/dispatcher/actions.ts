@@ -331,4 +331,34 @@ export enum Action {
      * Fired when we want to view a thread, either a new one or an existing one
      */
     ShowThread = "show_thread",
+
+     /**
+     * Show the Contact
+     */
+      ViewYiqiaContact = "view_yiqia_contact",
+
+      /**
+       * Show the Recents
+       */
+       ViewYiqiaRecent = "view_yiqia_recents",
+
+      /**
+       * Show the member of organization
+       */
+       ViewYiqiaOrgMembers = "view_yiqia_org_members",
+
+      /**
+       * Show the member of teams
+       */
+       ViewYiqiaTeamMembers = "view_yiqia_team_members",
+
+      /**
+       * Organization Item clicked
+       */
+       YiqiaOrganizationItemClicked = "yiqia_organization_item_clicked",
+
+      /**
+       * Show the Contact
+       */
+        ActiveContactData = "view_yiqia_active_contact_data",
 }

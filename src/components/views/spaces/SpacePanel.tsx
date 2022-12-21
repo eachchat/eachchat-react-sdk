@@ -244,11 +244,22 @@ const CreateSpaceButton = ({
     </li>;
 };
 
+const YiqiaContactButton = ({ selected, isPanelCollapsed }: MetaSpaceButtonProps) => {
+    return <MetaSpaceButton
+        spaceKey={MetaSpace.Contact}
+        className="mx_SpaceButton_people"
+        selected={selected}
+        isPanelCollapsed={isPanelCollapsed}
+        label={getMetaSpaceName(MetaSpace.Contact)}
+    />;
+};
+
 const metaSpaceComponentMap: Record<MetaSpace, typeof HomeButton> = {
     [MetaSpace.Home]: HomeButton,
     [MetaSpace.Favourites]: FavouritesButton,
     [MetaSpace.People]: PeopleButton,
     [MetaSpace.Orphans]: OrphansButton,
+    [MetaSpace.Contact]: YiqiaContactButton,
 };
 
 interface IInnerSpacePanelProps extends DroppableProvidedProps {
@@ -270,7 +281,6 @@ const InnerSpacePanel = React.memo<IInnerSpacePanelProps>(({
 }) => {
     const [invites, metaSpaces, actualSpaces, activeSpace] = useSpaces();
     const activeSpaces = activeSpace ? [activeSpace] : [];
-
     const metaSpacesSection = metaSpaces.map(key => {
         const Component = metaSpaceComponentMap[key];
         return <Component key={key} selected={activeSpace === key} isPanelCollapsed={isPanelCollapsed} />;

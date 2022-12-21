@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /*
 Copyright 2015 - 2022 The Matrix.org Foundation C.I.C.
 
@@ -22,13 +23,16 @@ import classNames from 'classnames';
 import { ISyncStateData, SyncState } from 'matrix-js-sdk/src/sync';
 import { IUsageLimit } from 'matrix-js-sdk/src/@types/partials';
 import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
+import { Method } from 'matrix-js-sdk/src/http-api';
+import { TimelineWindow } from 'matrix-js-sdk/src/timeline-window';
+import { TypedEventEmitter } from "matrix-js-sdk/src/models/typed-event-emitter";
 
 import { isOnlyCtrlOrCmdKeyEvent, Key } from '../../Keyboard';
 import PageTypes from '../../PageTypes';
 import MediaDeviceHandler from '../../MediaDeviceHandler';
 import { fixupColorFonts } from '../../utils/FontManager';
 import dis from '../../dispatcher/dispatcher';
-import { IMatrixClientCreds } from '../../MatrixClientPeg';
+import { IMatrixClientCreds, MatrixClientPeg } from '../../MatrixClientPeg';
 import SettingsStore from "../../settings/SettingsStore";
 import { SettingLevel } from "../../settings/SettingLevel";
 import ResizeHandle from '../views/elements/ResizeHandle';
@@ -42,14 +46,14 @@ import { Action } from "../../dispatcher/actions";
 import LeftPanel from "./LeftPanel";
 import PipContainer from '../views/voip/PipContainer';
 import { ViewRoomDeltaPayload } from "../../dispatcher/payloads/ViewRoomDeltaPayload";
-import RoomListStore from "../../stores/room-list/RoomListStore";
+import RoomListStore, { LISTS_LOADING_EVENT, LISTS_UPDATE_EVENT } from "../../stores/room-list/RoomListStore";
 import NonUrgentToastContainer from "./NonUrgentToastContainer";
 import { IOOBData, IThreepidInvite } from "../../stores/ThreepidInviteStore";
 import Modal from "../../Modal";
 import { ICollapseConfig } from "../../resizer/distributors/collapse";
 import HostSignupContainer from '../views/host_signup/HostSignupContainer';
 import { getKeyBindingsManager } from '../../KeyBindingsManager';
-import { IOpts } from "../../createRoom";
+import createRoom, { IOpts } from "../../createRoom";
 import SpacePanel from "../views/spaces/SpacePanel";
 import LegacyCallHandler, { LegacyCallHandlerEvent } from '../../LegacyCallHandler';
 import AudioFeedArrayForLegacyCall from '../views/voip/AudioFeedArrayForLegacyCall';
@@ -71,6 +75,16 @@ import LegacyGroupView from "./LegacyGroupView";
 import { IConfigOptions } from "../../IConfigOptions";
 import LeftPanelLiveShareWarning from '../views/beacon/LeftPanelLiveShareWarning';
 import { UserOnboardingPage } from '../views/user-onboarding/UserOnboardingPage';
+import YiqiaContactUserPage from './YiqiaContactUserPage';
+import { findDMForUser } from '../../utils/dm/findDMForUser';
+import YiQiaContactView from '../views/yiqia/YiQiaContactView';
+import { RoomNotificationStateStore } from '../../stores/notifications/RoomNotificationStateStore';
+import { NotificationStateEvents } from '../../stores/notifications/NotificationState';
+import { DirectoryMember, startDmOnFirstMessage } from '../../utils/direct-messages';
+import { createDmLocalRoom } from '../../utils/dm/createDmLocalRoom';
+import { privateShouldBeEncrypted } from '../../utils/rooms';
+import { arrayFastClone } from '../../utils/arrays';
+import YiQiaContactList from '../views/yiqia/YiQiaContactList';
 
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
@@ -105,6 +119,7 @@ interface IProps {
     forceTimeline?: boolean; // see props on MatrixChat
 
     currentGroupId?: string;
+    activeContactData?: any;
 }
 
 interface IState {
@@ -191,6 +206,8 @@ class LoggedInView extends React.Component<IProps, IState> {
         OwnProfileStore.instance.on(UPDATE_EVENT, this.refreshBackgroundImage);
         this.loadResizerPreferences();
         this.refreshBackgroundImage();
+
+        this.listenRobotRoom();
     }
 
     componentWillUnmount() {
@@ -204,6 +221,50 @@ class LoggedInView extends React.Component<IProps, IState> {
         SettingsStore.unwatchSetting(this.compactLayoutWatcherRef);
         SettingsStore.unwatchSetting(this.backgroundImageWatcherRef);
         this.resizer.detach();
+    }
+
+    // 监听机器人
+    private listenRobotRoom = () => {
+        this._matrixClient.on(ClientEvent.Room, (room: any) => {
+            try {
+                const roomName = localStorage.getItem('mx_contact_robot_name');
+                if (room.name===roomName || room.summaryHeroes[0]===roomName) {
+                    localStorage.setItem('mx_contact_robot_id', room?.roomId);
+                }
+            } catch (error) {
+
+            }
+        });
+
+        window.initRobotRoom=false;
+
+        RoomListStore.instance.addListener('yiqiaContact', (data) => {
+            try {
+                const rooms = RoomListStore.instance.orderedLists[DefaultTagID.DM];
+                const roomName = localStorage.getItem('mx_contact_robot_name');
+                const room = rooms.find((item: any) => (item.name===roomName || item.summaryHeroes[0]===roomName));
+                if (!room && !window.initRobotRoom) {
+                    window.initRobotRoom = true;
+                    this.createRobotRoom();
+                } else if (!window.initRobotRoom) {
+                    window.initRobotRoom = true;
+                    localStorage.setItem('mx_contact_robot_id', room?.roomId);
+                }
+            } catch (error) {
+
+            }
+        });
+    };
+
+    // 创建机器人房间
+    private createRobotRoom() {
+        const userId = localStorage.getItem('mx_contact_robot_name');
+        const createRoomOptions = {
+            dmUserId: userId,
+            encryption: undefined,
+            andView: false,
+        };
+        createRoom(createRoomOptions);
     }
 
     private onCallState = (): void => {
@@ -616,11 +677,9 @@ class LoggedInView extends React.Component<IProps, IState> {
             this._roomView.current.handleScrollKey(ev);
         }
     };
-    
 
     render() {
         let pageElement;
-
         switch (this.props.page_type) {
             case PageTypes.RoomView:
                 pageElement = <RoomView
@@ -646,6 +705,9 @@ class LoggedInView extends React.Component<IProps, IState> {
             case PageTypes.LegacyGroupView:
                 pageElement = <LegacyGroupView groupId={this.props.currentGroupId} />;
                 break;
+            case PageTypes.YiqiaContactUserPage:
+                pageElement = <YiQiaContactView data={this.props.activeContactData} />;
+                break;
         }
 
         const wrapperClasses = classNames({
@@ -669,6 +731,7 @@ class LoggedInView extends React.Component<IProps, IState> {
             const flag = screenWidth<maxWidth?true:false;
             return this.props.collapseLhs || flag;
         };
+        const isYiqiaContactUserPage = this.props.page_type=== PageTypes.YiqiaContactUserPage;
         return (
             <MatrixClientContext.Provider value={this._matrixClient}>
                 <div
@@ -691,15 +754,19 @@ class LoggedInView extends React.Component<IProps, IState> {
                                     backgroundImage={this.state.backgroundImage}
                                 />
                                 <div
-                                    className="mx_LeftPanel_wrapper--user"
+                                    className='mx_LeftPanel_wrapper--user'
                                     ref={this._resizeContainer}
                                     data-collapsed={this.props.collapseLhs ? true : undefined}
+                                    style={{
+                                        width: isYiqiaContactUserPage ? '40vw':"auto",
+                                    }}
                                 >
                                     <LeftPanel
                                         pageType={this.props.page_type as PageTypes}
                                         isMinimized={getIsMinimized()}
                                         resizeNotifier={this.props.resizeNotifier}
                                     />
+                                    <div style={{ display: 'none' }}><YiQiaContactList /></div>
                                 </div>
                             </nav>
                         </div>

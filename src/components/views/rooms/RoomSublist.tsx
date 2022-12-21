@@ -277,6 +277,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         const stateUpdates: IState & any = {}; // &any is to avoid a cast on the initializer
 
         const currentRooms = this.state.rooms;
+        RoomListStore.instance.emit('yiqiaContact', currentRooms);
         const newRooms = arrayFastClone(RoomListStore.instance.orderedLists[this.props.tagId] || []);
         if (arrayHasOrderChange(currentRooms, newRooms)) {
             stateUpdates.rooms = newRooms;
@@ -284,6 +285,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
 
         if (Object.keys(stateUpdates).length > 0) {
             this.setState(stateUpdates);
+            RoomListStore.instance.emit('yiqiaContact', newRooms);
         }
     };
 

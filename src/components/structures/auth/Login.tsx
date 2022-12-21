@@ -544,6 +544,7 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
     };
 
     render() {
+        const showRegister = localStorage.getItem('mx_show_register');
         const loader = this.isBusy() && !this.state.busyLoggingIn ?
             <div className="mx_Login_loader"><Spinner /></div> : null;
 
@@ -611,7 +612,7 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
                         onServerConfigChange={this.props.onServerConfigChange}
                     />
                     { this.renderLoginComponentForFlows() }
-                    {/* { footer } */}
+                    { showRegister && footer }
                 </AuthBody>
             </AuthPage>
         );

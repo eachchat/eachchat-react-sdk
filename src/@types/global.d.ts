@@ -109,6 +109,7 @@ declare global {
         mxLoginWithAccessToken: (hsUrl: string, accessToken: string) => Promise<void>;
         mxAutoRageshakeStore?: AutoRageshakeStore;
         mxDispatcher: MatrixDispatcher;
+        [propname: string]: any;
     }
 
     interface Electron {

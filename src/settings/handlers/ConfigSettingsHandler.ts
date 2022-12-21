@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /*
 Copyright 2017 Travis Ralston
 Copyright 2019, 2020 The Matrix.org Foundation C.I.C.
@@ -49,8 +50,9 @@ export default class ConfigSettingsHandler extends SettingsHandler {
         if (settingName === "theme") {
             return config.get("default_theme");
         }
-
+        this.removeCustomSettingConfig(); // 清除定义设置配置项
         const settingsConfig = config.get("setting_defaults");
+        this.getCustomSettingConfig(settingsConfig); //获取自定义设置配置项并存储于localStorage
         if (!settingsConfig || isNullOrUndefined(settingsConfig[settingName])) return null;
         return settingsConfig[settingName];
     }
@@ -65,5 +67,25 @@ export default class ConfigSettingsHandler extends SettingsHandler {
 
     public isSupported(): boolean {
         return true; // SdkConfig is always there
+    }
+
+    // 自定义配置项List
+    public getCustomSettingConfigList(): Array<string> {
+        return ['contact_robot_name', 'show_register'];
+    }
+
+    // 获取自定义设置配置项
+    public getCustomSettingConfig(settingsConfig: any): void {
+        this.getCustomSettingConfigList().forEach(item => {
+            const config = settingsConfig?.[item];
+            config && localStorage.setItem(`mx_${item}`, config);
+        });
+    }
+
+    // 清除定义设置配置项
+    public removeCustomSettingConfig(): void {
+        this.getCustomSettingConfigList().forEach(item => {
+            localStorage.removeItem(`mx_${item}`);
+        });
     }
 }

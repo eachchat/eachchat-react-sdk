@@ -212,6 +212,8 @@ interface IState {
     justRegistered?: boolean;
     roomJustCreatedOpts?: IOpts;
     forceTimeline?: boolean; // see props
+    yiqiaContactActiveItemKey?: string;
+    activeContactData?: any;
 }
 
 export default class MatrixChat extends React.PureComponent<IProps, IState> {
@@ -252,6 +254,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
             syncError: null, // If the current syncing status is ERROR, the error object, otherwise null.
             resizeNotifier: new ResizeNotifier(),
             ready: false,
+            yiqiaContactActiveItemKey: '',
         };
 
         this.loggedInView = createRef();
@@ -679,6 +682,29 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 }
                 break;
             }
+            case Action.ViewYiqiaContact: {
+                const { context }=payload;
+                this.setState({
+                    yiqiaContactActiveItemKey: context,
+                });
+                this.viewYiqiaContact();
+                break;
+            }
+            case Action.ActiveContactData: {
+                const { context }=payload;
+                this.setState({
+                    activeContactData: context,
+                });
+                break;
+            }
+            case Action.ViewYiqiaRecent: {
+                this.viewYiqiaRecents();
+                break;
+            }
+            case Action.ViewYiqiaOrgMembers: {
+                this.viewYiqiaOrganization();
+                break;
+            }
             case 'view_legacy_group':
                 this.viewLegacyGroup(payload.groupId);
                 break;
@@ -1004,6 +1030,39 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         });
         this.setPage(PageType.HomePage);
         this.notifyNewScreen('home');
+        ThemeController.isLogin = false;
+        this.themeWatcher.recheck();
+    }
+
+    private viewYiqiaContact(context?: any) {
+        // The home page requires the "logged in" view, so we'll set that.
+        this.setStateForNewView({
+            view: Views.LOGGED_IN,
+        });
+        this.setPage(PageType.YiqiaContactUserPage);
+        this.notifyNewScreen('yiqiaContact');
+        ThemeController.isLogin = false;
+        this.themeWatcher.recheck();
+    }
+
+    private viewYiqiaRecents() {
+        // The home page requires the "logged in" view, so we'll set that.
+        this.setStateForNewView({
+            view: Views.LOGGED_IN,
+        });
+        this.setPage(PageType.YiqiaContactUserPage);
+        this.notifyNewScreen('yiqiaContact');
+        ThemeController.isLogin = false;
+        this.themeWatcher.recheck();
+    }
+
+    private viewYiqiaOrganization() {
+        // The home page requires the "logged in" view, so we'll set that.
+        this.setStateForNewView({
+            view: Views.LOGGED_IN,
+        });
+        this.setPage(PageType.YiqiaContactUserPage);
+        this.notifyNewScreen('yiqiaContact');
         ThemeController.isLogin = false;
         this.themeWatcher.recheck();
     }
@@ -1705,6 +1764,10 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
             dis.dispatch({
                 action: Action.ViewHomePage,
             });
+        } else if (screen === 'yiqiaContact') {
+            dis.dispatch({
+                action: Action.ViewYiqiaContact,
+            });
         } else if (screen === 'start') {
             this.showScreen('home');
             dis.dispatch({
@@ -2015,6 +2078,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                         matrixClient={MatrixClientPeg.get()}
                         onRegistered={this.onRegistered}
                         currentRoomId={this.state.currentRoomId}
+                        activeContactData={this.state.activeContactData}
                     />
                 );
             } else {
