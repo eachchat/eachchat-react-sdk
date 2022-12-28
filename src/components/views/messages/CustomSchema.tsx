@@ -73,12 +73,19 @@ const CustomSchema = (props) => {
     const submitData = getSubmitObj(schema);
 
     const submitForm = () => {
+        const submitValues = {};
+        for (const key in submitData) {
+            if (submitData[key]) {
+                submitValues[key]=submitData[key];
+            }
+        }
+
         const data = {
             type: `${type}.submit`,
             content: {
                 "kind": activeBtn?.kind,
                 "params": {
-                    ...submitData,
+                    ...submitValues,
                     ...activeBtn?.data,
                 },
                 "m.relates_to": {
