@@ -55,6 +55,9 @@ interface IProps {
 const E2EIcon: React.FC<IProps> = ({ isUser, status, className, size, onClick, hideTooltip, bordered }) => {
     const [hover, setHover] = useState(false);
 
+    const disEncryption = localStorage.getItem('mx_dis_encryption');
+    if (disEncryption) return null;
+
     const classes = classNames({
         mx_E2EIcon: true,
         mx_E2EIcon_bordered: bordered,

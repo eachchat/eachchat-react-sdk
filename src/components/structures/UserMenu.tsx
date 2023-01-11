@@ -321,6 +321,9 @@ export default class UserMenu extends React.Component<IProps, IState> {
             />;
         }
 
+        const disEncryption = localStorage.getItem('mx_dis_encryption');
+        const disFeedback = localStorage.getItem('mx_dis_feedback');
+
         let primaryOptionList = (
             <IconizedContextMenuOptionList>
                 { homeButton }
@@ -329,17 +332,19 @@ export default class UserMenu extends React.Component<IProps, IState> {
                     label={_t("Notifications")}
                     onClick={(e) => this.onSettingsOpen(e, UserTab.Notifications)}
                 />
-                <IconizedContextMenuOption
-                    iconClassName="mx_UserMenu_iconLock"
-                    label={_t("Security & Privacy")}
-                    onClick={(e) => this.onSettingsOpen(e, UserTab.Security)}
-                />
+                {
+                    !disEncryption && <IconizedContextMenuOption
+                        iconClassName="mx_UserMenu_iconLock"
+                        label={_t("Security & Privacy")}
+                        onClick={(e) => this.onSettingsOpen(e, UserTab.Security)}
+                    />
+                }
                 <IconizedContextMenuOption
                     iconClassName="mx_UserMenu_iconSettings"
                     label={_t("All settings")}
                     onClick={(e) => this.onSettingsOpen(e, null)}
                 />
-                { feedbackButton }
+                { !disFeedback && feedbackButton }
                 <IconizedContextMenuOption
                     className="mx_IconizedContextMenu_option_red"
                     iconClassName="mx_UserMenu_iconSignOut"

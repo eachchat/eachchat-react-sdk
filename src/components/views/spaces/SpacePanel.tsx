@@ -285,7 +285,9 @@ const InnerSpacePanel = React.memo<IInnerSpacePanelProps>(({
         const Component = metaSpaceComponentMap[key];
         return <Component key={key} selected={activeSpace === key} isPanelCollapsed={isPanelCollapsed} />;
     });
+    const disCreateSpace = localStorage.getItem('mx_dis_create_space');
 
+    
     return <IndicatorScrollbar
         {...props}
         wrappedRef={innerRef}
@@ -326,6 +328,7 @@ const InnerSpacePanel = React.memo<IInnerSpacePanelProps>(({
         )) }
         { children }
         {
+            !disCreateSpace &&
             shouldShowComponent(UIComponent.CreateSpaces) &&
             <CreateSpaceButton isPanelCollapsed={isPanelCollapsed} setPanelCollapsed={setPanelCollapsed} />
         }

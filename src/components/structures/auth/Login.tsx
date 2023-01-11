@@ -510,8 +510,9 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
     }
 
     private renderPasswordStep = () => {
+        const disLoginPassword = localStorage.getItem('mx_dis_login_password');
         return (
-            <PasswordLogin
+            !disLoginPassword ? <PasswordLogin
                 onSubmit={this.onPasswordLogin}
                 username={this.state.username}
                 phoneCountry={this.state.phoneCountry}
@@ -525,7 +526,7 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
                 serverConfig={this.props.serverConfig}
                 disableSubmit={this.isBusy()}
                 busy={this.props.isSyncing || this.state.busyLoggingIn}
-            />
+            /> : null
         );
     };
 

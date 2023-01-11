@@ -263,19 +263,23 @@ const RoomSummaryCard: React.FC<IProps> = ({ room, onClose }) => {
     const roomContext = useContext(RoomContext);
     const e2eStatus = roomContext.e2eStatus;
     const isVideoRoom = useFeatureEnabled("feature_video_rooms") && room.isElementVideoRoom();
+    const disEncryption = localStorage.getItem('mx_dis_encryption');
 
     const alias = room.getCanonicalAlias() || room.getAltAliases()[0] || "";
     const header = <React.Fragment>
         <div className="mx_RoomSummaryCard_avatar" role="presentation">
             <RoomAvatar room={room} height={54} width={54} viewAvatarOnClick />
-            <TextWithTooltip
-                tooltip={isRoomEncrypted ? _t("Encrypted") : _t("Not encrypted")}
-                class={classNames("mx_RoomSummaryCard_e2ee", {
-                    mx_RoomSummaryCard_e2ee_normal: isRoomEncrypted,
-                    mx_RoomSummaryCard_e2ee_warning: isRoomEncrypted && e2eStatus === E2EStatus.Warning,
-                    mx_RoomSummaryCard_e2ee_verified: isRoomEncrypted && e2eStatus === E2EStatus.Verified,
-                })}
-            />
+            {
+                !disEncryption && <TextWithTooltip
+                    tooltip={isRoomEncrypted ? _t("Encrypted") : _t("Not encrypted")}
+                    class={classNames("mx_RoomSummaryCard_e2ee", {
+                        mx_RoomSummaryCard_e2ee_normal: isRoomEncrypted,
+                        mx_RoomSummaryCard_e2ee_warning: isRoomEncrypted && e2eStatus === E2EStatus.Warning,
+                        mx_RoomSummaryCard_e2ee_verified: isRoomEncrypted && e2eStatus === E2EStatus.Verified,
+                    })}
+                />
+            }
+
         </div>
 
         <RoomName room={room}>
@@ -293,6 +297,7 @@ const RoomSummaryCard: React.FC<IProps> = ({ room, onClose }) => {
     const memberCount = useRoomMemberCount(room);
     const pinningEnabled = useFeatureEnabled("feature_pinning");
     const pinCount = usePinnedEvents(pinningEnabled && room)?.length;
+    const disWidgets = localStorage.getItem('mx_dis_widgets');
 
     return <BaseCard header={header} className="mx_RoomSummaryCard" onClose={onClose}>
         <Group title={_t("About")} className="mx_RoomSummaryCard_aboutGroup">
@@ -324,6 +329,7 @@ const RoomSummaryCard: React.FC<IProps> = ({ room, onClose }) => {
         </Group>
 
         {
+            !disWidgets &&
             SettingsStore.getValue(UIFeature.Widgets)
             && !isVideoRoom
             && shouldShowComponent(UIComponent.AddIntegrations)

@@ -44,6 +44,9 @@ const EncryptionEvent = forwardRef<HTMLDivElement, IProps>(({ mxEvent, timestamp
     // if no change happened then skip rendering this, a shallow check is enough as all known fields are top-level.
     if (!objectHasDiff(prevContent, content)) return null; // nop
 
+    const disEncryption = localStorage.getItem('mx_dis_encryption');
+    if (disEncryption) return null;
+
     if (content.algorithm === ALGORITHM && isRoomEncrypted) {
         let subtitle: string;
         const dmPartner = DMRoomMap.shared().getUserIdForRoomId(roomId);

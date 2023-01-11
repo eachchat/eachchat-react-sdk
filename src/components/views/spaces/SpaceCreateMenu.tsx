@@ -263,6 +263,7 @@ const SpaceCreateMenu = ({ onFinished }) => {
 
     let body;
     if (visibility === null) {
+        const disFeedback = localStorage.getItem('mx_dis_feedback');
         body = <React.Fragment>
             <h2>{ _t("Create a space") }</h2>
             <p>
@@ -287,7 +288,10 @@ const SpaceCreateMenu = ({ onFinished }) => {
                 { _t("To join a space you'll need an invite.") }
             </p>
 
-            <SpaceFeedbackPrompt onClick={onFinished} />
+            {
+                !disFeedback &&
+             <SpaceFeedbackPrompt onClick={onFinished} />
+            }
         </React.Fragment>;
     } else {
         body = <React.Fragment>

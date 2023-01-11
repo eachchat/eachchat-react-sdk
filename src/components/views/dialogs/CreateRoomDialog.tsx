@@ -76,7 +76,8 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
 
         this.state = {
             isPublic: this.props.defaultPublic || false,
-            isEncrypted: this.props.defaultEncrypted ?? privateShouldBeEncrypted(),
+            // isEncrypted: this.props.defaultEncrypted ?? privateShouldBeEncrypted(),
+            isEncrypted: false,
             joinRule,
             name: this.props.defaultName || "",
             topic: "",
@@ -274,6 +275,8 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
         }
 
         let e2eeSection: JSX.Element;
+        const disEncryption = localStorage.getItem('mx_dis_encryption');
+
         if (this.state.joinRule !== JoinRule.Public) {
             let microcopy: string;
             if (privateShouldBeEncrypted()) {
@@ -356,7 +359,7 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
                         />
 
                         { publicPrivateLabel }
-                        { e2eeSection }
+                        { !disEncryption && e2eeSection }
                         { aliasField }
                         <details onToggle={this.onDetailsToggled} className="mx_CreateRoomDialog_details">
                             <summary className="mx_CreateRoomDialog_details_summary">

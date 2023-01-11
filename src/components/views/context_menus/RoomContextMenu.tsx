@@ -337,6 +337,8 @@ const RoomContextMenu = ({ room, onFinished, ...props }: IProps) => {
         }, true);
     };
 
+    const disWidgets = localStorage.getItem('mx_dis_widgets');
+
     return <IconizedContextMenu {...props} onFinished={onFinished} className="mx_RoomTile_contextMenu" compact>
         <IconizedContextMenuOptionList>
             { inviteOption }
@@ -345,7 +347,7 @@ const RoomContextMenu = ({ room, onFinished, ...props }: IProps) => {
             { peopleOption }
             { filesOption }
             { pinsOption }
-            { widgetsOption }
+            { !disWidgets && widgetsOption }
             { lowPriorityOption }
             { copyLinkOption }
 

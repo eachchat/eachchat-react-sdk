@@ -71,7 +71,21 @@ export default class ConfigSettingsHandler extends SettingsHandler {
 
     // 自定义配置项List
     public getCustomSettingConfigList(): Array<string> {
-        return ['contact_robot_name', 'show_register'];
+        return [
+            'contact_robot_name',
+            'show_register',
+            'dis_login_password',
+            'dis_encryption',
+            'dis_feedback',
+            'dis_create_space',
+            'dis_show_stickers_button',
+            'dis_widgets',
+            'dis_sidebar',
+            'dis_labs',
+            'dis_help',
+            'dis_show_incompatible_browser',
+            'dis_verify_identity',
+        ];
     }
 
     // 获取自定义设置配置项

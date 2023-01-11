@@ -1178,7 +1178,7 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
     } : null;
 
     const activeDescendant = rovingContext.state.activeRef?.current?.id;
-
+    const disFeedback = localStorage.getItem('mx_dis_feedback');
     return <>
         <div id="mx_SpotlightDialog_keyboardPrompt">
             { _t("Use <arrows/> to scroll", {}, {
@@ -1248,19 +1248,23 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
                 { content }
             </div>
 
-            <div className="mx_SpotlightDialog_footer">
-                { openFeedback && _t("Results not as expected? Please <a>give feedback</a>.", {}, {
-                    a: sub => <AccessibleButton kind="link_inline" onClick={openFeedback}>
-                        { sub }
-                    </AccessibleButton>,
-                }) }
-                { openFeedback && <AccessibleButton
-                    kind="primary_outline"
-                    onClick={openFeedback}
-                >
-                    { _t("Feedback") }
-                </AccessibleButton> }
-            </div>
+            {
+                !disFeedback &&
+                <div className="mx_SpotlightDialog_footer">
+                    { openFeedback && _t("Results not as expected? Please <a>give feedback</a>.", {}, {
+                        a: sub => <AccessibleButton kind="link_inline" onClick={openFeedback}>
+                            { sub }
+                        </AccessibleButton>,
+                    }) }
+                    { openFeedback && <AccessibleButton
+                        kind="primary_outline"
+                        onClick={openFeedback}
+                    >
+                        { _t("Feedback") }
+                    </AccessibleButton> }
+                </div>
+            }
+
         </BaseDialog>
     </>;
 };

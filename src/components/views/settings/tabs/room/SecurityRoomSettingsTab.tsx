@@ -404,12 +404,12 @@ export default class SecurityRoomSettingsTab extends React.Component<IProps, ISt
                 </div>
             );
         }
-
+        const disEncryption = localStorage.getItem('mx_dis_encryption');
         return (
             <div className="mx_SettingsTab mx_SecurityRoomSettingsTab">
                 <div className="mx_SettingsTab_heading">{ _t("Security & Privacy") }</div>
 
-                <SettingsFieldset legend={_t("Encryption")} description={_t("Once enabled, encryption cannot be disabled.")}>
+                { !disEncryption && <SettingsFieldset legend={_t("Encryption")} description={_t("Once enabled, encryption cannot be disabled.")}>
                     <LabelledToggleSwitch
                         value={isEncrypted}
                         onChange={this.onEncryptionChange}
@@ -417,7 +417,7 @@ export default class SecurityRoomSettingsTab extends React.Component<IProps, ISt
                         disabled={!canEnableEncryption}
                     />
                     { encryptionSettings }
-                </SettingsFieldset>
+                </SettingsFieldset> }
 
                 { this.renderJoinRule() }
 

@@ -91,7 +91,8 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
     if (opts.spinner === undefined) opts.spinner = true;
     if (opts.guestAccess === undefined) opts.guestAccess = true;
     if (opts.encryption === undefined) opts.encryption = false;
-
+    const disEncryption = localStorage.getItem('mx_dis_encryption');
+    if (disEncryption) opts.encryption = false;
     const client = MatrixClientPeg.get();
     if (client.isGuest()) {
         dis.dispatch({ action: 'require_registration' });

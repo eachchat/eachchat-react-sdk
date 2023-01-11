@@ -82,7 +82,14 @@ export default class UserSettingsDialog extends React.Component<IProps, IState> 
 
     private getTabs() {
         const tabs: Tab[] = [];
+        const disEncryption = localStorage.getItem('mx_dis_encryption');
+        const disSidebar = localStorage.getItem('mx_dis_sidebar');
+        const disLabs = localStorage.getItem('mx_dis_labs');
+        const disHelp = localStorage.getItem('mx_dis_help');
 
+
+
+        
         tabs.push(new Tab(
             UserTab.General,
             _td("General"),
@@ -118,7 +125,7 @@ export default class UserSettingsDialog extends React.Component<IProps, IState> 
             <KeyboardUserSettingsTab />,
             "UserSettingsKeyboard",
         ));
-        tabs.push(new Tab(
+        !disSidebar && tabs.push(new Tab(
             UserTab.Sidebar,
             _td("Sidebar"),
             "mx_UserSettingsDialog_sidebarIcon",
@@ -136,7 +143,7 @@ export default class UserSettingsDialog extends React.Component<IProps, IState> 
             ));
         }
 
-        tabs.push(new Tab(
+        !disEncryption && tabs.push(new Tab(
             UserTab.Security,
             _td("Security & Privacy"),
             "mx_UserSettingsDialog_securityIcon",
@@ -157,7 +164,7 @@ export default class UserSettingsDialog extends React.Component<IProps, IState> 
         if (SdkConfig.get("show_labs_settings")
             || SettingsStore.getFeatureSettingNames().some(k => SettingsStore.getBetaInfo(k))
         ) {
-            tabs.push(new Tab(
+            !disLabs && tabs.push(new Tab(
                 UserTab.Labs,
                 _td("Labs"),
                 "mx_UserSettingsDialog_labsIcon",
@@ -174,7 +181,7 @@ export default class UserSettingsDialog extends React.Component<IProps, IState> 
                 "UserSettingMjolnir",
             ));
         }
-        tabs.push(new Tab(
+        !disHelp && tabs.push(new Tab(
             UserTab.Help,
             _td("Help & About"),
             "mx_UserSettingsDialog_helpIcon",

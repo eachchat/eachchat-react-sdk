@@ -1549,10 +1549,10 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 return;
             }
 
-            Modal.createDialog(ErrorDialog, {
-                title: _t('Signed Out'),
-                description: _t('For security, this session has been signed out. Please sign in again.'),
-            });
+            // Modal.createDialog(ErrorDialog, {
+            //     title: _t('Signed Out'),
+            //     description: _t('For security, this session has been signed out. Please sign in again.'),
+            // });
 
             dis.dispatch({
                 action: 'logout',

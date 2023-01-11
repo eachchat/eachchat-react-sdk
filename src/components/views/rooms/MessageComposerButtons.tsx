@@ -272,6 +272,8 @@ const UploadButton = () => {
 };
 
 function showStickersButton(props: IProps): ReactElement {
+    const disShowStickersButton = localStorage.getItem('mx_dis_show_stickers_Button');
+    if (disShowStickersButton) return null;
     return (
         props.showStickersButton
             ? <CollapsibleButton

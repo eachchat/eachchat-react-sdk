@@ -218,9 +218,9 @@ const NewRoomIntro = () => {
     const subtitle = (
         <span> { subText } { subButton } </span>
     );
-
+    const disEncryption = localStorage.getItem('mx_dis_encryption');
     return <li className="mx_NewRoomIntro">
-        { !hasExpectedEncryptionSettings(cli, room) && (
+        { !hasExpectedEncryptionSettings(cli, room) && !disEncryption && (
             <EventTileBubble
                 className="mx_cryptoEvent mx_cryptoEvent_icon_warning"
                 title={_t("End-to-end encryption isn't enabled")}

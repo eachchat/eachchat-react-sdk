@@ -245,11 +245,12 @@ const SpaceLanding = ({ space }: { space: Room }) => {
     const onMembersClick = () => {
         RightPanelStore.instance.setCard({ phase: RightPanelPhases.SpaceMemberList });
     };
+    const disFeedback = localStorage.getItem('mx_dis_feedback');
 
     return <div className="mx_SpaceRoomView_landing">
         <div className="mx_SpaceRoomView_landing_header">
             <RoomAvatar room={space} height={80} width={80} viewAvatarOnClick={true} />
-            <SpaceFeedbackPrompt />
+            { !disFeedback && <SpaceFeedbackPrompt /> }
         </div>
         <div className="mx_SpaceRoomView_landing_name">
             <RoomName room={space}>
