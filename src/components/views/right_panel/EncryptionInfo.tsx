@@ -100,7 +100,8 @@ const EncryptionInfo: React.FC<IProps> = ({
         return content;
     }
 
-    return <React.Fragment>
+    const disEncryption = localStorage.getItem('mx_dis_encryption');
+    return !disEncryption ?<React.Fragment>
         <div data-test-id='encryption-info-description' className="mx_UserInfo_container">
             <h3>{ _t("Encryption") }</h3>
             { description }
@@ -113,7 +114,7 @@ const EncryptionInfo: React.FC<IProps> = ({
                 { content }
             </div>
         </div>
-    </React.Fragment>;
+    </React.Fragment> : null;
 };
 
 export default EncryptionInfo;

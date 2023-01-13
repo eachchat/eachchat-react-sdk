@@ -1354,10 +1354,11 @@ const BasicUserInfo: React.FC<{
         </div>
     );
 
+    const disEncryption = localStorage.getItem('mx_dis_encryption');
     return <React.Fragment>
         { memberDetails }
 
-        { securitySection }
+        { !disEncryption && securitySection }
         <UserOptionsSection
             canInvite={roomPermissions.canInvite}
             isIgnored={isIgnored}
