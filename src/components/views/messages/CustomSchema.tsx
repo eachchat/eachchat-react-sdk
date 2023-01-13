@@ -21,10 +21,9 @@ import { isArray } from 'lodash';
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { doMaybeLocalRoomAction } from '../../../utils/local-room';
 import DatePicker from "./CustomSchemaComponent/DatePicker";
-import ViewSource from '../../structures/ViewSource';
-import Modal from '../../../Modal';
 import CheckboxGroup from './CustomSchemaComponent/CheckboxGroup';
 import MultipleSelect from './CustomSchemaComponent/MultipleSelect';
+import NumberPicker from "./CustomSchemaComponent/NumberPicker";
 
 const { TextArea } = Input;
 
@@ -42,6 +41,7 @@ const components = {
     DatePicker,
     MegaLayout,
     MultipleSelect,
+    NumberPicker,
 };
 
 const getSubmitObj = (schema) => {
