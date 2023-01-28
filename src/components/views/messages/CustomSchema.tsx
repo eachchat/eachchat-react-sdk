@@ -6,7 +6,6 @@ import {
     createAsyncFormActions,
 } from '@formily/antd';
 import {
-    MegaLayout,
     Radio,
     Checkbox,
     Select,
@@ -24,6 +23,11 @@ import DatePicker from "./CustomSchemaComponent/DatePicker";
 import CheckboxGroup from './CustomSchemaComponent/CheckboxGroup';
 import MultipleSelect from './CustomSchemaComponent/MultipleSelect';
 import NumberPicker from "./CustomSchemaComponent/NumberPicker";
+import Serial from './CustomSchemaComponent/Serial';
+import LayoutTabs from './CustomSchemaComponent/LayoutTabs';
+import LayoutCard from './CustomSchemaComponent/LayoutCard';
+import LayoutGrid from './CustomSchemaComponent/LayoutGrid';
+import mockSchema from './CustomSchemaComponent/mockSchema';
 
 const { TextArea } = Input;
 
@@ -39,9 +43,12 @@ const components = {
     CheckboxGroup,
     Switch,
     DatePicker,
-    MegaLayout,
     MultipleSelect,
     NumberPicker,
+    Serial,
+    LayoutTabs,
+    LayoutCard,
+    LayoutGrid,
 };
 
 const getSubmitObj = (schema) => {
@@ -59,16 +66,17 @@ const getSubmitObj = (schema) => {
 };
 
 const CustomSchema = (props) => {
-    // const mxEv = props?.mxEvent?.event || {};
     const newMxEv = props?.mxEvent?.replacingEvent() || props.mxEvent; // show the replacing event, not the original, if it is an edit
-    // console.log('CustomSchema newMxEv====', newMxEv);
     const { type, content, event_id } = newMxEv?.event || {};
     let activeBtn; let schema; let buttons;
     try {
-        schema = content[type]?.schema;
-        buttons = content[type]?.buttons;
+        if (process.env.NODE_ENV==='development') {
+            schema=mockSchema?.schema || null;
+        } else {
+            schema = content[type]?.schema;
+            buttons = content[type]?.buttons;
+        }
     } catch (error) {
-
     }
     const submitData = getSubmitObj(schema);
 
