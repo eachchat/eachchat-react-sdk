@@ -255,79 +255,38 @@ class LoggedInView extends React.Component<IProps, IState> {
     // 发送消息 获取通讯录用户列表
     private getContactList = (): void => {
         const { contactContent }=this.state;
-        if (process.env.NODE_ENV==="development") {
-            const request = axios.create({
-                headers: {
-                    "Authorization": `Bearer ${localStorage.getItem('mx_authorization')}`,
-                    'Matrix-Id': localStorage.getItem('mx_user_id'),
-                },
+        this._matrixClient.getContactList(contactContent.page, contactContent.pageSize)
+            .then((res: any) => {
+                const { users = [] } = res;
+                if (users.length) {
+                    this.setState({
+                        contactContent: {
+                            ...contactContent,
+                            page: contactContent.page+1,
+                            userList: [...contactContent.userList, ...users],
+                        } }, () => {
+                        this.getContactList();
+                    });
+                } else {
+                    this.setState({
+                        contactContent: {
+                            ...contactContent,
+                            stop: true,
+                        } });
+                }
+                this.setState({
+                    contactContent: {
+                        ...contactContent,
+                        loading: false,
+                    } });
+            }).catch(err => {
+                this.setState({
+                    contactContent: {
+                        ...contactContent,
+                        loading: false,
+                        error: true,
+                    } });
             });
-            request.get(`/api/v1/users?page=${contactContent.page}&size=${contactContent.pageSize}`)
-                .then((res: any) => {
-                    const { users = [] } = res.data;
-                    if (users.length) {
-                        this.setState({
-                            contactContent: {
-                                ...contactContent,
-                                page: contactContent.page+1,
-                                userList: [...contactContent.userList, ...users],
-                            } }, () => {
-                            this.getContactList();
-                        });
-                    } else {
-                        this.setState({
-                            contactContent: {
-                                ...contactContent,
-                                stop: true,
-                            } });
-                    }
-                    this.setState({
-                        contactContent: {
-                            ...contactContent,
-                            loading: false,
-                        } });
-                }).catch(err => {
-                    this.setState({
-                        contactContent: {
-                            ...contactContent,
-                            loading: false,
-                            error: true,
-                        } });
-                });
-        } else {
-            this._matrixClient.getContactList(contactContent.page, contactContent.pageSize)
-                .then((res: any) => {
-                    const { users = [] } = res.data;
-                    if (users.length) {
-                        this.setState({
-                            contactContent: {
-                                ...contactContent,
-                                page: contactContent.page+1,
-                                userList: [...contactContent.userList, ...users],
-                            } }, () => {
-                            this.getContactList();
-                        });
-                    } else {
-                        this.setState({
-                            contactContent: {
-                                ...contactContent,
-                                stop: true,
-                            } });
-                    }
-                    this.setState({
-                        contactContent: {
-                            ...contactContent,
-                            loading: false,
-                        } });
-                }).catch(err => {
-                    this.setState({
-                        contactContent: {
-                            ...contactContent,
-                            loading: false,
-                            error: true,
-                        } });
-                });
-        }
     };
 
     // 监听机器人
