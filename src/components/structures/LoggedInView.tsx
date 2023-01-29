@@ -160,6 +160,8 @@ class LoggedInView extends React.Component<IProps, IState> {
     protected compactLayoutWatcherRef: string;
     protected backgroundImageWatcherRef: string;
     protected resizer: Resizer;
+    public contactContentUserList: Array<any>;
+    public contactContentError: boolean;
 
     constructor(props, context) {
         super(props, context);
@@ -255,38 +257,66 @@ class LoggedInView extends React.Component<IProps, IState> {
     // 发送消息 获取通讯录用户列表
     private getContactList = (): void => {
         const { contactContent }=this.state;
-        this._matrixClient.getContactList(contactContent.page, contactContent.pageSize)
-            .then((res: any) => {
-                const { users = [] } = res;
-                if (users.length) {
-                    this.setState({
-                        contactContent: {
-                            ...contactContent,
-                            page: contactContent.page+1,
-                            userList: [...contactContent.userList, ...users],
-                        } }, () => {
-                        this.getContactList();
-                    });
-                } else {
-                    this.setState({
-                        contactContent: {
-                            ...contactContent,
-                            stop: true,
-                        } });
-                }
-                this.setState({
-                    contactContent: {
-                        ...contactContent,
-                        loading: false,
-                    } });
-            }).catch(err => {
-                this.setState({
-                    contactContent: {
-                        ...contactContent,
-                        loading: false,
-                        error: true,
-                    } });
+        let _contactContentUserList = [];
+        this.contactContentError = false;
+        const usersArr = [];
+        const getUsers = (i) => {
+            return new Promise((resolve, reject) => {
+                resolve(
+                    this._matrixClient.getContactList(i, 50)
+                        .then((res: any) => {
+                            const { users = [] } = res;
+                            if (users.length) {
+                                _contactContentUserList = [..._contactContentUserList, ...users];
+                                this.contactContentUserList = _contactContentUserList;
+                                this.setState({
+                                    contactContent: {
+                                        ...contactContent,
+                                        page: contactContent.page+1,
+                                        userList: [..._contactContentUserList],
+                                    } }, () => {
+                                });
+                            } else {
+                                this.setState({
+                                    contactContent: {
+                                        ...contactContent,
+                                        stop: true,
+                                    } });
+                            }
+                        }).catch(err => {
+                            this.contactContentUserList = [];
+                            this.contactContentError = true;
+                            this.setState({
+                                contactContent: {
+                                    ...contactContent,
+                                    error: this.contactContentError,
+                                } });
+                        }),
+                );
             });
+        };
+
+        for (let i=1; i<=20; i++) {
+            usersArr.push(getUsers(i));
+        }
+
+        Promise.all([...usersArr]).then(res => {
+            this.setState({
+                contactContent: {
+                    ...contactContent,
+                    loading: false,
+                    error: this.contactContentError,
+                } });
+        }).catch(err => {
+            this.contactContentUserList = [];
+            this.contactContentError = true,
+            this.setState({
+                contactContent: {
+                    ...contactContent,
+                    loading: false,
+                    error: this.contactContentError,
+                } });
+        });
     };
 
     // 监听机器人
@@ -831,7 +861,10 @@ class LoggedInView extends React.Component<IProps, IState> {
                                         pageType={this.props.page_type as PageTypes}
                                         isMinimized={getIsMinimized()}
                                         resizeNotifier={this.props.resizeNotifier}
-                                        contactContent={this.state.contactContent}
+                                        contactContent={{
+                                            ...this.state.contactContent,
+                                            userList: this.contactContentUserList,
+                                        }}
                                         onContactReload={this.handleContactReload}
                                     />
                                 </div>
