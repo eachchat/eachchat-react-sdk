@@ -26,6 +26,7 @@ import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
 import { Method } from 'matrix-js-sdk/src/http-api';
 import { TimelineWindow } from 'matrix-js-sdk/src/timeline-window';
 import { TypedEventEmitter } from "matrix-js-sdk/src/models/typed-event-emitter";
+import axios from 'axios';
 
 import { isOnlyCtrlOrCmdKeyEvent, Key } from '../../Keyboard';
 import PageTypes from '../../PageTypes';
@@ -75,7 +76,6 @@ import LegacyGroupView from "./LegacyGroupView";
 import { IConfigOptions } from "../../IConfigOptions";
 import LeftPanelLiveShareWarning from '../views/beacon/LeftPanelLiveShareWarning';
 import { UserOnboardingPage } from '../views/user-onboarding/UserOnboardingPage';
-import YiqiaContactUserPage from './YiqiaContactUserPage';
 import { findDMForUser } from '../../utils/dm/findDMForUser';
 import YiQiaContactView from '../views/yiqia/YiQiaContactView';
 import { RoomNotificationStateStore } from '../../stores/notifications/RoomNotificationStateStore';
@@ -84,7 +84,6 @@ import { DirectoryMember, startDmOnFirstMessage } from '../../utils/direct-messa
 import { createDmLocalRoom } from '../../utils/dm/createDmLocalRoom';
 import { privateShouldBeEncrypted } from '../../utils/rooms';
 import { arrayFastClone } from '../../utils/arrays';
-import YiQiaContactList from '../views/yiqia/YiQiaContactList';
 
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
@@ -122,6 +121,14 @@ interface IProps {
     activeContactData?: any;
 }
 
+interface IContact {
+    page?: number;
+    pageSize?: number;
+    loading?: boolean;
+    error?: boolean;
+    stop?: boolean;
+    userList?: Array<any>;
+}
 interface IState {
     syncErrorData?: ISyncStateData;
     usageLimitDismissed: boolean;
@@ -130,6 +137,7 @@ interface IState {
     useCompactLayout: boolean;
     activeCalls: Array<MatrixCall>;
     backgroundImage?: string;
+    contactContent?: IContact;
 }
 
 /**
@@ -162,6 +170,14 @@ class LoggedInView extends React.Component<IProps, IState> {
             useCompactLayout: SettingsStore.getValue('useCompactLayout'),
             usageLimitDismissed: false,
             activeCalls: LegacyCallHandler.instance.getAllActiveCalls(),
+            contactContent: {
+                page: 1,
+                pageSize: 30,
+                loading: true,
+                error: false,
+                stop: false,
+                userList: [],
+            },
         };
 
         // stash the MatrixClient in case we log out before we are unmounted
@@ -207,7 +223,8 @@ class LoggedInView extends React.Component<IProps, IState> {
         this.loadResizerPreferences();
         this.refreshBackgroundImage();
 
-        this.listenRobotRoom();
+        // this.listenRobotRoom();
+        this.getContactList();
     }
 
     componentWillUnmount() {
@@ -222,6 +239,96 @@ class LoggedInView extends React.Component<IProps, IState> {
         SettingsStore.unwatchSetting(this.backgroundImageWatcherRef);
         this.resizer.detach();
     }
+    public handleContactReload = () => {
+        this.setState({
+            contactContent: {
+                page: 1,
+                pageSize: 30,
+                loading: true,
+                error: false,
+                stop: false,
+                userList: [],
+            } }, () => {
+            this.getContactList();
+        });
+    };
+    // 发送消息 获取通讯录用户列表
+    private getContactList = (): void => {
+        const { contactContent }=this.state;
+        if (process.env.NODE_ENV==="development") {
+            const request = axios.create({
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem('mx_authorization')}`,
+                    'Matrix-Id': localStorage.getItem('mx_user_id'),
+                },
+            });
+            request.get(`/api/v1/users?page=${contactContent.page}&size=${contactContent.pageSize}`)
+                .then((res: any) => {
+                    const { users = [] } = res.data;
+                    if (users.length) {
+                        this.setState({
+                            contactContent: {
+                                ...contactContent,
+                                page: contactContent.page+1,
+                                userList: [...contactContent.userList, ...users],
+                            } }, () => {
+                            this.getContactList();
+                        });
+                    } else {
+                        this.setState({
+                            contactContent: {
+                                ...contactContent,
+                                stop: true,
+                            } });
+                    }
+                    this.setState({
+                        contactContent: {
+                            ...contactContent,
+                            loading: false,
+                        } });
+                }).catch(err => {
+                    this.setState({
+                        contactContent: {
+                            ...contactContent,
+                            loading: false,
+                            error: true,
+                        } });
+                });
+        } else {
+            this._matrixClient.getContactList(contactContent.page, contactContent.pageSize)
+                .then((res: any) => {
+                    const { users = [] } = res.data;
+                    if (users.length) {
+                        this.setState({
+                            contactContent: {
+                                ...contactContent,
+                                page: contactContent.page+1,
+                                userList: [...contactContent.userList, ...users],
+                            } }, () => {
+                            this.getContactList();
+                        });
+                    } else {
+                        this.setState({
+                            contactContent: {
+                                ...contactContent,
+                                stop: true,
+                            } });
+                    }
+                    this.setState({
+                        contactContent: {
+                            ...contactContent,
+                            loading: false,
+                        } });
+                }).catch(err => {
+                    this.setState({
+                        contactContent: {
+                            ...contactContent,
+                            loading: false,
+                            error: true,
+                        } });
+                });
+        }
+    };
 
     // 监听机器人
     private listenRobotRoom = () => {
@@ -765,8 +872,9 @@ class LoggedInView extends React.Component<IProps, IState> {
                                         pageType={this.props.page_type as PageTypes}
                                         isMinimized={getIsMinimized()}
                                         resizeNotifier={this.props.resizeNotifier}
+                                        contactContent={this.state.contactContent}
+                                        onContactReload={this.handleContactReload}
                                     />
-                                    <div style={{ display: 'none' }}><YiQiaContactList /></div>
                                 </div>
                             </nav>
                         </div>

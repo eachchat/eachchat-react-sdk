@@ -20,6 +20,13 @@ const YiQiaContactView = (props: IProps) => {
         const newMember = new DirectoryMember({ user_id: data.matrixID, display_name: null, avatar_url: null });
         startDmOnFirstMessage(cli, [newMember] as any);
     };
+    let group;
+    try {
+        if (data.group[0]["group_name"]) {
+            group = data.group[0]["group_name"];
+        }
+    } catch (error) {
+    }
 
     return (
         <div className='YiQiaContactView'>
@@ -30,7 +37,7 @@ const YiQiaContactView = (props: IProps) => {
                             <div className='yiqia_UserInfo_avatar'>
                                 <BaseAvatar
                                     idName={data.matrixID}
-                                    name={data?.first_name + data?.last_name}
+                                    name={data?.name}
                                     url=""
                                     width={avatarSize}
                                     height={avatarSize}
@@ -40,8 +47,8 @@ const YiQiaContactView = (props: IProps) => {
                             </div>
                             <div className='yiqia_UserInfo_container'>
                                 <div className="yiqia_UserInfo_profile">
-                                    <div className="yiqia_UserInfo_displayname" title="weitao" aria-label="weitao">{ data.first_name+data.last_name }</div>
-                                    <div className="yiqia_UserInfo_matrixId" title="@weitao:yunify.com" aria-label="weitao">{ data.email }</div>
+                                    <div className="yiqia_UserInfo_displayname">{ data.name }</div>
+                                    <div className="yiqia_UserInfo_matrixId">{ data.email }</div>
                                 </div>
                             </div>
                         </div>
@@ -60,7 +67,15 @@ const YiQiaContactView = (props: IProps) => {
                             </div>
                             <div className="yiqia_user_details_item">
                                 <div className="yiqia_user_details_item_label">姓名</div>
-                                <div className="yiqia_user_details_item_info">{ data.first_name+data.last_name }</div>
+                                <div className="yiqia_user_details_item_info">{ data.name }</div>
+                            </div>
+                            <div className="yiqia_user_details_item">
+                                <div className="yiqia_user_details_item_label">工号</div>
+                                <div className="yiqia_user_details_item_info">{ data.employee_number }</div>
+                            </div>
+                            <div className="yiqia_user_details_item">
+                                <div className="yiqia_user_details_item_label">部门</div>
+                                <div className="yiqia_user_details_item_info">{ group }</div>
                             </div>
                             <div className="yiqia_user_details_item">
                                 <div className="yiqia_user_details_item_label">电子邮箱</div>

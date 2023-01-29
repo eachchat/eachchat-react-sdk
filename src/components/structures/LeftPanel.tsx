@@ -53,6 +53,8 @@ interface IProps {
     isMinimized: boolean;
     pageType: PageType;
     resizeNotifier: ResizeNotifier;
+    contactContent: object;
+    onContactReload: () => void;
 }
 
 enum BreadcrumbsMode {
@@ -418,9 +420,7 @@ export default class LeftPanel extends React.Component<IProps, IState> {
                 {
                     this.state.activeSpace === MetaSpace.Contact &&
                     <div className="mx_LeftPanel_roomListContainer">
-                        {/* { this.renderSearchDialExplore() }
-                        { this.renderBreadcrumbs() } */}
-                        <YiQiaContact />
+                        <YiQiaContact contactContent={this.props.contactContent} onReload={this.props.onContactReload} />
                     </div>
 
                 }

@@ -8,6 +8,7 @@ import { Action } from "../../../dispatcher/actions";
 import YiQiaContactList from "./YiQiaContactList";
 
 const YiQiaContact = (props) => {
+    const { contactContent, onReload }=props;
     useEffect(() => {
         sessionStorage.removeItem('activeContactData');
         dis.dispatch({
@@ -15,6 +16,8 @@ const YiQiaContact = (props) => {
             context: 'organization',
         });
     }, []);
+
+    const handleReload = () => onReload && onReload();
 
     return (
         <AutoHideScrollbar>
@@ -24,8 +27,13 @@ const YiQiaContact = (props) => {
                         fontWeight: "bold",
                         fontSize: '14px',
                     }}>通讯录</div>
-                <YiQiaContactList />
 
+                <YiQiaContactList
+                    loading={contactContent.loading}
+                    userList={contactContent.userList}
+                    error={contactContent.error}
+                    onReload={handleReload}
+                />
             </div>
         </AutoHideScrollbar>
     );

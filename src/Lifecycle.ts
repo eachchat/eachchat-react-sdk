@@ -662,6 +662,7 @@ async function persistCredentials(credentials: IMatrixClientCreds): Promise<void
     // where IndexedDB is blown away
     if (credentials.accessToken) {
         localStorage.setItem("mx_has_access_token", "true");
+        localStorage.setItem("mx_authorization", credentials.accessToken);
     } else {
         localStorage.deleteItem("mx_has_access_token");
     }
