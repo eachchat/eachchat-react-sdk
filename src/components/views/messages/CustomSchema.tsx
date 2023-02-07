@@ -16,6 +16,7 @@ import {
     Switch,
 } from 'antd';
 import { isArray } from 'lodash';
+import axios from 'axios';
 
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { doMaybeLocalRoomAction } from '../../../utils/local-room';
@@ -106,12 +107,37 @@ const CustomSchema = (props) => {
             },
         };
 
-        cli.sendCustomSchema(data.content)
-            .then(
-                (res) => { console.log(res); },
-            ).catch(e => {
-                console.error(e);
+        const elementBaseURL = 'element';
+        const requestElement =() => {
+            const MatrixID = localStorage.getItem("mx_user_id");
+            const Authorization = `Bearer ${localStorage.getItem('mx_authorization')}`;
+            return axios.create({
+                baseURL: elementBaseURL,
+                headers: {
+                    "Matrix-Id": MatrixID,
+                    "Authorization": Authorization,
+                },
             });
+        };
+
+        // 提交表单
+        const sendCustomSchema = () => {
+            return requestElement()({
+                method: 'POST',
+                url: "api/v1/scatter",
+                data: data.content,
+            })
+                .then((res: any) => res?.data)
+                .catch(err => err);
+        };
+        sendCustomSchema();
+
+        // cli.sendCustomSchema(data.content)
+        //     .then(
+        //         (res) => { console.log(res); },
+        //     ).catch(e => {
+        //         console.error(e);
+        //     });
 
         // doMaybeLocalRoomAction(
         //     props.mxEvent.getRoomId(),

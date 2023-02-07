@@ -198,6 +198,7 @@ $activeBorderColor: $primary-content;
 
         &.mx_SpaceButton_home,
         &.mx_SpaceButton_favourites,
+        &.mx_SpaceButton_nextCloud,
         &.mx_SpaceButton_people,
         &.mx_SpaceButton_orphans {
             .mx_SpaceButton_icon {
@@ -215,6 +216,10 @@ $activeBorderColor: $primary-content;
 
         &.mx_SpaceButton_favourites .mx_SpaceButton_icon::before {
             mask-image: url('$(res)/img/element-icons/roomlist/favorite.svg');
+        }
+
+        &.mx_SpaceButton_nextCloud .mx_SpaceButton_icon::before {
+            mask-image: url('$(res)/img/element-icons/roomlist/next-cloud.svg');
         }
 
         &.mx_SpaceButton_people .mx_SpaceButton_icon::before {

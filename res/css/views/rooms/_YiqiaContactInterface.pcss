@@ -131,6 +131,12 @@
 }
 
 .yiQiaContactList{
+    .ant-tree{
+        background: transparent;
+    }
+    .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected{
+        background-color: transparent;
+    }
     .mx_Spinner{
         margin-top: 200px;
     }
@@ -303,5 +309,21 @@
 
             }
         }
+    }
+}
+
+
+
+.yiqia-list-item{
+    display: flex;
+    align-items: center;
+    padding: 0 5px;
+    &>span{
+        display: flex;
+        align-items: center;
+        margin-right: 5px;
+    }
+    &.active{
+        background-color: rgba($accent, 0.1);
     }
 }

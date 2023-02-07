@@ -869,6 +869,10 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
 
                 break;
             }
+            case Action.ViewNextCloud: {
+                this.viewNextCloud();
+                break;
+            }
         }
     };
 
@@ -1030,6 +1034,16 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         });
         this.setPage(PageType.HomePage);
         this.notifyNewScreen('home');
+        ThemeController.isLogin = false;
+        this.themeWatcher.recheck();
+    }
+
+    private viewNextCloud(context?: any) {
+        this.setStateForNewView({
+            view: Views.LOGGED_IN,
+        });
+        this.setPage(PageType.NextCloudPage);
+        this.notifyNewScreen('nextCloud');
         ThemeController.isLogin = false;
         this.themeWatcher.recheck();
     }
@@ -1767,6 +1781,10 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         } else if (screen === 'yiqiaContact') {
             dis.dispatch({
                 action: Action.ViewYiqiaContact,
+            });
+        } else if (screen === 'nextCloud') {
+            dis.dispatch({
+                action: Action.ViewNextCloud,
             });
         } else if (screen === 'start') {
             this.showScreen('home');
