@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import React from 'react';
+import React, { useContext } from 'react';
 import {
     SchemaForm,
     FormEffectHooks,
@@ -28,6 +28,7 @@ import LayoutTabs from './CustomSchemaComponent/LayoutTabs';
 import LayoutCard from './CustomSchemaComponent/LayoutCard';
 import LayoutGrid from './CustomSchemaComponent/LayoutGrid';
 import mockSchema from './CustomSchemaComponent/mockSchema';
+import MatrixClientContext from '../../../contexts/MatrixClientContext';
 
 const { TextArea } = Input;
 
@@ -66,12 +67,15 @@ const getSubmitObj = (schema) => {
 };
 
 const CustomSchema = (props) => {
+    const cli = useContext(MatrixClientContext);
     const newMxEv = props?.mxEvent?.replacingEvent() || props.mxEvent; // show the replacing event, not the original, if it is an edit
     const { type, content, event_id } = newMxEv?.event || {};
     let activeBtn; let schema; let buttons;
     try {
         if (process.env.NODE_ENV==='development') {
-            schema=mockSchema?.schema || null;
+            // schema=mockSchema?.schema || null;
+            schema = content[type]?.schema;
+            buttons = content[type]?.buttons;
         } else {
             schema = content[type]?.schema;
             buttons = content[type]?.buttons;
@@ -92,29 +96,37 @@ const CustomSchema = (props) => {
             type: `${type}.submit`,
             content: {
                 "kind": activeBtn?.kind,
-                "params": {
+                "data": {
                     ...submitValues,
                     ...activeBtn?.data,
                 },
-                "m.relates_to": {
-                    event_id,
-                },
+                // "m.relates_to": {
+                //     event_id,
+                // },
             },
         };
-        doMaybeLocalRoomAction(
-            props.mxEvent.getRoomId(),
-            (actualRoomId: string) => MatrixClientPeg.get().sendEvent(
-                actualRoomId,
-                props.mxEvent.getThread()?.id ?? null,
-                data.type,
-                data.content,
-            ),
-            MatrixClientPeg.get(),
-        ).then(
-            (res) => { console.log(res); },
-        ).catch(e => {
-            console.error(e);
-        });
+
+        cli.sendCustomSchema(data.content)
+            .then(
+                (res) => { console.log(res); },
+            ).catch(e => {
+                console.error(e);
+            });
+
+        // doMaybeLocalRoomAction(
+        //     props.mxEvent.getRoomId(),
+        //     (actualRoomId: string) => MatrixClientPeg.get().sendEvent(
+        //         actualRoomId,
+        //         props.mxEvent.getThread()?.id ?? null,
+        //         data.type,
+        //         data.content,
+        //     ),
+        //     MatrixClientPeg.get(),
+        // ).then(
+        //     (res) => { console.log(res); },
+        // ).catch(e => {
+        //     console.error(e);
+        // });
     };
 
     const handleEffects = () => {
