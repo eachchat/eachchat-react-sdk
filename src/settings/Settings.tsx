@@ -924,6 +924,7 @@ export const SETTINGS: {[setting: string]: ISetting} = {
         default: {
             [MetaSpace.Home]: true,
             [MetaSpace.Contact]: true,
+            // [MetaSpace.NextCloud]: true,
         },
     },
     "Spaces.showPeopleInSpace": {

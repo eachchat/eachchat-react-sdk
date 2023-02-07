@@ -75,7 +75,7 @@ const YiQiaContactView = (props: IProps) => {
                             </div>
                             <div className="yiqia_user_details_item">
                                 <div className="yiqia_user_details_item_label">部门</div>
-                                <div className="yiqia_user_details_item_info">{ group }</div>
+                                <div className="yiqia_user_details_item_info">{ data.groupName }</div>
                             </div>
                             <div className="yiqia_user_details_item">
                                 <div className="yiqia_user_details_item_label">电子邮箱</div>

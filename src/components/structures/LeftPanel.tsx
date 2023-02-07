@@ -48,6 +48,7 @@ import PosthogTrackers from "../../PosthogTrackers";
 import PageType from "../../PageTypes";
 import { UserOnboardingButton } from "../views/user-onboarding/UserOnboardingButton";
 import YiQiaContact from "../views/yiqia/YiQiaContact";
+import NextCloudLeftPanel from "../views/next_cloud/nextCloudLeftPanel";
 
 interface IProps {
     isMinimized: boolean;
@@ -423,6 +424,13 @@ export default class LeftPanel extends React.Component<IProps, IState> {
                         <YiQiaContact contactContent={this.props.contactContent} onReload={this.props.onContactReload} />
                     </div>
 
+                }
+
+                {
+                    this.state.activeSpace === MetaSpace.NextCloud &&
+                    <div className="mx_LeftPanel_roomListContainer">
+                        <NextCloudLeftPanel />
+                    </div>
                 }
 
             </div>

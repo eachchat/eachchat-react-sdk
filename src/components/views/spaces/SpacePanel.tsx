@@ -254,12 +254,33 @@ const YiqiaContactButton = ({ selected, isPanelCollapsed }: MetaSpaceButtonProps
     />;
 };
 
+const NextCloudButton = ({ selected, isPanelCollapsed }: MetaSpaceButtonProps) => {
+    return <MetaSpaceButton
+        spaceKey={MetaSpace.NextCloud}
+        className="mx_SpaceButton_nextCloud"
+        selected={selected}
+        isPanelCollapsed={isPanelCollapsed}
+        label={getMetaSpaceName(MetaSpace.NextCloud)}
+    />;
+};
+
+// const NewMenuButton = ({ selected, isPanelCollapsed }: MetaSpaceButtonProps) => {
+//     return <MetaSpaceButton
+//         spaceKey={MetaSpace.NextCloud}
+//         className="mx_SpaceButton_nextCloud"
+//         selected={selected}
+//         isPanelCollapsed={isPanelCollapsed}
+//         label={getMetaSpaceName(MetaSpace.NextCloud)}
+//     />;
+// };
+
 const metaSpaceComponentMap: Record<MetaSpace, typeof HomeButton> = {
     [MetaSpace.Home]: HomeButton,
     [MetaSpace.Favourites]: FavouritesButton,
     [MetaSpace.People]: PeopleButton,
     [MetaSpace.Orphans]: OrphansButton,
     [MetaSpace.Contact]: YiqiaContactButton,
+    [MetaSpace.NextCloud]: NextCloudButton,
 };
 
 interface IInnerSpacePanelProps extends DroppableProvidedProps {

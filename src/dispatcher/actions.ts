@@ -361,4 +361,9 @@ export enum Action {
        * Show the Contact
        */
         ActiveContactData = "view_yiqia_active_contact_data",
+
+     /**
+     * Show the NextCloud
+     */
+     ViewNextCloud = "view_next_cloud",
 }

@@ -46,6 +46,7 @@ import Resend from "../../../Resend";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { MediaEventHelper } from "../../../utils/MediaEventHelper";
 import DownloadActionButton from "./DownloadActionButton";
+import UploadNextCloudButton from "./UploadNextCloudButton";
 import SettingsStore from '../../../settings/SettingsStore';
 import { RoomPermalinkCreator } from '../../../utils/permalinks/Permalinks';
 import ReplyChain from '../elements/ReplyChain';
@@ -474,7 +475,9 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
             <TrashcanIcon />
         </RovingAccessibleTooltipButton>;
 
-        const threadTooltipButton = <ReplyInThreadButton mxEvent={this.props.mxEvent} key="reply_thread" />;
+        // const threadTooltipButton = <ReplyInThreadButton mxEvent={this.props.mxEvent} key="reply_thread" />;
+        const threadTooltipButton = null;
+
 
         // We show a different toolbar for failed events, so detect that first.
         const mxEvent = this.props.mxEvent;
@@ -535,6 +538,11 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
 
                 // XXX: Assuming that the underlying tile will be a media event if it is eligible media.
                 if (MediaEventHelper.isEligible(this.props.mxEvent)) {
+                    toolbarOpts.splice(0, 0, <UploadNextCloudButton
+                        mxEvent={this.props.mxEvent}
+                        mediaEventHelperGet={() => this.props.getTile?.().getMediaHelper?.()}
+                        key="upload"
+                    />);
                     toolbarOpts.splice(0, 0, <DownloadActionButton
                         mxEvent={this.props.mxEvent}
                         mediaEventHelperGet={() => this.props.getTile?.().getMediaHelper?.()}

@@ -84,6 +84,7 @@ import { DirectoryMember, startDmOnFirstMessage } from '../../utils/direct-messa
 import { createDmLocalRoom } from '../../utils/dm/createDmLocalRoom';
 import { privateShouldBeEncrypted } from '../../utils/rooms';
 import { arrayFastClone } from '../../utils/arrays';
+import NextCloudContentView from '../views/next_cloud/nextCloudContentView';
 
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
@@ -226,7 +227,7 @@ class LoggedInView extends React.Component<IProps, IState> {
         this.refreshBackgroundImage();
 
         // this.listenRobotRoom();
-        this.getContactList();
+        // this.getContactList();
     }
 
     componentWillUnmount() {
@@ -318,6 +319,7 @@ class LoggedInView extends React.Component<IProps, IState> {
                 } });
         });
     };
+
 
     // 监听机器人
     private listenRobotRoom = () => {
@@ -804,6 +806,9 @@ class LoggedInView extends React.Component<IProps, IState> {
             case PageTypes.YiqiaContactUserPage:
                 pageElement = <YiQiaContactView data={this.props.activeContactData} />;
                 break;
+            case PageTypes.NextCloudPage:
+                pageElement = <NextCloudContentView />;
+                break;
         }
 
         const wrapperClasses = classNames({
@@ -828,6 +833,8 @@ class LoggedInView extends React.Component<IProps, IState> {
             return this.props.collapseLhs || flag;
         };
         const isYiqiaContactUserPage = this.props.page_type=== PageTypes.YiqiaContactUserPage;
+        const isNextCloudPage = this.props.page_type=== PageTypes.NextCloudPage;
+
         return (
             <MatrixClientContext.Provider value={this._matrixClient}>
                 <div
@@ -838,7 +845,10 @@ class LoggedInView extends React.Component<IProps, IState> {
                 >
                     <ToastContainer />
                     <div className={bodyClasses}>
-                        <div className='mx_LeftPanel_outerWrapper'>
+                        <div className='mx_LeftPanel_outerWrapper'
+                            style={{
+                                paddingRight: isNextCloudPage && "8px",
+                            }}>
                             <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
                             <nav className='mx_LeftPanel_wrapper'>
                                 <BackdropPanel
@@ -855,6 +865,7 @@ class LoggedInView extends React.Component<IProps, IState> {
                                     data-collapsed={this.props.collapseLhs ? true : undefined}
                                     style={{
                                         width: isYiqiaContactUserPage ? '40vw':"auto",
+                                        display: isNextCloudPage? 'none': 'flex',
                                     }}
                                 >
                                     <LeftPanel
@@ -870,8 +881,8 @@ class LoggedInView extends React.Component<IProps, IState> {
                                 </div>
                             </nav>
                         </div>
-                        <ResizeHandle passRef={this.resizeHandler} id="lp-resizer" />
-                        <div className="mx_RoomView_wrapper">
+                        <ResizeHandle passRef={this.resizeHandler} id="lp-resizer" hide={isNextCloudPage} />
+                        <div className={`mx_RoomView_wrapper ${isNextCloudPage&&'mx_RoomView_wrapper_ml8'}`}>
                             { pageElement }
                         </div>
                     </div>

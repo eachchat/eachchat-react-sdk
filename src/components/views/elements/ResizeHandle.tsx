@@ -23,9 +23,10 @@ interface IResizeHandleProps {
     reverse?: boolean;
     id?: string;
     passRef?: React.RefObject<HTMLDivElement>;
+    hide?: boolean;
 }
 
-const ResizeHandle: React.FC<IResizeHandleProps> = ({ vertical, reverse, id, passRef }) => {
+const ResizeHandle: React.FC<IResizeHandleProps> = ({ vertical, reverse, id, passRef, hide }) => {
     const classNames = ['mx_ResizeHandle'];
     if (vertical) {
         classNames.push('mx_ResizeHandle_vertical');
@@ -35,6 +36,11 @@ const ResizeHandle: React.FC<IResizeHandleProps> = ({ vertical, reverse, id, pas
     if (reverse) {
         classNames.push('mx_ResizeHandle_reverse');
     }
+
+    if (hide) {
+        classNames.push('mx_ResizeHandle_hide');
+    }
+
     return (
         <div ref={passRef} className={classNames.join(' ')} data-id={id}><div /></div>
     );

@@ -1,0 +1,245 @@
+.nextCloudContentView{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* padding: 20px 30px 20px 30px; */
+    /* margin-left: -8px;
+    padding: 10px;
+    padding-left: 18px;
+    margin-bottom: 40px;
+    margin-right: 20px;
+    margin-left: 5px; */
+    .header{
+        display: flex;
+        /* margin: 15px 0; */
+        .NextCloudNavBar-wrap{
+            display: flex;
+            align-items: center;
+            .Breadcrumb-wrap{
+                font-weight: bolder;
+                .ant-breadcrumb-link{
+                    cursor: pointer;
+                    &:hover{
+                        color: $accent;
+                    }
+                }
+            }
+        }
+        .NextCloudUpload-wrap{
+            .NextCloudUpload{
+                display: flex;
+                align-items: center;
+                .ant-upload-list{
+                    margin-left: 20px;
+                    .ant-upload-list-item{
+                        margin-top: 0;
+                    }
+                }
+            }
+        }
+    }
+    .__dbk__gutter.Dark{
+        background: transparent;
+    }
+    .__dbk__dragger.Dark{
+        height: 64px;
+        opacity: 0;
+    }
+    .__dbk__gutter.Dark:hover > .__dbk__dragger.Dark{
+        opacity: 0.8;
+    }
+    .__dbk__gutter.Dark:hover > .__dbk__dragger{
+        background-color: #17191C;
+        opacity: 0.8;
+    }
+
+    
+   
+    .NextCloudFilesTable-wrap{
+        height: 100%;
+        border: 1px solid #ddd;
+        overflow: hidden;
+        .ant-table-title{
+            border-bottom: 1px solid #ddd;
+        }
+        .table-header{
+            padding: 8px;
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            .btn{
+                margin-right: 10px;
+            }
+            .new-forder-input{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 32px;
+                .ant-input {
+                    margin: 0 !important;
+                    width: 124px;
+                }
+            }
+            .new-forder-add{
+                cursor: pointer;
+                &:hover{
+                    color: $accent;
+                }
+            }
+        }
+        .file-name-wrap{
+            display: flex;
+            align-items: center;
+            .anticon{
+                font-size: 18px;
+                margin-right: 8px;
+            }
+            &.isFolder{
+                cursor: pointer;
+                &:hover{
+                    color: $accent;
+                }
+            }
+            .name{
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
+        .nextCloud-file-action{
+            .anticon{
+                margin-right: 10px;
+                &:hover{
+                    color: $accent;
+                }
+            }
+        }
+        
+    }
+}
+
+.NextCloudUploadNotification{
+    &.ant-notification-notice{
+        width: 310px;
+    }
+    .ant-notification-notice-message{
+        border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    }
+    .uploadNotificationMessage{
+        font-size: 12px;    
+    }
+    .uploadNotificationDescription{
+        font-size: 12px;
+        max-height: 60px;
+        overflow: auto;
+        .upload-file-item{
+            display: flex;
+            align-items: center;
+            padding: 0 5px;
+            justify-content: space-between;
+            overflow: hidden;
+            .file-name{
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                margin-right: 10px;
+            }
+            .anticon{
+                font-size: 14px;
+                &.anticon-check-circle{
+                    color: #52c41a;
+                }
+                &.anticon-close-circle{
+                    color: #ff4d4f;
+                }
+            }
+        }
+    }
+    
+}
+
+.mx_NextCloudShareLink{
+    display: inline-block;
+    margin-top: 10px;
+  
+    .ant-card { 
+        min-width: 270px;
+        border-color: #E3E8F0;
+        .ant-card-head{
+            border-bottom-color:#E3E8F0;
+            display: flex;
+            align-items: center;
+            /* &::before{
+                content: '';
+                display: inline-block;
+                width: 24px;
+                height: 24px;
+                margin-right: 5px;
+                background: url('$(res)/img/element-icons/room/composer/cloud-share.svg');;
+                background-size: contain;
+            } */
+        }
+    }
+    
+   
+    .content{
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        &:hover{
+            color: $accent;
+        }
+        .anticon{
+            margin-right: 6px;
+            font-size: 18px;
+        }
+    }
+}
+
+.NextCloudNavBar-wrap{
+    display: flex;
+    align-items: center;
+    margin-left: 5px;
+    .Breadcrumb-wrap{
+        font-weight: bolder;
+        .ant-breadcrumb-link{
+            cursor: pointer;
+            &:hover{
+                color: $accent;
+            }
+        }
+    }
+}
+
+.NextCloudSearchSelect{
+    .file-option-wrap{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        white-space: break-spaces;
+    }
+    .fileName{
+        display: flex;
+        align-items: center;
+        margin-right: 10px;
+        .anticon{
+            font-size: 20px;
+            margin-right: 5px;
+        }
+        .label{
+            display: flex;
+            align-items: center;
+        }
+    }
+    .filePath{
+        font-size: 12px;
+        color: rgba(0,0,0,0.6);
+    }
+    .no-data{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        .anticon{
+            font-size: 38px;
+        }
+    }
+}
