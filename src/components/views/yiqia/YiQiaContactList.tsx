@@ -73,6 +73,7 @@ const YiQiaContactList = () => {
     };
 
     const handleClick = (data: any) => {
+        console.log('data==',data)
         dis.dispatch({
             action: Action.ActiveContactData,
             context: data,
@@ -106,15 +107,20 @@ const YiQiaContactList = () => {
         </div>;
     };
 
-    const formatTreeData = (data) => {
+    const formatTreeData = (data, groupName) => {
         const treeData = data.map(item => {
-            return {
-                // 在原数组添加属性
+            const _item = {
                 ...item,
                 key: item?.pk || item?.email,
                 value: item?.group_name || item?.name,
-                title: getTitle(item),
-                children: item?.users ? formatTreeData(item?.users) : item?.users, // 判断当前是否还有子节点
+                groupName,
+                employeeNumber: item?.employee_number,
+                matrixID: item?.email,
+                children: item?.users ? formatTreeData(item?.users, item?.group_name) : item?.users,
+            };
+            return {
+                ..._item,
+                title: getTitle(_item),
             };
         });
         return treeData;
