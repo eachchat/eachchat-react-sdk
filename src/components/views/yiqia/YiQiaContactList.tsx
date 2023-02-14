@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable camelcase */
 /* eslint-disable react-hooks/exhaustive-deps */
 
@@ -83,7 +84,7 @@ const YiQiaContactList = () => {
     const getTitle = (item) => {
         const { group_name, name }=item;
         const active = item.name === searchValue;
-        return <div className={`yiqia-list-item ${(active?'active':'')}`} onClick={() => handleClick(item)}>
+        return <div className={`yiqia-list-item ${(active?'active':'')}`} onClick={() => !group_name && handleClick(item)}>
             {
                 group_name ?
                     <>
