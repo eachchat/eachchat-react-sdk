@@ -116,7 +116,7 @@ const YiQiaContactList = () => {
                 value: item?.group_name || item?.name,
                 groupName,
                 employeeNumber: item?.employee_number,
-                matrixID: item?.email,
+                matrixID: item?.matrix_id,
                 children: item?.users ? formatTreeData(item?.users, item?.group_name) : item?.users,
             };
             return {
