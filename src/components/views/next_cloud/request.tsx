@@ -333,3 +333,22 @@ export const uploadBitFileDelete = (username, folderName) => {
         errorNotification(err?.message);
     });
 };
+
+// 上传文件到根目录
+export const uploadNextCloudRootFile = async (fileName, file) => {
+    return requestNextCloud()({
+        "method": 'PUT',
+        "url": `remote.php/webdav/${fileName}`,
+        "data": file,
+    }).then((res: any) => {
+        notification.success({
+            message: "成功",
+            description: `${fileName}保存到云盘成功`,
+        });
+    }).catch(err => {
+        notification.error({
+            message: "失败",
+            description: `${fileName}保存到云盘失败`,
+        });
+    });
+};
