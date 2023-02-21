@@ -39,3 +39,12 @@ export const xmlToJson = (xmlStr) => {
     }
     return obj;
 };
+
+export const copyAction = (str) => {
+    const createInput = document.createElement('textarea');
+    createInput.value = str;
+    document.body.appendChild(createInput);
+    createInput.select();
+    document.execCommand('Copy'); // document执行复制操作
+    createInput.remove();
+};

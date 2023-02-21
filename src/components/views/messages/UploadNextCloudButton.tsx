@@ -26,6 +26,7 @@ import Spinner from "../elements/Spinner";
 import { _t, _td } from "../../../languageHandler";
 import { FileDownloader } from "../../../utils/FileDownloader";
 import { uploadNextCloudRootFile } from "../next_cloud/request";
+import NextCloudShareModel from "../next_cloud/nextCloudShareModel";
 
 interface IProps {
     mxEvent: MatrixEvent;
@@ -40,6 +41,9 @@ interface IState {
     loading: boolean;
     blob?: Blob;
     tooltip: string;
+    open: boolean;
+    file?: any;
+    fileName?: any;
 }
 
 export default class DownloadActionButton extends React.PureComponent<IProps, IState> {
@@ -51,32 +55,47 @@ export default class DownloadActionButton extends React.PureComponent<IProps, IS
         this.state = {
             loading: false,
             tooltip: "上传中...",
+            open: false,
         };
     }
 
-    private onUploadNextCloudClick = async () => {
-        if (this.state.loading) return;
+    private handleOk = () => {
+        this.setState({ open: false });
+    };
 
-        // if (this.props.mediaEventHelperGet().media.isEncrypted) {
-        //     this.setState({ tooltip: _td("Decrypting") });
-        // }
+    private handleCancel = () => {
+        this.setState({ open: false });
+    };
+
+    private onSaveToNextCloudClick = () => {
+        this.onUploadNextCloudClick(false);
+        this.setState({
+            open: true,
+            loading: false,
+        });
+    };
+    private onUploadNextCloudClick = async (upload=true) => {
+        if (this.state.loading) return;
 
         this.setState({ loading: true });
 
         if (this.state.blob) {
-            // Cheat and trigger a download, again.
             return this.doDownload();
         }
 
         const blob = await this.props.mediaEventHelperGet().sourceBlob.value;
         this.setState({ blob });
-        await this.doDownload();
+        await this.doDownload(upload);
     };
 
-    private async doDownload() {
+    private async doDownload(upload?: boolean) {
         const fileName = this.props.mediaEventHelperGet().fileName;
         const file = new File([this.state.blob], fileName, { type: this.state.blob.type });
-        uploadNextCloudRootFile(fileName, file)
+        this.setState({
+            file,
+            fileName,
+        });
+        upload && uploadNextCloudRootFile(fileName, file)
             .finally(() => this.setState({ loading: false }));
     }
 
@@ -89,17 +108,34 @@ export default class DownloadActionButton extends React.PureComponent<IProps, IS
         const classes = classNames({
             'mx_MessageActionBar_iconButton': true,
             'mx_MessageActionBar_downloadButton': true,
+            'mx_MessageActionBar_saveToNextCloudButton': true,
             'mx_MessageActionBar_downloadSpinnerButton': !!spinner,
         });
-
-        return <RovingAccessibleTooltipButton
-            className={classes}
-            title={spinner ? _t(this.state.tooltip) : '保存到云盘'}
-            onClick={this.onUploadNextCloudClick}
-            disabled={!!spinner}
-        >
-            <CloudUploadOutlined />
-            { spinner }
-        </RovingAccessibleTooltipButton>;
+        return <>
+            <RovingAccessibleTooltipButton
+                className={classes}
+                title={spinner ? _t(this.state.tooltip) : '保存到云盘'}
+                // onClick={this.onSaveToNextCloudClick}
+                onClick={this.onUploadNextCloudClick}
+                disabled={!!spinner}
+            >
+                <CloudUploadOutlined />
+                { spinner }
+            </RovingAccessibleTooltipButton>
+            <NextCloudShareModel
+                className='mx_MessageComposer_nextCloud_share_model'
+                showSave={true}
+                open={this.state.open}
+                maskClosable={false}
+                hasRowSelection={false}
+                onOk={this.handleOk}
+                onCancel={this.handleCancel}
+                title="保存到云盘"
+                fileObj={{
+                    fileName: this.state.fileName,
+                    file: this.state.file,
+                }}
+            />
+        </>;
     }
 }

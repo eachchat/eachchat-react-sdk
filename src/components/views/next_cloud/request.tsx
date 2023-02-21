@@ -58,7 +58,7 @@ export const formatFilesXmlObj = (username, xmlObj) => {
             const getcontentlength = props?.['d:getcontentlength']?.[0] || 0;
             const size = isFolder ? quotaUsedBytes : getcontentlength;
             const modified = props?.['d:getlastmodified']?.[0];
-            const currentPath = href?.replace(COMMON_PATH, '');
+            const currentPath = decodeURIComponent(href?.replace(COMMON_PATH, ''));
             return {
                 "id": currentPath,
                 "href": href,
@@ -132,6 +132,7 @@ export const requestNextCloud = () => {
             "Matrix-Id": MatrixID,
             "Authorization": NextCloudAuthorization,
             "withCredentials": false,
+            "OCS-APIRequest": true,
         },
     });
 };
@@ -208,7 +209,7 @@ export const downLoadNextCloudFile=(fileName, isFolder, params={}) => {
 };
 
 // 上传文件
-export const uploadNextCloudFile = (fileName, currentPath, file, source) => {
+export const uploadNextCloudFile = (fileName, currentPath, file, source?) => {
     const path = currentPath ? `${currentPath}${fileName}` : `${fileName}`;
     return requestNextCloud()({
         "method": 'PUT',
@@ -216,11 +217,15 @@ export const uploadNextCloudFile = (fileName, currentPath, file, source) => {
         "data": file,
         "cancelToken": source?.token,
     }).then((res: any) => {
-        console.log('uploadNextCloudFile res', res);
-        return res;
+        notification.success({
+            message: "成功",
+            description: `${fileName}保存到云盘成功`,
+        });
     }).catch(err => {
-        console.log('uploadNextCloudFile error', err);
-        errorNotification(err?.message);
+        notification.error({
+            message: "失败",
+            description: `${fileName}保存到云盘失败`,
+        });
     });
 };
 
@@ -350,5 +355,54 @@ export const uploadNextCloudRootFile = async (fileName, file) => {
             message: "失败",
             description: `${fileName}保存到云盘失败`,
         });
+    });
+};
+
+// 获取分享链接
+export const getShareLink = async (currentPath, fileName) => {
+    const path = `/${currentPath}${fileName}`;
+    return requestNextCloud()({
+        "method": 'GET',
+        "url": `ocs/v2.php/apps/files_sharing/api/v1/shares?format=json&path=${path}&reshares=true`,
+    }).then((res: any) => {
+        const shareLink = res?.data?.ocs?.data?.[0]?.url;
+        const isFolder = res?.data?.ocs?.data?.[0]?.item_type==='folder';
+        if (shareLink) {
+            return Promise.resolve({ shareLink, isFolder });
+        } else {
+            return Promise.reject(path);
+        }
+    });
+};
+// 创建分享链接
+export const createShareLink = async (currentPath, fileName) => {
+    const path = `/${currentPath}${fileName}`;
+    return requestNextCloud()({
+        "method": 'POST',
+        "url": `ocs/v2.php/apps/files_sharing/api/v1/shares?format=json`,
+        "data": {
+            "path": path,
+            "shareType": 3,
+            "attributes": "[]",
+        },
+    }).then((res: any) => {
+        const shareLink = res?.data?.ocs?.data?.url;
+        const isFolder = res?.data?.ocs?.data?.item_type==='folder';
+
+        if (shareLink) {
+            return Promise.resolve({ shareLink, isFolder });
+        }
+    });
+};
+
+// 搜索
+export const getSearchList = (val) => {
+    return requestNextCloud()({
+        "method": 'GET',
+        "url": `ocs/v2.php/search/providers/files/search`,
+        "params": {
+            term: val,
+            from: '/apps/files/?dir=/',
+        },
     });
 };

@@ -475,7 +475,9 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
             <TrashcanIcon />
         </RovingAccessibleTooltipButton>;
 
-        const threadTooltipButton = <ReplyInThreadButton mxEvent={this.props.mxEvent} key="reply_thread" />;
+        // const threadTooltipButton = <ReplyInThreadButton mxEvent={this.props.mxEvent} key="reply_thread" />;
+        const threadTooltipButton = null;
+
 
         // We show a different toolbar for failed events, so detect that first.
         const mxEvent = this.props.mxEvent;

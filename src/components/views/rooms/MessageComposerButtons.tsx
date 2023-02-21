@@ -18,7 +18,7 @@ limitations under the License.
 import classNames from 'classnames';
 import { IEventRelation } from "matrix-js-sdk/src/models/event";
 import { M_POLL_START } from "matrix-events-sdk";
-import React, { createContext, ReactElement, useContext, useRef } from 'react';
+import React, { createContext, ReactElement, useContext, useEffect, useRef, useState } from 'react';
 import { Room } from 'matrix-js-sdk/src/models/room';
 import { MatrixClient } from 'matrix-js-sdk/src/client';
 import { THREAD_RELATION_TYPE } from 'matrix-js-sdk/src/models/thread';
@@ -43,7 +43,7 @@ import IconizedContextMenu, { IconizedContextMenuOptionList } from '../context_m
 import CustomButton from './CustomMsgComposerButton';
 import { doMaybeLocalRoomAction } from '../../../utils/local-room';
 import { CustomEventType } from '../../../CustomConstant';
-
+import NextCloudShareModel from '../next_cloud/nextCloudShareModel';
 interface IProps {
     addEmoji: (emoji: string) => boolean;
     haveRecording: boolean;
@@ -57,6 +57,7 @@ interface IProps {
     showPollsButton: boolean;
     showStickersButton: boolean;
     toggleButtonMenu: () => void;
+    mxEvent?: any;
 }
 
 type OverflowMenuCloser = () => void;
@@ -65,7 +66,6 @@ export const OverflowMenuContext = createContext<OverflowMenuCloser | null>(null
 const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
     const matrixClient: MatrixClient = useContext(MatrixClientContext);
     const { room, roomId, narrow } = useContext(RoomContext);
-
     if (props.haveRecording) {
         return null;
     }
@@ -75,9 +75,10 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
     if (narrow) {
         mainButtons = [
             emojiButton(props),
+            uploadButton(), // props passed via UploadButtonContext
+            shareNextCloudButton({ ...props, room, roomId, matrixClient }), //nextCloud文件分享
         ];
         moreButtons = [
-            uploadButton(), // props passed via UploadButtonContext
             showStickersButton(props),
             voiceRecordingButton(props, narrow),
             props.showPollsButton && pollButton(room, props.relation),
@@ -87,6 +88,8 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
         mainButtons = [
             emojiButton(props),
             uploadButton(), // props passed via UploadButtonContext
+            shareNextCloudButton({ ...props, room, roomId, matrixClient }), //nextCloud文件分享
+
         ];
         moreButtons = [
             showStickersButton(props),
@@ -191,6 +194,10 @@ function uploadButton(): ReactElement {
     return <UploadButton key="controls_upload" />;
 }
 
+function shareNextCloudButton(props): ReactElement {
+    return <ShareNextCloudButton key="controls_nextCloud_share" {...props} />;
+}
+
 type UploadButtonFn = () => void;
 export const UploadButtonContext = createContext<UploadButtonFn | null>(null);
 
@@ -269,6 +276,44 @@ const UploadButton = () => {
         onClick={onClick}
         title={_t('Attachment')}
     />;
+};
+
+const ShareNextCloudButton = (props) => {
+    const [open, setOpen]=useState(false);
+    const overflowMenuCloser = useContext(OverflowMenuContext);
+    const title="云盘分享";
+
+    const handleOk = () => {
+        setOpen(false);
+    };
+    const handleCancel = () => {
+        setOpen(false);
+    };
+    const handleClick = () => {
+        setOpen(true);
+        overflowMenuCloser?.();
+    };
+    return <>
+        <CollapsibleButton
+            className="mx_MessageComposer_button"
+            iconClassName="mx_MessageComposer_nextCloud_share"
+            onClick={handleClick}
+            title={title}
+        />
+        <NextCloudShareModel
+            className='mx_MessageComposer_nextCloud_share_model'
+            showShare={true}
+            title="云盘分享"
+            open={open}
+            maskClosable={false}
+            hasRowSelection={true}
+            onOk={handleOk}
+            onCancel={handleCancel}
+            {...props}
+        />
+
+    </>
+    ;
 };
 
 function showStickersButton(props: IProps): ReactElement {

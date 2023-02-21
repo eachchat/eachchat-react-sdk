@@ -57,3 +57,65 @@
         /* background-color: rgba($accent,0.1); */
     }
 }
+
+.ant-modal-root{
+    .ant-input{
+        font-weight: normal;
+    }
+    .ant-input:hover{
+        border-color: $accent;
+    }
+    .ant-input:focus, .ant-input-focused{
+        border-color: $accent ;
+    }
+    .ant-radio-wrapper:hover .ant-radio, .ant-radio:hover .ant-radio-inner, .ant-radio-input:focus + .ant-radio-inner{
+        border-color: $accent;
+    }
+    .ant-radio-checked .ant-radio-inner{
+        border-color: $accent
+    }
+    .ant-radio-inner::after{
+        background-color: $accent;
+    }
+    .ant-btn:hover, .ant-btn:focus{
+        color: $accent;
+        border-color: $accent;
+    }
+    .ant-btn:active{
+        color: $accent;
+        border-color: $accent;
+    }
+    .ant-btn-primary{
+        border-color: $accent;
+        background: $accent;
+    }
+    .ant-btn-primary:hover, .ant-btn-primary:focus{
+        color: #fff;
+        border-color: rgba($accent,0.8);
+        background: rgba($accent,0.8);
+    }
+    .ant-btn-primary:active{
+        border-color: $accent;
+        background: $accent;
+    }
+    .ant-table-tbody > tr.ant-table-row-selected:hover > td,
+    .ant-table-tbody > tr.ant-table-row-selected > td{
+        background: rgba($accent,0.1);
+    }
+    .ant-spin-dot-item{
+        background-color: $accent;
+    }
+    .ant-select:not(.ant-select-disabled):hover .ant-select-selector{
+        border-color: $accent;
+    }
+    .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector{
+        border-color: $accent;
+        box-shadow: 0 0 0 2px rgba($accent, 0.2);
+    }
+}
+.ant-spin{
+    color: $accent !important;
+}
+.ant-spin-dot-item{
+    background-color: $accent !important;
+}

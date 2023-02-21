@@ -46,6 +46,7 @@ import SMPollBody from "./MPollBodySchema";
 import { SchemaType } from './schema/const';
 import { CustomEventTypeShowArr } from '../../../CustomConstant';
 import CustomSchema from './CustomSchema';
+import NextCloudShareLink from '../next_cloud/NextCloudShareLink';
 
 // onMessageAllowed is handled internally
 interface IProps extends Omit<IBodyProps, "onMessageAllowed" | "mediaEventHelper"> {
@@ -71,6 +72,7 @@ const baseBodyTypes = new Map<string, typeof React.Component>([
     [MsgType.File, MFileBody],
     [MsgType.Audio, MVoiceOrAudioBody],
     [MsgType.Video, MVideoBody],
+    ['m.next.cloud.share.link', NextCloudShareLink],
 ]);
 const baseEvTypes = new Map<string, React.ComponentType<Partial<IBodyProps>>>([
     // TODO:
