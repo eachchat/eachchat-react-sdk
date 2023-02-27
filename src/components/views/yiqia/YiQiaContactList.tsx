@@ -3,8 +3,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import React, { useEffect, useState } from 'react';
-import { Input, Tree } from 'antd';
+import { Button, Input, notification, Tree } from 'antd';
 import { ApartmentOutlined } from '@ant-design/icons';
+import { reject } from 'lodash';
 
 import Spinner from '../elements/Spinner';
 import { Action } from "../../../dispatcher/actions";
@@ -37,44 +38,118 @@ window.yiqiaContact = {
     expandedKeys: [],
 };
 
+const initTreeData: DataNode[] = [];
+
+const updateTreeData = (list: DataNode[], key: React.Key, children: DataNode[]): DataNode[] =>
+    list.map(node => {
+        if (node.key === key) {
+            return {
+                ...node,
+                children,
+            };
+        }
+        if (node.children) {
+            return {
+                ...node,
+                children: updateTreeData(node.children, key, children),
+            };
+        }
+        return node;
+    });
+
 const YiQiaContactList = () => {
-    const { yiqiaContact } = window;
-    const [expandedKeys, setExpandedKeys] = useState<React.Key[]>(yiqiaContact.expandedKeys);
-    const [searchValue, setSearchValue] = useState('');
-    const [autoExpandParent, setAutoExpandParent] = useState(true);
-    const [defaultData, setDefaultData]=useState(yiqiaContact.defaultData);
-    const [defaultDataList, setDefaultDataList]=useState(yiqiaContact.defaultDataList);
-    const [loading, setLoading]=useState(false);
+    // const { yiqiaContact } = window;
+    // const [expandedKeys, setExpandedKeys] = useState<React.Key[]>(yiqiaContact.expandedKeys);
+    // const [searchValue, setSearchValue] = useState('');
+    // const [autoExpandParent, setAutoExpandParent] = useState(true);
+    // const [defaultData, setDefaultData]=useState(yiqiaContact.defaultData);
+    // const [defaultDataList, setDefaultDataList]=useState(yiqiaContact.defaultDataList);
+    // const [loading, setLoading]=useState(false);
+    // const [parentId, setParentId]=useState('');
+
+    const [treeData, setTreeData] = useState(initTreeData);
+    const [error, setError] = useState(false);
+
 
     useEffect(() => {
-        !defaultData.length && handleGetDefaultData();
+        getInitTreeData();
     }, []);
+    useEffect(() => {
+        console.log('treeData', treeData);
+    }, [treeData]);
+    // useEffect(() => {
+    //     !defaultData.length && handleGetDefaultData();
+    // }, []);
 
-    const handleGetDefaultData = () => {
-        setLoading(true);
-        getContactList()
+    // useEffect(() => {
+    //     parentId && insertTreeData();
+    // }, [parentId]);
+
+    // const handleGetDefaultData = () => {
+    //     setLoading(true);
+    //     getContactList(parentId)
+    //         .then((res: any) => {
+    //             const { groups }=res;
+    //             const treeData = formatTreeData(groups);
+    //             const expandedKeys= getDefaultExpandedKeys(groups);
+    //             const list = [];
+    //             flatData(treeData, list);
+    //             setDefaultDataList(list);
+    //             setDefaultData(treeData);
+    //             setExpandedKeys(expandedKeys);
+    //             window.yiqiaContact = {
+    //                 defaultData: treeData,
+    //                 defaultDataList: list,
+    //                 expandedKeys: expandedKeys,
+    //             };
+    //         })
+    //         .catch(err => {
+    //             notification['error']({
+    //                 message: 'Error',
+    //                 description: err?.message,
+    //             });
+    //         }).finally(() => setLoading(false));
+    // };
+
+    const getInitTreeData = () => {
+        setError(false);
+        getContactList('')
             .then((res: any) => {
                 const { groups }=res;
                 const treeData = formatTreeData(groups);
-                const expandedKeys= getDefaultExpandedKeys(groups);
-                const list = [];
-                flatData(treeData, list);
-                setDefaultDataList(list);
-                setDefaultData(treeData);
-                setExpandedKeys(expandedKeys);
-                window.yiqiaContact = {
-                    defaultData: treeData,
-                    defaultDataList: list,
-                    expandedKeys: expandedKeys,
-                };
+                setTreeData(treeData);
             })
             .catch(err => {
-                console.log('err==', err);
-            }).finally(() => setLoading(false));
+                setError(true);
+            });
+    };
+
+    const onLoadData = (data: any) => {
+        const { pk, children=[] } = data;
+        return new Promise<void>((resolve, reject) => {
+            getContactList(pk)
+                .then((res: any) => {
+                    console.log('res',res)
+                    const { groups }=res;
+                    if (groups) {
+                        const treeData = formatTreeData(groups);
+                        setTreeData(origin =>
+                            updateTreeData(origin, pk, [...children, ...treeData]),
+                        );
+                    }
+                    resolve();
+                })
+                .catch(err => {
+                    notification['error']({
+                        message: 'Error',
+                        description: err?.message,
+                    });
+                    reject();
+                });
+        });
     };
 
     const handleClick = (data: any) => {
-        console.log('data==',data)
         dis.dispatch({
             action: Action.ActiveContactData,
             context: data,
@@ -83,8 +158,11 @@ const YiQiaContactList = () => {
 
     const getTitle = (item) => {
         const { group_name, name }=item;
-        const active = item.name === searchValue;
-        return <div className={`yiqia-list-item ${(active?'active':'')}`} onClick={() => !group_name && handleClick(item)}>
+        // const active = item.name === searchValue;
+        return <div
+        // className={`yiqia-list-item ${(active?'active':'')}`}
+            className={`yiqia-list-item `}
+            onClick={() => !group_name && handleClick(item)}>
             {
                 group_name ?
                     <>
@@ -108,7 +186,7 @@ const YiQiaContactList = () => {
         </div>;
     };
 
-    const formatTreeData = (data, groupName) => {
+    const formatTreeData = (data, groupName?) => {
         const treeData = data.map(item => {
             const _item = {
                 ...item,
@@ -118,7 +196,9 @@ const YiQiaContactList = () => {
                 employeeNumber: item?.employee_number,
                 matrixID: item?.matrix_id,
                 children: item?.users ? formatTreeData(item?.users, item?.group_name) : item?.users,
+                isLeaf: item?.username,
             };
+
             return {
                 ..._item,
                 title: getTitle(_item),
@@ -144,6 +224,8 @@ const YiQiaContactList = () => {
     const onExpand = (newExpandedKeys: React.Key[]) => {
         setExpandedKeys(newExpandedKeys);
         setAutoExpandParent(false);
+        setParentId(newExpandedKeys?.[0] as any);
+        console.log('newExpandedKeys', defaultData, newExpandedKeys);
     };
 
     const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,17 +248,29 @@ const YiQiaContactList = () => {
             className='yiQiaContactList'
         >
             { /* <Search className='yiqia-user-search ' placeholder="搜索" onChange={onChange} /> */ }
-            <Input className='yiqia-user-search ' style={{ width: "90%" }} placeholder="搜索" onChange={onChange} />
+            { /* <Input className='yiqia-user-search ' style={{ width: "90%" }} placeholder="搜索" onChange={onChange} /> */ }
             {
-                loading ?
-                    <Spinner />:
-                    <Tree
-                        onExpand={onExpand}
-                        expandedKeys={expandedKeys}
-                        autoExpandParent={autoExpandParent}
-                        treeData={defaultData}
-                    />
+                // loading ?
+                //     <Spinner />:
+                // <Tree
+                //     onExpand={onExpand}
+                //     treeData={defaultData}
+                //     // expandedKeys={expandedKeys}
+                //     // autoExpandParent={autoExpandParent}
+                // />
 
+
+                !error && <Tree
+                    loadData={onLoadData}
+                    treeData={treeData}
+                />
+
+            }
+            {
+                error &&
+                <Button className='contact-error' type="link" onClick={getInitTreeData}>
+                    点击重新加载
+                </Button>
             }
 
         </div>
