@@ -1,4 +1,5 @@
 /* eslint-disable max-len */
+import { notification } from "antd";
 import axios from "axios";
 const elementBaseURL = 'element';
 
@@ -15,11 +16,16 @@ export const requestElement =() => {
 };
 
 // 获取通讯录列表
-export const getContactList = ()=>{
+export const getContactList = (parentId?: any) => {
     return requestElement()({
         method: 'GET',
-        url: "api/v1/groups",
+        url: `api/v1/groups?parent=${parentId}`,
     })
-        .then((res: any) => res?.data)
-        .catch(err => err);
-}
+        .then((res: any) => res?.data);
+    // .catch(err => {
+    //     notification['error']({
+    //         message: 'Error',
+    //         description: err?.message,
+    //     });
+    // });
+};
