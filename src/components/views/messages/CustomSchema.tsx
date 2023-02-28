@@ -83,7 +83,7 @@ const CustomSchema = (props) => {
         }
     } catch (error) {
     }
-    const submitData = getSubmitObj(schema);
+    let submitData = getSubmitObj(schema);
 
     const submitForm = () => {
         const submitValues = {};
@@ -160,6 +160,10 @@ const CustomSchema = (props) => {
             try {
                 const { values }=data;
                 for (const key in submitData) {
+                    submitData={
+                        ...submitData,
+                        ...values,
+                    };
                     submitData[key]=values[key];
                 }
             } catch (error) {

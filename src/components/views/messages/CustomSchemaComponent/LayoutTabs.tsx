@@ -1,3 +1,4 @@
+/* eslint-disable no-unsafe-optional-chaining */
 import React from 'react';
 import { ISchemaFieldComponentProps } from '@formily/react-schema-renderer';
 import { Tabs } from 'antd';
@@ -8,7 +9,14 @@ const { TabPane } = Tabs;
 function LayoutTabs(p: ISchemaFieldComponentProps): JSX.Element {
     const tabs: (LabelValue | string)[] = (p.props?.['x-component-props']?.tabs || []);
     const position = p.props?.['x-component-props']?.position;
+    try {
+        p?.children?.forEach((item: any) => {
+            const { schema }=item?.props;
+            schema['x-component-props'].defaultValue = schema['x-component-props'].defaultValue || schema['x-component-props']?.value;
+        });
+    } catch (error) {
 
+    }
     return (
         <div className="layout-tabs">
             <Tabs defaultActiveKey={isString(tabs[0]) ? tabs[0] : tabs[0].value} tabPosition={position}>
