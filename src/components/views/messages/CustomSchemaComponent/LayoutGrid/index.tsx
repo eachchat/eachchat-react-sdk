@@ -6,6 +6,26 @@ import './index.pcss';
 
 function LayoutGrid(p: ISchemaFieldComponentProps): JSX.Element {
     const columns = p.props?.['x-component-props'].columns || 2;
+    try {
+        p.children.forEach((item: any) => {
+            const { schema } = item.props;
+            const { type } = schema;
+            if (type==='string') {
+                const node = schema['x-component-props'];
+                schema.default = node.value;
+            } else {
+                const node = schema?.properties;
+                for (const key in node) {
+                    const temp = node[key]['x-component-props'];
+                    temp.defaultValue = temp?.value;
+                    node[key].default = temp?.value;
+                }
+            }
+        });
+    } catch (error) {
+        console.log(error);
+    }
+
     return (
         <div
             className="grid grid-layout gap-4"
