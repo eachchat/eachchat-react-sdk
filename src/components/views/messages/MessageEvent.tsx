@@ -14,12 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { createRef } from 'react';
+import React, { createRef } from "react";
 import { EventType, MsgType } from "matrix-js-sdk/src/@types/event";
-import { Relations } from 'matrix-js-sdk/src/models/relations';
-import { M_BEACON_INFO } from 'matrix-js-sdk/src/@types/beacon';
-import { M_LOCATION } from 'matrix-js-sdk/src/@types/location';
-import { M_POLL_START } from "matrix-events-sdk";
+import { M_BEACON_INFO } from "matrix-js-sdk/src/@types/beacon";
+import { M_LOCATION } from "matrix-js-sdk/src/@types/location";
+import { M_POLL_END, M_POLL_START } from "matrix-js-sdk/src/@types/polls";
 import { MatrixEventEvent } from "matrix-js-sdk/src/models/event";
 
 import SettingsStore from "../../../settings/SettingsStore";
@@ -30,7 +29,7 @@ import { IMediaBody } from "./IMediaBody";
 import { MediaEventHelper } from "../../../utils/MediaEventHelper";
 import { ReactAnyComponent } from "../../../@types/common";
 import { IBodyProps } from "./IBodyProps";
-import MatrixClientContext from '../../../contexts/MatrixClientContext';
+import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import TextualBody from "./TextualBody";
 import MImageBody from "./MImageBody";
 import MFileBody from "./MFileBody";
@@ -38,15 +37,16 @@ import MVoiceOrAudioBody from "./MVoiceOrAudioBody";
 import MVideoBody from "./MVideoBody";
 import MStickerBody from "./MStickerBody";
 import MPollBody from "./MPollBody";
+import { MPollEndBody } from "./MPollEndBody";
 import MLocationBody from "./MLocationBody";
 import MjolnirBody from "./MjolnirBody";
 import MBeaconBody from "./MBeaconBody";
-import { IEventTileOps } from "../rooms/EventTile";
-import SMPollBody from "./MPollBodySchema";
-import { SchemaType } from './schema/const';
-import { CustomEventTypeShowArr } from '../../../CustomConstant';
-import CustomSchema from './CustomSchema';
-import NextCloudShareLink from '../next_cloud/NextCloudShareLink';
+import { DecryptionFailureBody } from "./DecryptionFailureBody";
+import { GetRelationsForEvent, IEventTileOps } from "../rooms/EventTile";
+import { VoiceBroadcastBody, VoiceBroadcastInfoEventType, VoiceBroadcastInfoState } from "../../../voice-broadcast";
+import NextCloudShareLink from "../qingCloud/next_cloud/NextCloudShareLink";
+import CustomSchema from "../qingCloud/custom_schema";
+import { CustomEventTypeShowArr } from "../qingCloud/custom_schema/CustomConstant";
 
 // onMessageAllowed is handled internally
 interface IProps extends Omit<IBodyProps, "onMessageAllowed" | "mediaEventHelper"> {
@@ -55,7 +55,7 @@ interface IProps extends Omit<IBodyProps, "onMessageAllowed" | "mediaEventHelper
     overrideEventTypes?: Record<string, typeof React.Component>;
 
     // helper function to access relations for this event
-    getRelationsForEvent?: (eventId: string, relationType: string, eventType: string) => Relations;
+    getRelationsForEvent?: GetRelationsForEvent;
 
     isSeeingThroughMessageHiddenForModeration?: boolean;
 }
@@ -75,11 +75,11 @@ const baseBodyTypes = new Map<string, typeof React.Component>([
     ['m.next.cloud.share.link', NextCloudShareLink],
 ]);
 const baseEvTypes = new Map<string, React.ComponentType<Partial<IBodyProps>>>([
-    // TODO:
     [EventType.Sticker, MStickerBody],
     [M_POLL_START.name, MPollBody],
-    [SchemaType.Approval, SMPollBody],
     [M_POLL_START.altName, MPollBody],
+    [M_POLL_END.name, MPollEndBody],
+    [M_POLL_END.altName, MPollEndBody],
     [M_BEACON_INFO.name, MBeaconBody],
     [M_BEACON_INFO.altName, MBeaconBody],
 ]);
@@ -95,6 +95,7 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
 
     public constructor(props: IProps, context: React.ContextType<typeof MatrixClientContext>) {
         super(props, context);
+
         if (MediaEventHelper.isEligible(this.props.mxEvent)) {
             this.mediaHelper = new MediaEventHelper(this.props.mxEvent);
         }
@@ -106,12 +107,12 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
         this.props.mxEvent.addListener(MatrixEventEvent.Decrypted, this.onDecrypted);
     }
 
-    public componentWillUnmount() {
+    public componentWillUnmount(): void {
         this.props.mxEvent.removeListener(MatrixEventEvent.Decrypted, this.onDecrypted);
         this.mediaHelper?.destroy();
     }
 
-    public componentDidUpdate(prevProps: Readonly<IProps>) {
+    public componentDidUpdate(prevProps: Readonly<IProps>): void {
         if (this.props.mxEvent !== prevProps.mxEvent && MediaEventHelper.isEligible(this.props.mxEvent)) {
             this.mediaHelper?.destroy();
             this.mediaHelper = new MediaEventHelper(this.props.mxEvent);
@@ -120,7 +121,7 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
         this.updateComponentMaps();
     }
 
-    private updateComponentMaps() {
+    private updateComponentMaps(): void {
         this.bodyTypes = new Map<string, typeof React.Component>(baseBodyTypes.entries());
         for (const [bodyType, bodyComponent] of Object.entries(this.props.overrideBodyTypes ?? {})) {
             this.bodyTypes.set(bodyType, bodyComponent);
@@ -132,11 +133,11 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
         }
     }
 
-    public getEventTileOps = () => {
+    public getEventTileOps = (): IEventTileOps | null => {
         return (this.body.current as IOperableEventTile)?.getEventTileOps?.() || null;
     };
 
-    public getMediaHelper() {
+    public getMediaHelper(): MediaEventHelper {
         return this.mediaHelper;
     }
 
@@ -148,33 +149,21 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
         }
     };
 
-    private onTileUpdate = () => {
+    private onTileUpdate = (): void => {
         this.forceUpdate();
     };
-    // TODO:
-    public render() {
-        // this.props.mxEvent.event.type = SchemaType.SchemaTest;
-        // this.props.mxEvent.event.content[SchemaType.SchemaTest]= this.props.mxEvent.event.content['org.matrix.msc3381.poll.start'];
+
+    public render(): React.ReactNode {
         const content = this.props.mxEvent.getContent();
-        // debugger
         const type = this.props.mxEvent.getType();
         const msgtype = content.msgtype;
-        // console.log('mxEvent 123',this.props.mxEvent)
-        // const type = SchemaType.SchemaText;
-        // console.log('content,type,msgtype',content,type,msgtype)
-        // console.log('mxEvent',this.props.mxEvent)
-        // this.props.mxEvent.event.type = SchemaType.SchemaText
         let BodyType: React.ComponentType<Partial<IBodyProps>> | ReactAnyComponent = RedactedBody;
-        // SMPollBody
         if (!this.props.mxEvent.isRedacted()) {
             // only resolve BodyType if event is not redacted
-            if (type && this.evTypes.has(type)) {
-                // TODO:
-                if (type===M_POLL_START.name && content?.schema_type===SchemaType.Approval) {
-                    BodyType = this.evTypes.get(SchemaType.Approval);
-                } else {
-                    BodyType = this.evTypes.get(type);
-                }
+            if (this.props.mxEvent.isDecryptionFailure()) {
+                BodyType = DecryptionFailureBody;
+            } else if (type && this.evTypes.has(type)) {
+                BodyType = this.evTypes.get(type);
             } else if (msgtype && this.bodyTypes.has(msgtype)) {
                 BodyType = this.bodyTypes.get(msgtype);
             } else if (content.url) {
@@ -186,11 +175,12 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
             }
 
             // TODO: move to eventTypes when location sharing spec stabilises
-            if (
-                M_LOCATION.matches(type) ||
-                (type === EventType.RoomMessage && msgtype === MsgType.Location)
-            ) {
+            if (M_LOCATION.matches(type) || (type === EventType.RoomMessage && msgtype === MsgType.Location)) {
                 BodyType = MLocationBody;
+            }
+
+            if (type === VoiceBroadcastInfoEventType && content?.state === VoiceBroadcastInfoState.Started) {
+                BodyType = VoiceBroadcastBody;
             }
         }
 
@@ -199,7 +189,7 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
             const allowRender = localStorage.getItem(key) === "true";
 
             if (!allowRender) {
-                const userDomain = this.props.mxEvent.getSender().split(':').slice(1).join(':');
+                const userDomain = this.props.mxEvent.getSender().split(":").slice(1).join(":");
                 const userBanned = Mjolnir.sharedInstance().isUserBanned(this.props.mxEvent.getSender());
                 const serverBanned = Mjolnir.sharedInstance().isServerBanned(userDomain);
 
@@ -209,28 +199,33 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
             }
         }
 
-        // 自定义类型
+         // 自定义类型
         if (type && CustomEventTypeShowArr.includes(type)) {
             BodyType = CustomSchema;
+            // BodyType = TextualBody;
+
+
         }
 
         // @ts-ignore - this is a dynamic react component
-        return BodyType ? <BodyType
-            ref={this.body}
-            mxEvent={this.props.mxEvent}
-            highlights={this.props.highlights}
-            highlightLink={this.props.highlightLink}
-            showUrlPreview={this.props.showUrlPreview}
-            forExport={this.props.forExport}
-            maxImageHeight={this.props.maxImageHeight}
-            replacingEventId={this.props.replacingEventId}
-            editState={this.props.editState}
-            onHeightChanged={this.props.onHeightChanged}
-            onMessageAllowed={this.onTileUpdate}
-            permalinkCreator={this.props.permalinkCreator}
-            mediaEventHelper={this.mediaHelper}
-            getRelationsForEvent={this.props.getRelationsForEvent}
-            isSeeingThroughMessageHiddenForModeration={this.props.isSeeingThroughMessageHiddenForModeration}
-        /> : null;
+        return BodyType ? (
+            <BodyType
+                ref={this.body}
+                mxEvent={this.props.mxEvent}
+                highlights={this.props.highlights}
+                highlightLink={this.props.highlightLink}
+                showUrlPreview={this.props.showUrlPreview}
+                forExport={this.props.forExport}
+                maxImageHeight={this.props.maxImageHeight}
+                replacingEventId={this.props.replacingEventId}
+                editState={this.props.editState}
+                onHeightChanged={this.props.onHeightChanged}
+                onMessageAllowed={this.onTileUpdate}
+                permalinkCreator={this.props.permalinkCreator}
+                mediaEventHelper={this.mediaHelper}
+                getRelationsForEvent={this.props.getRelationsForEvent}
+                isSeeingThroughMessageHiddenForModeration={this.props.isSeeingThroughMessageHiddenForModeration}
+            />
+        ) : null;
     }
 }

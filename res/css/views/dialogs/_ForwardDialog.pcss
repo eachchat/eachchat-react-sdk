@@ -95,7 +95,6 @@ limitations under the License.
                 height: 32px;
                 padding: 6px;
                 border-radius: 8px;
-                box-sizing: content-box;
 
                 &:hover {
                     background-color: $spacePanel-bg-color;
@@ -138,7 +137,8 @@ limitations under the License.
                         visibility: hidden;
                     }
 
-                    .mx_ForwardList_sendIcon, .mx_NotificationBadge {
+                    .mx_ForwardList_sendIcon,
+                    .mx_NotificationBadge {
                         position: absolute;
                     }
 
@@ -149,7 +149,7 @@ limitations under the License.
 
                     &.mx_ForwardList_sending .mx_ForwardList_sendIcon {
                         background-color: $accent;
-                        mask-image: url('$(res)/img/element-icons/circle-sending.svg');
+                        mask-image: url("$(res)/img/element-icons/circle-sending.svg");
                         mask-position: center;
                         mask-repeat: no-repeat;
                         mask-size: 14px;
@@ -159,7 +159,7 @@ limitations under the License.
 
                     &.mx_ForwardList_sent .mx_ForwardList_sendIcon {
                         background-color: $accent;
-                        mask-image: url('$(res)/img/element-icons/circle-sent.svg');
+                        mask-image: url("$(res)/img/element-icons/circle-sent.svg");
                         mask-position: center;
                         mask-repeat: no-repeat;
                         mask-size: 14px;

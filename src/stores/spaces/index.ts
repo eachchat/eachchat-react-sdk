@@ -34,7 +34,6 @@ export enum MetaSpace {
     People = "people-space",
     Orphans = "orphans-space",
     Contact = "yiqia-contact",
-    NextCloud = "next-cloud",
 }
 
 export const getMetaSpaceName = (spaceKey: MetaSpace, allRoomsInHome = false): string => {
@@ -49,8 +48,6 @@ export const getMetaSpaceName = (spaceKey: MetaSpace, allRoomsInHome = false): s
             return _t("Other rooms");
         case MetaSpace.Contact:
             return "通讯录";
-        case MetaSpace.NextCloud:
-            return "云盘";
     }
 };
 
@@ -60,11 +57,12 @@ export interface ISuggestedRoom extends IHierarchyRoom {
     viaServers: string[];
 }
 
-export function isMetaSpace(spaceKey: SpaceKey): boolean {
-    return spaceKey === MetaSpace.Home ||
+export function isMetaSpace(spaceKey?: SpaceKey): boolean {
+    return (
+        spaceKey === MetaSpace.Home ||
         spaceKey === MetaSpace.Favourites ||
         spaceKey === MetaSpace.People ||
-        spaceKey === MetaSpace.Orphans ||
-        spaceKey === MetaSpace.Contact ||
-        spaceKey === MetaSpace.NextCloud;
+        spaceKey === MetaSpace.Orphans || 
+        spaceKey === MetaSpace.Contact 
+    );
 }

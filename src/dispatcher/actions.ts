@@ -41,6 +41,11 @@ export enum Action {
     ViewUserSettings = "view_user_settings",
 
     /**
+     * Open the user device settings. No additional payload information required.
+     */
+    ViewUserDeviceSettings = "view_user_device_settings",
+
+    /**
      * Opens the room directory. No additional payload information required.
      */
     ViewRoomDirectory = "view_room_directory",
@@ -69,6 +74,11 @@ export enum Action {
      * Focuses the user's cursor to the send message composer. Should be used with a FocusComposerPayload.
      */
     FocusSendMessageComposer = "focus_send_message_composer",
+
+    /**
+     * Clear the  to the send message composer. Should be used with a FocusComposerPayload.
+     */
+    ClearAndFocusSendMessageComposer = "clear_focus_send_message_composer",
 
     /**
      * Focuses the user's cursor to the edit message composer. Should be used with a FocusComposerPayload.
@@ -105,6 +115,11 @@ export enum Action {
      * Changes room based on payload parameters. Should be used with JoinRoomPayload.
      */
     ViewRoom = "view_room",
+
+    /**
+     * Changes thread based on payload parameters. Should be used with ThreadPayload.
+     */
+    ViewThread = "view_thread",
 
     /**
      * Changes room based on room list order and payload parameters. Should be used with ViewRoomDeltaPayload.
@@ -332,38 +347,8 @@ export enum Action {
      */
     ShowThread = "show_thread",
 
-     /**
-     * Show the Contact
-     */
-      ViewYiqiaContact = "view_yiqia_contact",
+    ViewYiqiaContact = "view_yiqia_contact",
 
-      /**
-       * Show the Recents
-       */
-       ViewYiqiaRecent = "view_yiqia_recents",
+    ActiveContactData = "view_yiqia_active_contact_data",
 
-      /**
-       * Show the member of organization
-       */
-       ViewYiqiaOrgMembers = "view_yiqia_org_members",
-
-      /**
-       * Show the member of teams
-       */
-       ViewYiqiaTeamMembers = "view_yiqia_team_members",
-
-      /**
-       * Organization Item clicked
-       */
-       YiqiaOrganizationItemClicked = "yiqia_organization_item_clicked",
-
-      /**
-       * Show the Contact
-       */
-        ActiveContactData = "view_yiqia_active_contact_data",
-
-     /**
-     * Show the NextCloud
-     */
-     ViewNextCloud = "view_next_cloud",
 }

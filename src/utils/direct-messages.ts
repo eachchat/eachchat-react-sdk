@@ -28,12 +28,19 @@ import { findDMRoom } from "./dm/findDMRoom";
 import { privateShouldBeEncrypted } from "./rooms";
 import { createDmLocalRoom } from "./dm/createDmLocalRoom";
 import { startDm } from "./dm/startDm";
+import { resolveThreePids } from "./threepids";
 
-export async function startDmOnFirstMessage(
-    client: MatrixClient,
-    targets: Member[],
-): Promise<Room> {
-    const existingRoom = findDMRoom(client, targets);
+export async function startDmOnFirstMessage(client: MatrixClient, targets: Member[]): Promise<Room> {
+    let resolvedTargets = targets;
+
+    try {
+        resolvedTargets = await resolveThreePids(targets, client);
+    } catch (e) {
+        logger.warn("Error resolving 3rd-party members", e);
+    }
+
+    const existingRoom = findDMRoom(client, resolvedTargets);
+
     if (existingRoom) {
         dis.dispatch<ViewRoomPayload>({
             action: Action.ViewRoom,
@@ -45,12 +52,12 @@ export async function startDmOnFirstMessage(
         return existingRoom;
     }
 
-    const room = await createDmLocalRoom(client, targets);
+    const room = await createDmLocalRoom(client, resolvedTargets);
     dis.dispatch({
         action: Action.ViewRoom,
         room_id: room.roomId,
         joining: false,
-        targets,
+        targets: resolvedTargets,
     });
     return room;
 }
@@ -105,7 +112,7 @@ export abstract class Member {
      * Gets the MXC URL of this Member's avatar. For users this should be their profile's
      * avatar MXC URL or null if none set. For 3PIDs this should always be null.
      */
-    public abstract getMxcAvatarUrl(): string;
+    public abstract getMxcAvatarUrl(): string | null;
 }
 
 export class DirectoryMember extends Member {
@@ -114,7 +121,7 @@ export class DirectoryMember extends Member {
     private readonly avatarUrl?: string;
 
     // eslint-disable-next-line camelcase
-    constructor(userDirResult: { user_id: string, display_name?: string, avatar_url?: string }) {
+    public constructor(userDirResult: { user_id: string; display_name?: string; avatar_url?: string }) {
         super();
         this._userId = userDirResult.user_id;
         this.displayName = userDirResult.display_name;
@@ -122,23 +129,23 @@ export class DirectoryMember extends Member {
     }
 
     // These next class members are for the Member interface
-    get name(): string {
+    public get name(): string {
         return this.displayName || this._userId;
     }
 
-    get userId(): string {
+    public get userId(): string {
         return this._userId;
     }
 
-    getMxcAvatarUrl(): string {
-        return this.avatarUrl;
+    public getMxcAvatarUrl(): string | null {
+        return this.avatarUrl ?? null;
     }
 }
 
 export class ThreepidMember extends Member {
     private readonly id: string;
 
-    constructor(id: string) {
+    public constructor(id: string) {
         super();
         this.id = id;
     }
@@ -146,27 +153,27 @@ export class ThreepidMember extends Member {
     // This is a getter that would be falsy on all other implementations. Until we have
     // better type support in the react-sdk we can use this trick to determine the kind
     // of 3PID we're dealing with, if any.
-    get isEmail(): boolean {
-        return this.id.includes('@');
+    public get isEmail(): boolean {
+        return this.id.includes("@");
     }
 
     // These next class members are for the Member interface
-    get name(): string {
+    public get name(): string {
         return this.id;
     }
 
-    get userId(): string {
+    public get userId(): string {
         return this.id;
     }
 
-    getMxcAvatarUrl(): string {
+    public getMxcAvatarUrl(): string | null {
         return null;
     }
 }
 
 export interface IDMUserTileProps {
     member: Member;
-    onRemove(member: Member): void;
+    onRemove?(member: Member): void;
 }
 
 /**
@@ -181,9 +188,9 @@ export async function determineCreateRoomEncryptionOption(client: MatrixClient, 
     if (privateShouldBeEncrypted()) {
         // Check whether all users have uploaded device keys before.
         // If so, enable encryption in the new room.
-        const has3PidMembers = targets.some(t => t instanceof ThreepidMember);
+        const has3PidMembers = targets.some((t) => t instanceof ThreepidMember);
         if (!has3PidMembers) {
-            const targetIds = targets.map(t => t.userId);
+            const targetIds = targets.map((t) => t.userId);
             const allHaveDeviceKeys = await canEncryptToAllUsers(client, targetIds);
             if (allHaveDeviceKeys) {
                 return true;
