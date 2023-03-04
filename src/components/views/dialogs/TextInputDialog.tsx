@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { ChangeEvent, createRef } from 'react';
+import React, { ChangeEvent, createRef } from "react";
 
 import Field from "../elements/Field";
-import { _t, _td } from '../../../languageHandler';
+import { _t, _td } from "../../../languageHandler";
 import { IFieldState, IValidationResult } from "../elements/Validation";
 import BaseDialog from "./BaseDialog";
 import DialogButtons from "../elements/DialogButtons";
@@ -49,12 +49,12 @@ export default class TextInputDialog extends React.Component<IProps, IState> {
         title: "",
         value: "",
         description: "",
-        busyMessage: _td("Loading..."),
+        busyMessage: _td("Loading…"),
         focus: true,
         hasCancel: true,
     };
 
-    constructor(props: IProps) {
+    public constructor(props: IProps) {
         super(props);
 
         this.state = {
@@ -106,7 +106,7 @@ export default class TextInputDialog extends React.Component<IProps, IState> {
         return result;
     };
 
-    public render(): JSX.Element {
+    public render(): React.ReactNode {
         return (
             <BaseDialog
                 className="mx_TextInputDialog"
@@ -117,7 +117,7 @@ export default class TextInputDialog extends React.Component<IProps, IState> {
                 <form onSubmit={this.onOk}>
                     <div className="mx_Dialog_content">
                         <div className="mx_TextInputDialog_label">
-                            <label htmlFor="textinput"> { this.props.description } </label>
+                            <label htmlFor="textinput"> {this.props.description} </label>
                         </div>
                         <div>
                             <Field

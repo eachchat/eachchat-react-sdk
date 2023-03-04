@@ -29,7 +29,7 @@ import DMRoomMap from "../../../../src/utils/DMRoomMap";
 import { MatrixClientPeg } from "../../../../src/MatrixClientPeg";
 import { DirectoryMember } from "../../../../src/utils/direct-messages";
 
-const renderNewRoomIntro = (client: MatrixClient, room: Room|LocalRoom) => {
+const renderNewRoomIntro = (client: MatrixClient, room: Room | LocalRoom) => {
     render(
         <MatrixClientContext.Provider value={client}>
             <RoomContext.Provider value={{ room, roomId: room.roomId } as unknown as IRoomState}>
@@ -53,7 +53,7 @@ describe("NewRoomIntro", () => {
     describe("for a DM Room", () => {
         beforeEach(() => {
             jest.spyOn(DMRoomMap.shared(), "getUserIdForRoomId").mockReturnValue(userId);
-            const room = new Room(roomId, client, client.getUserId());
+            const room = new Room(roomId, client, client.getUserId()!);
             room.name = "test_room";
             renderNewRoomIntro(client, room);
         });
@@ -67,7 +67,7 @@ describe("NewRoomIntro", () => {
     describe("for a DM LocalRoom", () => {
         beforeEach(() => {
             jest.spyOn(DMRoomMap.shared(), "getUserIdForRoomId").mockReturnValue(userId);
-            const localRoom = new LocalRoom(roomId, client, client.getUserId());
+            const localRoom = new LocalRoom(roomId, client, client.getUserId()!);
             localRoom.name = "test_room";
             localRoom.targets.push(new DirectoryMember({ user_id: userId }));
             renderNewRoomIntro(client, localRoom);

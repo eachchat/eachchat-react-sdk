@@ -20,9 +20,7 @@ enum PageType {
     HomePage = "home_page",
     RoomView = "room_view",
     UserView = "user_view",
-    LegacyGroupView = "legacy_group_view",
     YiqiaContactUserPage = "yiqia_contact_user_page",
-    NextCloudPage = "next_cloud_page",
 }
 
 export default PageType;
