@@ -496,7 +496,7 @@ export const SETTINGS: { [setting: string]: ISetting } = {
     "MessageComposerInput.showStickersButton": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td("Show stickers button"),
-        default: true,
+        default: SdkConfig.get().integrations_ui_url,
         controller: new UIFeatureController(UIFeature.Widgets, false),
     },
     "MessageComposerInput.showPollsButton": {
