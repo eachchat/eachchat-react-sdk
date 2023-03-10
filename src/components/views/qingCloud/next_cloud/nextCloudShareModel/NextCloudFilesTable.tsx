@@ -15,14 +15,14 @@ const NextCloudFilesTable = (props) => {
         type: "radio",
         onChange: (selectedRowKeys: React.Key[], selectedRows) => {
             setSelectedRowKeys(selectedRowKeys);
-            onChange(selectedRowKeys);
+            onChange(selectedRows?.[0]);
         },
     };
 
     const handleFlieNameClick = (row) => {
         onFileNameClick && onFileNameClick(row);
     };
-
+  
     const columns: any = [
         {
             title: '名称',
@@ -51,9 +51,8 @@ const NextCloudFilesTable = (props) => {
             key: 'modified',
             width: 200,
         },
+        
     ];
-
-   
 
     return <div className='NextCloudFilesTable-wrap' ref={nextCloudTableRef}>
         <Table

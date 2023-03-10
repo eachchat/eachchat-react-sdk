@@ -3,15 +3,20 @@
     padding: 20px 0;
     color:  $primary-content !important;
    .button-group{
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
+        display: flex;
+        align-items: center;
+        justify-content: space-evenly;
+        flex-wrap: wrap;
+        border-top: 1px dashed $appearance-tab-border-color;
+        margin-top: 20px;
+        padding: 20px;
    }
    input{
         height: 32px;
         margin: 0 !important;
         padding: 0 11px;
         color:  $primary-content !important;
+        font-weight: normal;
    }
    .grid {
         display: grid;
@@ -20,6 +25,22 @@
         gap: 0px 10px;
     }
     .ant-form-item{
-        margin-bottom: 8px;
+        margin-bottom: 20px;
+    }
+    .ant-form-item-explain{
+        font-size: 12px;
+    }
+    .qxb-card{
+        &.qxb-card-bordered{
+            border: 1px solid $appearance-tab-border-color;
+        }
+        .qxb-card-head{
+            font-size: 16px;
+            padding: 6px 20px;
+            border-bottom: 1px solid $appearance-tab-border-color;
+        }
+    }
+    .custom-schema-component{
+        width: 100%;
     }
 }

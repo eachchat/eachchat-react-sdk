@@ -62,6 +62,7 @@ import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
 import ExtraTile from "./ExtraTile";
 import RoomSublist, { IAuxButtonProps } from "./RoomSublist";
 import { SdkContextClass } from "../../../contexts/SDKContext";
+import classNames from "classnames";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -79,12 +80,14 @@ interface IState {
     currentRoomId?: string;
     suggestedRooms: ISuggestedRoom[];
     feature_favourite_messages: boolean;
+    unifiedRoomList: boolean;
 }
 
 export const TAG_ORDER: TagID[] = [
     DefaultTagID.Invite,
     DefaultTagID.SavedItems,
     DefaultTagID.Favourite,
+    DefaultTagID.Unified,
     DefaultTagID.DM,
     DefaultTagID.Untagged,
     DefaultTagID.LowPriority,
@@ -93,6 +96,7 @@ export const TAG_ORDER: TagID[] = [
     DefaultTagID.Archived,
 ];
 const ALWAYS_VISIBLE_TAGS: TagID[] = [DefaultTagID.DM, DefaultTagID.Untagged];
+const ALWAYS_VISIBLE_UNIFIED_TAGS: TagID[] = [DefaultTagID.Unified];
 
 interface ITagAesthetics {
     sectionLabel: string;
@@ -206,7 +210,7 @@ const DmAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, dispatcher = default
     return null;
 };
 
-const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex }) => {
+const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, className }) => {
     const [menuDisplayed, handle, openMenu, closeMenu] = useContextMenu<HTMLDivElement>();
     const activeSpace = useEventEmitterState<Room>(SpaceStore.instance, UPDATE_SELECTED_SPACE, () => {
         return SpaceStore.instance.activeSpaceRoom;
@@ -366,15 +370,25 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex }) => {
             <ContextMenuTooltipButton
                 tabIndex={tabIndex}
                 onClick={openMenu}
-                className="mx_RoomSublist_auxButton"
+                className={classNames('mx_RoomSublist_auxButton', className)}
                 tooltipClassName="mx_RoomSublist_addRoomTooltip"
                 aria-label={_t("Add room")}
                 title={_t("Add room")}
                 isExpanded={menuDisplayed}
                 inputRef={handle}
             />
-
             {contextMenu}
+        </>
+    );
+};
+
+const UnifiedAuxButton: React.FC<IAuxButtonProps> = (iAuxButtonProps: IAuxButtonProps) => {
+    return (
+        <>
+            {/* eslint-disable-next-line new-cap */}
+            {DmAuxButton(iAuxButtonProps)}
+            {/* eslint-disable-next-line new-cap */}
+            {UntaggedAuxButton({...iAuxButtonProps, className: "mx_RoomSublist_auxGroupButton"})}
         </>
     );
 };
@@ -394,6 +408,12 @@ const TAG_AESTHETICS: TagAestheticsMap = {
         sectionLabel: _td("Saved Items"),
         isInvite: false,
         defaultHidden: false,
+    },
+    [DefaultTagID.Unified]: {
+        sectionLabel: _td("Normal priority"),
+        isInvite: false,
+        defaultHidden: false,
+        AuxButtonComponent: UnifiedAuxButton,
     },
     [DefaultTagID.DM]: {
         sectionLabel: _td("People"),
@@ -434,6 +454,7 @@ const TAG_AESTHETICS: TagAestheticsMap = {
 
 export default class RoomList extends React.PureComponent<IProps, IState> {
     private dispatcherRef?: string;
+    private readonly unifiedRoomListWatcherRef: string;
     private treeRef = createRef<HTMLDivElement>();
     private favouriteMessageWatcher: string;
 
@@ -447,7 +468,14 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             sublists: {},
             suggestedRooms: SpaceStore.instance.suggestedRooms,
             feature_favourite_messages: SettingsStore.getValue("feature_favourite_messages"),
+            unifiedRoomList: SettingsStore.getValue("unifiedRoomList"),
         };
+
+        this.unifiedRoomListWatcherRef = SettingsStore.watchSetting(
+            "unifiedRoomList",
+            null,
+            this.onUnifiedRoomListChange,
+        );
     }
 
     public componentDidMount(): void {
@@ -472,6 +500,12 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         defaultDispatcher.unregister(this.dispatcherRef);
         SdkContextClass.instance.roomViewStore.off(UPDATE_EVENT, this.onRoomViewStoreUpdate);
     }
+
+    private onUnifiedRoomListChange = (): void => {
+        this.setState({
+            unifiedRoomList: SettingsStore.getValue("unifiedRoomList"),
+        });
+    };
 
     private onRoomViewStoreUpdate = (): void => {
         this.setState({
@@ -639,7 +673,10 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             const aesthetics = TAG_AESTHETICS[orderedTagId];
             if (!aesthetics) throw new Error(`Tag ${orderedTagId} does not have aesthetics`);
 
-            let alwaysVisible = ALWAYS_VISIBLE_TAGS.includes(orderedTagId);
+            let alwaysVisible = (
+                this.state.unifiedRoomList ? ALWAYS_VISIBLE_UNIFIED_TAGS : ALWAYS_VISIBLE_TAGS
+            ).includes(orderedTagId);
+
             if (
                 (this.props.activeSpace === MetaSpace.Favourites && orderedTagId !== DefaultTagID.Favourite) ||
                 (this.props.activeSpace === MetaSpace.People && orderedTagId !== DefaultTagID.DM) ||

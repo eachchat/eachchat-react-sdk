@@ -114,6 +114,7 @@ import { RoomSearchView } from "./RoomSearchView";
 import eventSearch from "../../Searching";
 import VoipUserMapper from "../../VoipUserMapper";
 import { isCallEvent } from "./LegacyCallEventGrouper";
+import SdkConfig from "../../SdkConfig";
 
 const DEBUG = false;
 let debuglog = function (msg: string): void {};
@@ -308,7 +309,7 @@ function LocalRoomView(props: LocalRoomViewProps): ReactElement {
                     <FileDropTarget parent={props.roomView.current} onFileDrop={props.onFileDrop} />
                     <div className="mx_RoomView_timeline">
                         <ScrollPanel className="mx_RoomView_messagePanel" resizeNotifier={props.resizeNotifier}>
-                            {encryptionTile}
+                            {!SdkConfig.get("setting_defaults").dis_encryption  && encryptionTile}
                             <NewRoomIntro />
                         </ScrollPanel>
                     </div>

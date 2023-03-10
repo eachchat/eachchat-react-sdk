@@ -55,6 +55,7 @@ import {
     VoiceBroadcastChunkEventType,
 } from "../voice-broadcast";
 import { CustomEventType } from "../components/views/qingCloud/custom_schema/CustomConstant";
+import SdkConfig from "../SdkConfig";
 
 // Subset of EventTile's IProps plus some mixins
 export interface EventTileTypeProps {
@@ -109,7 +110,7 @@ const EVENT_TILE_TYPES = new Map<string, Factory>([
 ]);
 
 const STATE_EVENT_TILE_TYPES = new Map<string, Factory>([
-    [EventType.RoomEncryption, (ref, props) => <EncryptionEvent ref={ref} {...props} />],
+    [EventType.RoomEncryption, (ref, props) => !SdkConfig.get("setting_defaults").dis_encryption ? <EncryptionEvent ref={ref} {...props} />: null],
     [EventType.RoomCanonicalAlias, TextualEventFactory],
     [EventType.RoomCreate, RoomCreateEventFactory],
     [EventType.RoomMember, TextualEventFactory],

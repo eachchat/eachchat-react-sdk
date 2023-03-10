@@ -23,8 +23,7 @@ import NextCloudShareModel from './nextCloudShareModel';
 const ShareNextCloudButton = (props) => {
     const [open, setOpen]=useState(false);
     const overflowMenuCloser = useContext(OverflowMenuContext);
-    const title="网盘分享";
-
+    const title="网盘共享";
     const handleOk = () => {
         setOpen(false);
     };
@@ -45,7 +44,7 @@ const ShareNextCloudButton = (props) => {
         <NextCloudShareModel
             className='mx_MessageComposer_nextCloud_share_model'
             showShare={true}
-            title="网盘分享"
+            title={title}
             open={open}
             maskClosable={false}
             hasRowSelection={true}

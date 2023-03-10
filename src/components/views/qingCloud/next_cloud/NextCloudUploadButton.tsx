@@ -19,7 +19,6 @@ import React from "react";
 import classNames from "classnames";
 import { CloudUploadOutlined } from '@ant-design/icons';
 
-import { Icon as DownloadIcon } from "../../../../res/img/download.svg";
 import { MediaEventHelper } from "../../../../utils/MediaEventHelper";
 import { RovingAccessibleTooltipButton } from "../../../../accessibility/RovingTabIndex";
 import Spinner from "../../elements/Spinner";
@@ -46,9 +45,7 @@ interface IState {
     fileName?: any;
 }
 
-export default class DownloadActionButton extends React.PureComponent<IProps, IState> {
-    private downloader = new FileDownloader();
-
+export default class NextCloudUploadButton extends React.PureComponent<IProps, IState> {
     public constructor(props: IProps) {
         super(props);
 
@@ -116,7 +113,6 @@ export default class DownloadActionButton extends React.PureComponent<IProps, IS
                 className={classes}
                 title={spinner ? _t(this.state.tooltip) : '保存到网盘'}
                 onClick={this.onSaveToNextCloudClick}
-                // onClick={this.onUploadNextCloudClick}
                 disabled={!!spinner}
             >
                 <CloudUploadOutlined />

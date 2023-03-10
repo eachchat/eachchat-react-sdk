@@ -28,7 +28,7 @@
     }
 
     &:hover {
-        background-color: $panel-actions;
+        /* background-color: $panel-actions; */
     }
 }
 
@@ -48,7 +48,7 @@
         padding: 0 16px;
         font-size: 16px;
         line-height: 60px;
-        border-bottom: 1px solid #dee0e3;
+        /* border-bottom: 1px solid #dee0e3; */
     }
 
     .content{
@@ -60,7 +60,7 @@
             }
             .tree{
                 max-width: 300px;
-                border-right: 1px solid #ccc;
+                /* border-right: 1px solid #ccc; */
                 .anticon-loading{
                     font-size: 26px;
                     display: block;
@@ -70,7 +70,7 @@
             .yiqiaOrgTree{
                 padding: 20px;
                 .ant-tree-node-content-wrapper.ant-tree-node-selected{
-                    background-color: #f0f0f0;
+                    /* background-color: #f0f0f0; */
                 }
             }
 
@@ -82,7 +82,7 @@
         .tree-empty{
             padding: 20px;
             height: 100%;
-            border-right: 1px solid #ccc;
+            /* border-right: 1px solid #ccc; */
         }
     }
 }
@@ -97,7 +97,7 @@
         }
     }
     .ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected{
-        background-color: rgba(141,151,165,.2) !important;
+        /* background-color: rgba(141,151,165,.2) !important; */
     }
     .ant-menu-item-selected{
         color: inherit !important;
@@ -107,7 +107,7 @@
     }
     .ant-menu-light .ant-menu-item:hover{
         color: inherit !important;
-        background-color: rgba(141,151,165,.2) !important;
+        /* background-color: rgba(141,151,165,.2) !important; */
         cursor: pointer;
     }
     
@@ -116,14 +116,14 @@
     display: flex;
     justify-content: center;
     cursor: pointer;
-    color: $accent;
+    /* color: $accent; */
     margin-top: 20px;
 }
 
 .yiqiaOrgTree{
     height: calc(100vh - 60px);
     overflow: auto;
-    border-right: 1px solid #ccc;
+    /* border-right: 1px solid #ccc; */
     .ant-tree-switcher-noop{
         visibility: hidden;
     }
@@ -133,18 +133,19 @@
 .yiQiaContactList{
     .contact-error{
         border: none;
-        color: $accent;
+        /* color: $accent; */
         display: flex;
         justify-content: center;
         align-items: center;
         width: 100%;
         padding-right: 30px;
         &:hover{
-            color: $accent;
+            /* color: $accent; */
         }
     }
     .ant-tree{
         background: transparent;
+        color: $primary-content !important;
     }
     .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected{
         background-color: transparent;
@@ -167,7 +168,7 @@
        
         .ant-input-group-addon{
             left: 8px !important;
-            background-color: transparent;
+            /* background-color: transparent; */
             button{
                 width: 42px;
                 height: 42px;
@@ -182,7 +183,7 @@
 
     .ant-list-item{
         &:hover{
-            background: #F0F0EF;
+            /* background: #F0F0EF; */
             cursor: pointer;
         }
         .ant-list-item-meta{
@@ -255,15 +256,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        background: #f0f0f0;
-        border: 1px solid #ccc;
-        /* border-radius: 20px; */
         justify-content: space-evenly;
-        /* max-width: 400px; */
-        /* margin: auto; */
-        /* height: calc(100% - 140px); */
-        /* margin-top: 70px; */
-        /* max-height: 600px; */
         height: 100%;
         width: 100%;
         .header{
@@ -274,26 +267,23 @@
             padding-bottom: 20px;
             margin-bottom: 20px;
             width: 100%;
-            border-bottom: 1px solid #ccc;
+            border-bottom: 1px solid #E3E8F0;
         }
         .yiqia_UserInfo_avatar{
             margin-bottom: 15px;
         }
-        .yiqia_UserInfo_container{}
         .yiqia_UserInfo_profile{
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            &>div{
-
-            }
         }
         .yiqia_UserInfo_operate_container{
             .send-msg{
-                background: #fff;
+                /* background: #fff; */
                 padding: 20px 40px;
                 border-radius: 20px;
+                border: 1px solid #ddd;
             }
             .send-msg-wrap{
                 display: flex;
@@ -314,7 +304,7 @@
             margin-bottom: 10px;
             margin-left: 30px;
             .yiqia_user_details_item_label{
-               color: #85878a;
+               /* color: #85878a; */
                margin-right: 30px;
             }
             .yiqia_user_details_item_info{

@@ -69,6 +69,7 @@ polyfillTouchEvent();
 export interface IAuxButtonProps {
     tabIndex: number;
     dispatcher?: Dispatcher<ActionPayload>;
+    className?: string;
 }
 
 interface IProps {

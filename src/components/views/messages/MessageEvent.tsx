@@ -44,7 +44,7 @@ import MBeaconBody from "./MBeaconBody";
 import { DecryptionFailureBody } from "./DecryptionFailureBody";
 import { GetRelationsForEvent, IEventTileOps } from "../rooms/EventTile";
 import { VoiceBroadcastBody, VoiceBroadcastInfoEventType, VoiceBroadcastInfoState } from "../../../voice-broadcast";
-import NextCloudShareLink from "../qingCloud/next_cloud/NextCloudShareLink";
+import NextCloudShareNoticeCard from "../qingCloud/next_cloud/NextCloudShareNoticeCard";
 import CustomSchema from "../qingCloud/custom_schema";
 import { CustomEventTypeShowArr } from "../qingCloud/custom_schema/CustomConstant";
 
@@ -72,7 +72,7 @@ const baseBodyTypes = new Map<string, typeof React.Component>([
     [MsgType.File, MFileBody],
     [MsgType.Audio, MVoiceOrAudioBody],
     [MsgType.Video, MVideoBody],
-    ['m.next.cloud.share.link', NextCloudShareLink],
+    ['m.next.cloud.share.link', NextCloudShareNoticeCard],
 ]);
 const baseEvTypes = new Map<string, React.ComponentType<Partial<IBodyProps>>>([
     [EventType.Sticker, MStickerBody],
@@ -202,9 +202,6 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
          // 自定义类型
         if (type && CustomEventTypeShowArr.includes(type)) {
             BodyType = CustomSchema;
-            // BodyType = TextualBody;
-
-
         }
 
         // @ts-ignore - this is a dynamic react component

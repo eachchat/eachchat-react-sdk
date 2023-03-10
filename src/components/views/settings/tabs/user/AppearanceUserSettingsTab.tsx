@@ -136,6 +136,17 @@ export default class AppearanceUserSettingsTab extends React.Component<IProps, I
         );
     }
 
+    private renderRoomListSection(): JSX.Element {
+        return (
+            <>
+                <div className="mx_SettingsTab_heading">{_t("Room list")}</div>
+                <div className="mx_SettingsTab_section mx_AppearanceUserSettingsTab_fontScaling">
+                    <SettingsFlag name="unifiedRoomList" level={SettingLevel.DEVICE} useCheckbox={true} />
+                </div>
+            </>
+        );
+    }
+    
     public render(): React.ReactNode {
         const brand = SdkConfig.get().brand;
 
@@ -146,6 +157,7 @@ export default class AppearanceUserSettingsTab extends React.Component<IProps, I
                     {_t("Appearance Settings only affect this %(brand)s session.", { brand })}
                 </div>
                 <ThemeChoicePanel />
+                {this.renderRoomListSection()}
                 <LayoutSwitcher
                     userId={this.state.userId}
                     displayName={this.state.displayName}

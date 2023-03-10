@@ -25,6 +25,7 @@ import { findDMForUser } from "./findDMForUser";
 import dis from "../../dispatcher/dispatcher";
 import { getAddressType } from "../../UserAddress";
 import createRoom from "../../createRoom";
+import SdkConfig from "../../SdkConfig";
 
 /**
  * Start a DM.
@@ -55,7 +56,7 @@ export async function startDm(client: MatrixClient, targets: Member[], showSpinn
     const createRoomOptions = { inlineErrors: true } as any; // XXX: Type out `createRoomOptions`
 
     if (await determineCreateRoomEncryptionOption(client, targets)) {
-        createRoomOptions.encryption = true;
+        createRoomOptions.encryption = !SdkConfig.get("setting_defaults").dis_encryption;
     }
 
     // Check if it's a traditional DM and create the room if required.
