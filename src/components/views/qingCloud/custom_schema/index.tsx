@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
     SchemaForm,
     FormEffectHooks,
@@ -30,6 +30,9 @@ import LayoutCard from './CustomSchemaComponent/LayoutCard';
 import LayoutGrid from './CustomSchemaComponent/LayoutGrid';
 import MatrixClientContext from '../../../../contexts/MatrixClientContext';
 import ThemeWatcher from '../../../../settings/watchers/ThemeWatcher';
+import { ConfitProviderToken } from '../constant';
+import SettingsStore from '../../../../settings/SettingsStore';
+import { useElementTheme } from '../hooks';
 
 const { TextArea } = Input;
 
@@ -68,6 +71,8 @@ const getSubmitObj = (schema) => {
 };
 
 const CustomSchema = (props) => {
+    const elementTheme = useElementTheme();
+
     const cli = useContext(MatrixClientContext);
     const newMxEv = props?.mxEvent?.replacingEvent() || props.mxEvent; // show the replacing event, not the original, if it is an edit
     const { type, content, event_id } = newMxEv?.event || {};
@@ -165,17 +170,13 @@ const CustomSchema = (props) => {
         return schema;
     };
 
-    let elementTheme = new ThemeWatcher().getEffectiveTheme();
+  
 
     return (
         <ConfigProvider
             theme={{
                 algorithm: elementTheme === "light" ? theme.defaultAlgorithm : theme.darkAlgorithm,
-                token: {
-                    colorPrimary: '#0dbd8b',
-                    colorBgContainer: 'transparent',
-                   
-                },
+                token: ConfitProviderToken,
             }}
         >
         <div className="mx_Custom_schema">

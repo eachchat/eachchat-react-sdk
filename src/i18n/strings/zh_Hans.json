@@ -3214,7 +3214,7 @@
     "App Store® and the Apple logo® are trademarks of Apple Inc.": "App Store®和Apple logo®是Apple Inc.的商标",
     "Google Play and the Google Play logo are trademarks of Google LLC.": "Google Play及其logo是Google LLC的商标。",
     "Community ownership": "社群所有权",
-    "With free end-to-end encrypted messaging, and unlimited voice and video calls, %(brand)s is a great way to stay in touch.": "%(brand)s提供免费的端到端加密消息传递以及无限制的语音和视频通话，是保持联系的绝佳方式。",
+    "With free end-to-end encrypted messaging, and unlimited voice and video calls, %(brand)s is a great way to stay in touch.": "%(brand)s提供免费的消息传递以及无限制的语音和视频通话，是保持联系的绝佳方式。",
     "Don’t miss a reply or important message": "不要错过回复或重要消息",
     "Make sure people know it’s really you": "确保人们知道这真的是你",
     "Find and invite your community members": "发现并邀请你的社群成员",
@@ -3480,5 +3480,11 @@
     "You do not have sufficient permissions to change this.": "你没有足够的权限更改这个。",
     "%(brand)s is end-to-end encrypted, but is currently limited to smaller numbers of users.": "%(brand)s是端到端加密的，但是目前仅限于少数用户。",
     "Enable %(brand)s as an additional calling option in this room": "启用%(brand)s作为此房间的额外通话选项",
-    "<b>It's not recommended to add encryption to public rooms.</b> Anyone can find and join public rooms, so anyone can read messages in them. You'll get none of the benefits of encryption, and you won't be able to turn it off later. Encrypting messages in a public room will make receiving and sending messages slower.": "<b>不建议为公共房间添加加密。</b>任何人都能找到并加入公共房间，所以任何人都能阅读其中的消息。你不会获得加密的任何好处，并且之后你无法将其关闭。在公共房间中加密消息会使接收和发送消息变慢。"
+    "<b>It's not recommended to add encryption to public rooms.</b> Anyone can find and join public rooms, so anyone can read messages in them. You'll get none of the benefits of encryption, and you won't be able to turn it off later. Encrypting messages in a public room will make receiving and sending messages slower.": "<b>不建议为公共房间添加加密。</b>任何人都能找到并加入公共房间，所以任何人都能阅读其中的消息。你不会获得加密的任何好处，并且之后你无法将其关闭。在公共房间中加密消息会使接收和发送消息变慢。",
+    "Normal priority": "正常优先级",
+    "Show people and rooms in a combined list": "使用组合列表显示所有人员和房间",
+    "Room list style": "聊天室列表样式",
+    "Compact: tiny avatar together with name and preview in one line": "紧凑：在一行中包含小头像、用户名和消息预览",
+    "Intermediate: medium sized avatar with single-line preview": "中等：中等大小头像，用户名与消息预览在头像旁以单行宽度分列",
+    "Roomy: big avatar with two-line preview": "宽敞：大尺寸头像，用户名与消息预览在头像旁以双行宽度分列"
 }

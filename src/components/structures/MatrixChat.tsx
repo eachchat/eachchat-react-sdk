@@ -394,7 +394,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
             // } else {
             //     this.setStateForNewView({ view: Views.COMPLETE_SECURITY });
             // }
-            if(SettingsStore.getValue("SHOW_ENCRYPTION_SETUP_UI")){
+            if(SdkConfig.get("setting_defaults")?.SHOW_ENCRYPTION_SETUP_UI){
                 this.setStateForNewView({ view: Views.COMPLETE_SECURITY });
             }else{
                 this.onLoggedIn();

@@ -54,6 +54,8 @@ import SetIdServer from "../../SetIdServer";
 import SetIntegrationManager from "../../SetIntegrationManager";
 import ToggleSwitch from "../../../elements/ToggleSwitch";
 import { IS_MAC } from "../../../../../Keyboard";
+import SdkConfig from "../../../../../SdkConfig";
+import { Button } from "antd";
 
 interface IProps {
     closeSettingsFn: () => void;
@@ -383,8 +385,18 @@ export default class GeneralUserSettingsTab extends React.Component<IProps, ISta
             <div className="mx_SettingsTab_section mx_GeneralUserSettingsTab_accountSection">
                 <span className="mx_SettingsTab_subheading">{_t("Account")}</span>
                 {externalAccountManagement}
-                <p className="mx_SettingsTab_subsectionText">{passwordChangeText}</p>
-                {passwordChangeForm}
+                {
+                     SdkConfig.get("setting_defaults").sso_change_password ?
+                     <div className="mx_SettingsTab_subsectionText">
+                        修改密码说明： 请前往sso平台修改密码。 
+                        {SdkConfig.get("setting_defaults").sso_change_password_url && <a target="_blank" href={SdkConfig.get("setting_defaults").sso_change_password_url}>修改密码</a>}
+                    </div> :
+                     <>
+                        <p className="mx_SettingsTab_subsectionText">{passwordChangeText}</p>
+                        {passwordChangeForm}
+                     </>
+                }
+               
                 {threepidSection}
             </div>
         );
@@ -539,7 +551,7 @@ export default class GeneralUserSettingsTab extends React.Component<IProps, ISta
                 {supportsMultiLanguageSpellCheck ? this.renderSpellCheckSection() : null}
                 {discoverySection}
                 {this.renderIntegrationManagerSection() /* Has its own title */}
-                {accountManagementSection}
+                {!SdkConfig.get("setting_defaults").dis_deactivate_account && accountManagementSection}
             </div>
         );
     }

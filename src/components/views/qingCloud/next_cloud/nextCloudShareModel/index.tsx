@@ -1,29 +1,33 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, notification, ConfigProvider, theme } from 'antd';
+import { Button, Modal, notification, ConfigProvider, theme, Popover } from 'antd';
 
-import { createShareLink, getNextCloudFilesList, getNextCloudUserName, getShareLink, uploadNextCloudFile, uploadNextCloudRootFile } from '../request';
+import { createShareLink, getNextCloudFilesList, getNextCloudUserName, uploadNextCloudFile } from '../request';
 import NextCloudFilesTable from './NextCloudFilesTable';
 import NextCloudNavBar from './NextCloudNavBar';
 import { MatrixClientPeg } from '../../../../../MatrixClientPeg';
 import { doMaybeLocalRoomAction } from '../../../../../utils/local-room';
 import NextCloudSearchSelect from './NextCloudSearchSelect';
-import ThemeWatcher from '../../../../../settings/watchers/ThemeWatcher';
+import { generateRandomPassword, getExpireDate } from '../utils';
+import NextCloudShareButtonGroups from './NextCloudShareButtonGroups';
+import { ConfitProviderToken, Theme } from '../../constant';
+import { useElementTheme } from '../../hooks';
 
 
 const NextCloudShareModel= (props: any) => {
-
-    let elementTheme = new ThemeWatcher().getEffectiveTheme();
-
-    const { title= "网盘", open, showSave, showShare, fileObj, hasRowSelection, onOk, onCancel }=props;
+    const { title= "网盘", open, showSave, showShare, fileObj, hasRowSelection, onOk, onCancel, showFooter=true }=props;
     const [userName, setUserName]=useState();
     const [currentPath, setCurrentPath]=useState('');
     const [fileList, setFileList]=useState([]);
     const [loading, setLoading]=useState(false);
     const [refresh, setRefresh]=useState(new Date().getTime());
     const [selectFileName, setSelectFileName]=useState('');
+    const [shareLoading, setShareLoading]=useState(false);
+    const [isSelectFolder, setIsSelectFolder]=useState(false);
 
-    useEffect(() => getUserName(), []);
+    const elementTheme = useElementTheme();
+
+    useEffect(() => open && getUserName(), [open]);
 
     useEffect(() => open && getFilesList(userName, currentPath), [open, userName, currentPath, refresh]);
 
@@ -61,21 +65,23 @@ const NextCloudShareModel= (props: any) => {
         isFolder && setCurrentPath(currentPath);
     };
 
+    // 当前文件路径change
     const handleChangePath = (path) => setCurrentPath(path);
 
+    // 刷新
     const handleRefresh = () => setRefresh(new Date().getTime());
 
-    const handleSelectChange = (data) => setSelectFileName(data?.[0]);
+    // 文件选择
+    const handleSelectChange = (data) => {
+        const {name, isFolder} = data || {};
+        setSelectFileName(name);
+        setIsSelectFolder(isFolder);
+    };
 
+    // 保存
     const handleSaveOk = () => {
         const { fileName, file } = fileObj;
         uploadNextCloudFile(fileName, currentPath, file);
-        onOk && onOk();
-    };
-
-    const handleShareOk = () => {
-        handleGetShareLink();
-        setSelectFileName('');
         onOk && onOk();
     };
 
@@ -87,15 +93,28 @@ const NextCloudShareModel= (props: any) => {
         },
     });
 
-    const copyShareLink = (data) => {
+    // 聊天框发送共享通知
+    const sendShareNotice = ({
+        isShareLink,
+        fileName,
+        shareLink,
+        isFolder,
+        password,
+        expireDate,
+        userList,
+    }: any) => {
         const shareLinkData = {
             type: 'm.room.message',
             content: {
                 "body": "",
                 "msgtype": "m.next.cloud.share.link",
-                "fileName": selectFileName,
-                "shareLink": data.shareLink,
-                "isFolder": data.isFolder,
+                isShareLink,
+                fileName,
+                shareLink,
+                isFolder,
+                password,
+                expireDate,
+                userList,
             },
         };
         doMaybeLocalRoomAction(
@@ -113,88 +132,117 @@ const NextCloudShareModel= (props: any) => {
             console.error(e);
         });
     };
-    const handleGetShareLink = () => {
-        getShareLink(currentPath, selectFileName)
-            .then(res => {
-                copyShareLink(res);
-            })
-            .catch(err => {
-                handleCreateShareLink();
-            });
-    };
+     
+    // 创建共享链接
     const handleCreateShareLink = () => {
-        createShareLink(currentPath, selectFileName)
+        setShareLoading(true);
+        setSelectFileName('');
+        onOk && onOk();
+        const password = generateRandomPassword();
+        const expireDate = getExpireDate();
+        createShareLink({currentPath, fileName: selectFileName, password, expireDate, shareType:3} as any)
             .then(res => {
-                copyShareLink(res);
+                const {shareLink} = res;
+                sendShareNotice({
+                    isShareLink: true,
+                    fileName:selectFileName,
+                    isFolder:isSelectFolder,
+                    shareLink,
+                    password,
+                    expireDate,
+                });
             })
             .catch(err => {
                 showNotification("error", err.message);
-            });
+            })
+            .finally(()=>setShareLoading(false));
     };
+
+    // 添加共享人
+    const handleCreateShareUser = (data)=>{
+        setShareLoading(true);
+        setSelectFileName('');
+        onOk && onOk();
+        const successAddShareUser = [];
+        const failAddShareUser = [];
+        Promise.all(data.map((item:any)=>{
+            return createShareLink({currentPath, fileName: selectFileName, permissions:1, ...item} as any).then(res=>successAddShareUser.push({...item,res})).catch(err=>failAddShareUser.push({...item,err}))
+        })).then(res=>{
+            console.log('handleCreateShareUser', res)
+        }).catch(err=>{
+            console.log('handleCreateShareUser', err)
+        }).finally(()=>{
+            setShareLoading(false);
+            if(successAddShareUser.length){
+                sendShareNotice({
+                    isShareLink: false,
+                    isFolder:isSelectFolder,
+                    fileName: selectFileName,
+                    userList: [...successAddShareUser],
+                })
+            }
+
+           if(failAddShareUser.length){
+                failAddShareUser.length === data?.length ? 
+                showNotification("error", `共享人添加失败`) : 
+                showNotification("error", `以下共享人添加失败:${failAddShareUser.map(item=>item.name)?.join(",")}`);
+            }
+        })
+    }
 
     const handleCancel = () => {
         setSelectFileName('');
         onCancel && onCancel();
     };
-
+   
     const getFooter = () => {
         return <div>
-            <Button onClick={handleCancel}>
-            取消
-            </Button>
+            <Button onClick={handleCancel} style={{marginRight:"20px"}}>取消</Button>
+            { showSave && <Button type="primary" onClick={handleSaveOk} value={"保存至此"}>保存至此</Button> }
             {
-                showSave &&
-                <Button type="primary" onClick={handleSaveOk}>
-                保存至此
-                </Button>
-            }
-            {
-                showShare &&
-                <Button
-                    type="primary"
+                showShare &&  
+                <NextCloudShareButtonGroups 
+                    loading={shareLoading}
                     disabled={!selectFileName.length}
-                    onClick={handleShareOk}>
-                分享
-                </Button>
+                    onShareLink = {handleCreateShareLink}
+                    onAddShareUser = {handleCreateShareUser}
+                />
             }
         </div>;
     };
+
     return <ConfigProvider
-    theme={{
-        algorithm: elementTheme === "light" ? theme.defaultAlgorithm :theme.darkAlgorithm,
-        token: {
-            colorPrimary: '#0dbd8b',
-        },
-      }}
-  >
-        <Modal
-            className='mx_MessageComposer_nextCloud_share_model'
-            destroyOnClose
-            title={title}
-            open={open}
-            onCancel={handleCancel}
-            maskClosable={false}
-            footer={getFooter()}
-        >
-            <div className='nextCloudContentView'>
-                <NextCloudNavBar currentPath={currentPath} onClick={handleChangePath} />
-                {
-                    showShare && <NextCloudSearchSelect onSearchSelect={setCurrentPath} />
-                }
-                <NextCloudFilesTable
-                    data={fileList}
-                    loading={loading}
-                    userName={userName}
-                    currentPath={currentPath}
-                    hasRowSelection={hasRowSelection}
-                    onRefresh={handleRefresh}
-                    onFileNameClick={handleFileNameClick}
-                    onChange={handleSelectChange}
-                />
-            </div>
-        </Modal>
-    </ConfigProvider>
-  
+                theme={{
+                    algorithm: elementTheme === Theme.Lignt ?  theme.defaultAlgorithm : theme.darkAlgorithm,
+                    token: ConfitProviderToken
+                }}
+            >
+                <Modal
+                    className='mx_MessageComposer_nextCloud_share_model'
+                    destroyOnClose
+                    title={title}
+                    open={open}
+                    width={720}
+                    onCancel={handleCancel}
+                    maskClosable={false}
+                    footer={showFooter ?  getFooter() : null}
+                >
+                    <div className='nextCloudContentView'>
+                        <NextCloudNavBar currentPath={currentPath} onClick={handleChangePath} />
+                        { showShare && <NextCloudSearchSelect onSearchSelect={setCurrentPath} /> }
+                        <NextCloudFilesTable
+                            data={fileList}
+                            loading={loading}
+                            userName={userName}
+                            currentPath={currentPath}
+                            hasRowSelection={hasRowSelection}
+                            onRefresh={handleRefresh}
+                            onFileNameClick={handleFileNameClick}
+                            onChange={handleSelectChange}
+                        />
+                    </div>
+                </Modal>
+            </ConfigProvider>
 };
 
 export default NextCloudShareModel;

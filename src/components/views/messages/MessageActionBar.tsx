@@ -58,7 +58,7 @@ import { ShowThreadPayload } from "../../../dispatcher/payloads/ShowThreadPayloa
 import useFavouriteMessages from "../../../hooks/useFavouriteMessages";
 import { GetRelationsForEvent } from "../rooms/EventTile";
 import { VoiceBroadcastInfoEventType } from "../../../voice-broadcast/types";
-import UploadNextCloudButton from "../qingCloud/next_cloud/UploadNextCloudButton";
+import NextCloudUploadButton from "../qingCloud/next_cloud/NextCloudUploadButton";
 
 interface IOptionsButtonProps {
     mxEvent: MatrixEvent;
@@ -518,7 +518,7 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
 
                 // XXX: Assuming that the underlying tile will be a media event if it is eligible media.
                 if (MediaEventHelper.isEligible(this.props.mxEvent)) {
-                    toolbarOpts.splice(0, 0, <UploadNextCloudButton
+                    toolbarOpts.splice(0, 0, <NextCloudUploadButton
                         mxEvent={this.props.mxEvent}
                         mediaEventHelperGet={() => this.props.getTile?.().getMediaHelper?.()}
                         key="upload"

@@ -28,6 +28,7 @@ import QuestionDialog from "./QuestionDialog";
 import BaseDialog from "./BaseDialog";
 import Spinner from "../elements/Spinner";
 import DialogButtons from "../elements/DialogButtons";
+import SdkConfig from "../../../SdkConfig";
 
 interface IProps {
     onFinished: (success: boolean) => void;
@@ -128,7 +129,7 @@ export default class LogoutDialog extends React.Component<IProps, IState> {
     };
 
     public render(): React.ReactNode {
-        if (this.state.shouldLoadBackupStatus) {
+        if (this.state.shouldLoadBackupStatus && !SdkConfig.get("setting_defaults").dis_encryption) {
             const description = (
                 <div>
                     <p>

@@ -1137,4 +1137,10 @@ export const SETTINGS: { [setting: string]: ISetting } = {
         displayName: _td("Enable hardware acceleration"),
         default: true,
     },
+    "unifiedRoomList": {
+        supportedLevels: LEVELS_ACCOUNT_SETTINGS,
+        displayName: _td("Show people and rooms in a combined list"),
+        default: true,
+        controller: new ReloadOnChangeController(),
+    },
 };

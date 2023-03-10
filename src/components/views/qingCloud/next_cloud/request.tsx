@@ -2,104 +2,8 @@
 import axios from "axios";
 import { parseString } from 'xml2js';
 import { notification } from 'antd';
+import { downFlowFiles, formatFilesXmlObj } from "./utils";
 
-// 获取日期
-export const getDate = (str) => {
-    try {
-        const year = new Date(str).getFullYear();
-        const month = new Date(str).getMonth() + 1;
-        const date = new Date(str).getDate();
-        const hours = new Date(str).getHours();
-        const minutes = new Date(str).getMinutes();
-        return `${year}年${month}月${date}日 ${hours}:${minutes}`;
-    } catch (error) {
-        console.log('getDate err', error);
-    }
-};
-
-// 格式化Size
-export const formatSize = (val) => {
-    const size = Number(val) as number;
-    const KB = 1024;
-    const MB = 1024*KB;
-    const G = 1024*MB;
-    if (isNaN(size)) {
-        return ``;
-    } else if (size===0) {
-        return `0KB`;
-    } else if (size<KB) {
-        return `<1KB`;
-    } else if (size<MB) {
-        return `${parseInt(size/KB)}KB`;
-    } else if (size<G) {
-        return `${parseFloat(size/MB).toFixed(1)}MB`;
-    } else {
-        return `${parseFloat(size/G).toFixed(1)}GB`;
-    }
-};
-
-// 格式化xmlObj
-export const formatFilesXmlObj = (username, xmlObj) => {
-    try {
-        const COMMON_PATH = `/remote.php/dav/files/${username}/`;
-        const response = xmlObj?.['d:multistatus']?.['d:response'];
-        const root = response.shift();
-        const rootHref = root?.['d:href']?.[0];
-        return response.map((item: any, index) => {
-            const href = item?.['d:href'][0];
-            const props = item?.['d:propstat'][0]?.['d:prop'][0];
-            const isFolder = props?.['d:resourcetype']?.[0]?.['d:collection'] ? true : false;
-            const quotaUsedBytes = props?.['d:quota-used-bytes']?.[0] || 0;
-            const getcontentlength = props?.['d:getcontentlength']?.[0] || 0;
-            const size = isFolder ? quotaUsedBytes : getcontentlength;
-            const modified = props?.['d:getlastmodified']?.[0];
-            const currentPath = decodeURIComponent(href?.replace(COMMON_PATH, ''));
-            return {
-                "id": currentPath,
-                "href": href,
-                "getetag": props?.['d:getetag']?.[0],
-                "getlastmodified": modified,
-                "quota-available-bytes": quotaUsedBytes,
-                "quota-used-bytes": props?.['d:quota-used-bytes']?.[0],
-                "resourcetype": props?.['d:resourcetype']?.[0],
-                "getcontentlength": getcontentlength,
-                "getcontenttype": props?.['d:getcontenttype'],
-                "isFolder": isFolder,
-                "name": decodeURI(href?.replace(rootHref, '')).replace('/', ''),
-                "size": formatSize(size),
-                "modified": getDate(modified),
-                "currentPath": currentPath,
-                "downloadPath": currentPath,
-                "dir": `/${rootHref?.replace(COMMON_PATH, '')?.slice(0, -1)}`,
-            };
-        });
-    } catch (error) {
-        console.log('formatFilesXmlObj error', error);
-    }
-};
-
-// 流文件下载
-export const downFlowFiles = (res: any) => {
-    const blob = new Blob([res.data]);
-    // 提取文件名
-    let contentDisposition: any = "";
-    if (res.headers["content-disposition"]) {contentDisposition = res.headers["content-disposition"];}
-    if (res.headers["Content-disposition"]) {contentDisposition = res.headers["Content-disposition"];}
-    const err = contentDisposition.match(/err=(.*)/);
-    if (err && err[1]) {
-        console.log(decodeURI(err[1]));
-        return;
-    }
-    const fileName = contentDisposition.match(/filename=(.*)/)[1];
-    const downloadElement = document.createElement('a');
-    const href = window.URL.createObjectURL(blob); //创建下载的链接
-    downloadElement.href = href;
-    downloadElement.download = decodeURI(fileName).replace(new RegExp('"', 'g'), ''); //下载后文件名
-    document.body.appendChild(downloadElement);
-    downloadElement.click(); //点击下载
-    document.body.removeChild(downloadElement); //下载完成移除元素
-    window.URL.revokeObjectURL(href); //释放掉blob对象
-};
 
 const elementBaseURL = 'element';
 const nextCloudBaseURL = 'nextCloud';
@@ -341,7 +245,7 @@ export const uploadNextCloudRootFile = async (fileName, file) => {
     });
 };
 
-// 获取分享链接
+// 获取共享链接
 export const getShareLink = async (currentPath, fileName) => {
     const path = `/${currentPath}${fileName}`;
     return requestNextCloud()({
@@ -357,16 +261,29 @@ export const getShareLink = async (currentPath, fileName) => {
         }
     });
 };
-// 创建分享链接
-export const createShareLink = async (currentPath, fileName) => {
+
+// 创建共享链接
+export const createShareLink = async ({
+    currentPath,
+    fileName,
+    permissions,
+    shareType,
+    shareWith,
+    password,
+    expireDate,
+}) => {
     const path = `/${currentPath}${fileName}`;
     return requestNextCloud()({
         "method": 'POST',
         "url": `ocs/v2.php/apps/files_sharing/api/v1/shares?format=json`,
         "data": {
-            "path": path,
-            "shareType": 3,
             "attributes": "[]",
+            "path": path,
+            "permissions": permissions,
+            "shareType": shareType,
+            "shareWith": shareWith,
+            "password":password,
+            "expireDate":expireDate
         },
     }).then((res: any) => {
         const shareLink = res?.data?.ocs?.data?.url;
@@ -389,3 +306,37 @@ export const getSearchList = (val) => {
         },
     });
 };
+
+// Search for share recipients 搜索共享收件人
+export const getSearchSharees = (params: any) => {
+    return requestNextCloud()({
+        "method": 'GET',
+        "url": `ocs/v2.php/apps/files_sharing/api/v1/sharees?format=json&itemType=${params?.folder}&search=${params?.search}&lookup=false&perPage=25`,
+    });
+};
+
+// 获取共享链接
+export const getShareesRecommended =(params:any)=>{
+    return requestNextCloud()({
+        "method": 'GET',
+        "url": `ocs/v2.php/apps/files_sharing/api/v1/shares?format=json&path=${params.path}&reshares=true`,
+    });
+}
+
+// 生成password
+export const generatePassword = () =>{
+    return requestNextCloud()({
+        "method": 'GET',
+        "url": `ocs/v2.php/apps/password_policy/api/v1/generate`,
+    });
+}
+
+// 获取共享人列表
+export const getShareUserList = (parentId?: any) => {
+    return requestElement()({
+        method: 'GET',
+        url: `api/v1/groups?parent=${parentId}`,
+    })
+        .then((res: any) => res?.data);
+};
+
