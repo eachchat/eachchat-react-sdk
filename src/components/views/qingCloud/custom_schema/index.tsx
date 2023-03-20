@@ -33,6 +33,15 @@ import ThemeWatcher from '../../../../settings/watchers/ThemeWatcher';
 import { ConfitProviderToken } from '../constant';
 import SettingsStore from '../../../../settings/SettingsStore';
 import { useElementTheme } from '../hooks';
+import UserPicker from './CustomSchemaComponent/UserPicker';
+import OrganizationPicker from './CustomSchemaComponent/OrganizationPicker';
+import CascadeSelector from './CustomSchemaComponent/CascadeSelector';
+import AggregationRecords from './CustomSchemaComponent/AggregationRecords';
+import AssociatedData from './CustomSchemaComponent/AssociatedData';
+import AssociatedRecords from './CustomSchemaComponent/AssociatedRecords';
+import SubTable from './CustomSchemaComponent/SubTable';
+import ImageUpload from './CustomSchemaComponent/ImageUpload';
+import FileUpload from './CustomSchemaComponent/FileUpload';
 
 const { TextArea } = Input;
 
@@ -54,6 +63,15 @@ const components = {
     LayoutTabs,
     LayoutCard,
     LayoutGrid,
+    UserPicker,
+    OrganizationPicker,
+    CascadeSelector,
+    AggregationRecords,
+    AssociatedData,
+    AssociatedRecords,
+    SubTable,
+    ImageUpload,
+    FileUpload,
 };
 
 const getSubmitObj = (schema) => {

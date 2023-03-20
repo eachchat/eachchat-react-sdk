@@ -3,10 +3,7 @@ import axios from "axios";
 import { parseString } from 'xml2js';
 import { notification } from 'antd';
 import { downFlowFiles, formatFilesXmlObj } from "./utils";
-
-
-const elementBaseURL = 'element';
-const nextCloudBaseURL = 'nextCloud';
+import { elementBaseURL, nextCloudBaseURL } from "../constant";
 
 export const requestElement =() => {
     const MatrixID = localStorage.getItem("mx_user_id");

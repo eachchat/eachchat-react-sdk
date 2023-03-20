@@ -389,7 +389,7 @@ export default class GeneralUserSettingsTab extends React.Component<IProps, ISta
                      SdkConfig.get("setting_defaults").sso_change_password ?
                      <div className="mx_SettingsTab_subsectionText">
                         修改密码说明： 请前往sso平台修改密码。 
-                        {SdkConfig.get("setting_defaults").sso_change_password_url && <a target="_blank" href={SdkConfig.get("setting_defaults").sso_change_password_url}>修改密码</a>}
+                        {SdkConfig.get("setting_defaults").sso_url && <a target="_blank" href={SdkConfig.get("setting_defaults").sso_url+'/if/user/#/settings'}>修改密码</a>}
                     </div> :
                      <>
                         <p className="mx_SettingsTab_subsectionText">{passwordChangeText}</p>

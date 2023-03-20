@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import axios from "axios";
-const elementBaseURL = 'element';
+import { elementBaseURL } from "../constant";
 
 export const requestElement =() => {
     const MatrixID = localStorage.getItem("mx_user_id");
