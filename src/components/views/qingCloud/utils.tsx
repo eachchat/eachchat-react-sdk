@@ -5,11 +5,11 @@ import { findDMForUser } from "../../../utils/dm/findDMForUser";
 
 export const autoAddRobot = ()=>{
     const cli = MatrixClientPeg.get();
-    const robot_name =SdkConfig.get("setting_defaults").robot_name;
-    const exitRoom = findDMForUser(cli, robot_name);
+    const robot_id =SdkConfig.get("setting_defaults").robot_id;
+    const exitRoom = findDMForUser(cli, robot_id);
     if(!exitRoom){
         createRoom({
-            dmUserId: robot_name,
+            dmUserId: robot_id,
         });
     }
 }
