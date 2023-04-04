@@ -63,6 +63,7 @@ import ExtraTile from "./ExtraTile";
 import RoomSublist, { IAuxButtonProps } from "./RoomSublist";
 import { SdkContextClass } from "../../../contexts/SDKContext";
 import classNames from "classnames";
+import { autoAddRobot } from "../qingCloud/utils";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -491,6 +492,9 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             },
         );
         this.updateLists(); // trigger the first update
+
+        // 自动添加机器人
+         autoAddRobot();
     }
 
     public componentWillUnmount(): void {

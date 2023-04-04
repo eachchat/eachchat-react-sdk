@@ -1,57 +1,58 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // @ts-nocheck
 import { MouseEventHandler } from 'react';
 import {
-  TableInstance,
-  UseColumnOrderInstanceProps,
-  UseColumnOrderState,
-  UseExpandedHooks,
-  UseExpandedInstanceProps,
-  UseExpandedOptions,
-  UseExpandedRowProps,
-  UseExpandedState,
-  UseFiltersColumnOptions,
-  UseFiltersColumnProps,
-  UseFiltersInstanceProps,
-  UseFiltersOptions,
-  UseFiltersState,
-  UseGlobalFiltersInstanceProps,
-  UseGlobalFiltersOptions,
-  UseGlobalFiltersState,
-  UseGroupByCellProps,
-  UseGroupByColumnOptions,
-  UseGroupByColumnProps,
-  UseGroupByHooks,
-  UseGroupByInstanceProps,
-  UseGroupByOptions,
-  UseGroupByRowProps,
-  UseGroupByState,
-  UsePaginationInstanceProps,
-  UsePaginationOptions,
-  UsePaginationState,
-  UseResizeColumnsColumnOptions,
-  UseResizeColumnsColumnProps,
-  UseResizeColumnsOptions,
-  UseResizeColumnsState,
-  UseRowSelectHooks,
-  UseRowSelectInstanceProps,
-  UseRowSelectOptions,
-  UseRowSelectRowProps,
-  UseRowSelectState,
-  UseSortByColumnOptions,
-  UseSortByColumnProps,
-  UseSortByHooks,
-  UseSortByInstanceProps,
-  UseSortByOptions,
-  UseSortByState,
+    TableInstance,
+    UseColumnOrderInstanceProps,
+    UseColumnOrderState,
+    UseExpandedHooks,
+    UseExpandedInstanceProps,
+    UseExpandedOptions,
+    UseExpandedRowProps,
+    UseExpandedState,
+    UseFiltersColumnOptions,
+    UseFiltersColumnProps,
+    UseFiltersInstanceProps,
+    UseFiltersOptions,
+    UseFiltersState,
+    UseGlobalFiltersInstanceProps,
+    UseGlobalFiltersOptions,
+    UseGlobalFiltersState,
+    UseGroupByCellProps,
+    UseGroupByColumnOptions,
+    UseGroupByColumnProps,
+    UseGroupByHooks,
+    UseGroupByInstanceProps,
+    UseGroupByOptions,
+    UseGroupByRowProps,
+    UseGroupByState,
+    UsePaginationInstanceProps,
+    UsePaginationOptions,
+    UsePaginationState,
+    UseResizeColumnsColumnOptions,
+    UseResizeColumnsColumnProps,
+    UseResizeColumnsOptions,
+    UseResizeColumnsState,
+    UseRowSelectHooks,
+    UseRowSelectInstanceProps,
+    UseRowSelectOptions,
+    UseRowSelectRowProps,
+    UseRowSelectState,
+    UseSortByColumnOptions,
+    UseSortByColumnProps,
+    UseSortByHooks,
+    UseSortByInstanceProps,
+    UseSortByOptions,
+    UseSortByState,
 } from 'react-table';
 
 declare module 'react-table' {
   export interface UseFlexLayoutInstanceProps<D extends Record<string, unknown>> {
-    totalColumnsMinWidth: number
+    totalColumnsMinWidth: number;
   }
 
   export interface UseFlexLayoutColumnProps<D extends Record<string, unknown>> {
-    totalMinWidth: number
+    totalMinWidth: number;
   }
 
   export interface TableOptions<D extends Record<string, unknown>>
@@ -93,7 +94,7 @@ declare module 'react-table' {
       UseResizeColumnsState<D>,
       UseRowSelectState<D>,
       UseSortByState<D> {
-    rowCount: number
+    rowCount: number;
   }
 
   export interface ColumnInterface<D extends Record<string, unknown> = Record<string, unknown>>
@@ -101,7 +102,7 @@ declare module 'react-table' {
       UseGroupByColumnOptions<D>,
       UseResizeColumnsColumnOptions<D>,
       UseSortByColumnOptions<D> {
-    align?: string
+    align?: string;
   }
 
   export interface ColumnInstance<D extends Record<string, unknown> = Record<string, unknown>>
@@ -111,15 +112,15 @@ declare module 'react-table' {
       UseFlexLayoutColumnProps<D>,
       UseSortByColumnProps<D> {}
 
-  export type Cell<D extends Record<string, unknown> = Record<string, unknown>> = UseGroupByCellProps<D>
+  export type Cell<D extends Record<string, unknown> = Record<string, unknown>> = UseGroupByCellProps<D>;
 
   export interface Row<D extends object = {}>
     extends UseExpandedRowProps<D>,
       UseGroupByRowProps<D>,
       UseRowSelectRowProps<D> {}
 
-  export type FixedColumn<T extends {}> = Column<T> & { fixed: boolean; width: number };
+  export type FixedColumn<T extends {}> = Column<T> & { fixed: boolean, width: number };
   export type UnionColumn<T extends {}> = FixedColumn<T> | Column<T> & { fixed?: boolean };
 }
 
-export type TableMouseEventHandler = (instance: TableInstance<T>) => MouseEventHandler
+export type TableMouseEventHandler = (instance: TableInstance<T>) => MouseEventHandler;

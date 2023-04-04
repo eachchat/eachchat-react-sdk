@@ -1,3 +1,5 @@
+import SdkConfig from "../../../SdkConfig";
+
 export enum ShareType {
     User = 0, //人
     Dept = 1,   //部门
@@ -15,3 +17,7 @@ export  const ConfitProviderToken =  {
     colorLinkHover: '#0dbd8b',
     colorBgContainer: 'transparent',
 }
+
+const desktop_host = SdkConfig.get('setting_defaults').desktop_host;
+export const elementBaseURL = desktop_host ? `${desktop_host}/element` : 'element';
+export const nextCloudBaseURL = desktop_host ? `${desktop_host}/nextCloud` : 'nextCloud';
