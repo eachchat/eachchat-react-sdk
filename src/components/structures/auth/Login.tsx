@@ -519,6 +519,13 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
         if(SdkConfig.get("setting_defaults").dis_login_password){
             order = ["m.login.sso"];
         }
+        if(SdkConfig.get("setting_defaults")?.onlySSOLogin?.length){
+            const {hsName} = this.props.serverConfig;
+            const onlySSOLoginArr = SdkConfig.get("setting_defaults")?.onlySSOLogin;
+            if(onlySSOLoginArr.find(item=>item===hsName)){
+                order = ["m.login.sso"];
+            }
+        }
         const flows = order.map((type) => this.state.flows.find((flow) => flow.type === type)).filter(Boolean);
         return (
             <React.Fragment>
@@ -606,21 +613,27 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
                 </div>
             );
         } else if (SettingsStore.getValue(UIFeature.Registration)) {
-            footer = (
-                <span className="mx_AuthBody_changeFlow">
-                    {_t(
-                        "New? <a>Create account</a>",
-                        {},
-                        {
-                            a: (sub) => (
-                                <AccessibleButton kind="link_inline" onClick={this.onTryRegisterClick}>
-                                    {sub}
-                                </AccessibleButton>
-                            ),
-                        },
-                    )}
-                </span>
-            );
+            if(SdkConfig.get("setting_defaults")?.onlySSOLogin?.length){
+                const {hsName} = this.props.serverConfig;
+                const onlySSOLoginArr = SdkConfig.get("setting_defaults")?.onlySSOLogin;
+                if(!onlySSOLoginArr.find(item=>item===hsName)){
+                    footer = (
+                        <span className="mx_AuthBody_changeFlow">
+                            {_t(
+                                "New? <a>Create account</a>",
+                                {},
+                                {
+                                    a: (sub) => (
+                                        <AccessibleButton kind="link_inline" onClick={this.onTryRegisterClick}>
+                                            {sub}
+                                        </AccessibleButton>
+                                    ),
+                                },
+                            )}
+                        </span>
+                    );
+                }
+            }
         }
 
         return (
