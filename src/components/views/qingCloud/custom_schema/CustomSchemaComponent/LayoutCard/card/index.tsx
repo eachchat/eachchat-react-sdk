@@ -1,8 +1,6 @@
 import React, { HTMLAttributes, ReactNode, CSSProperties } from 'react';
 import cs from 'classnames';
 
-import './index.pcss';
-
 function getAction(actions: ReactNode[]): ReactNode[] {
     const actionList = actions.map((action, index) => (
         <li style={{ width: `${100 / actions.length}%` }} key={`action-${index}`}>
