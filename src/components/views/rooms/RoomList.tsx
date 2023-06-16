@@ -494,7 +494,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         this.updateLists(); // trigger the first update
 
         // 自动添加机器人
-         autoAddRobot();
+        //  autoAddRobot();
     }
 
     public componentWillUnmount(): void {
