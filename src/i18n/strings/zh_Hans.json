@@ -3227,7 +3227,7 @@
     "Only %(count)s steps to go|other": "仅需%(count)s步",
     "Only %(count)s steps to go|one": "仅需%(count)s步",
     "Download %(brand)s": "下载%(brand)s",
-    "Download %(brand)s Desktop": "下载%(brand)s桌面版",
+    "Download %(brand)s Desktop": "下载%(brand)",
     "Download on the App Store": "在App Store下载",
     "Send read receipts": "发送已读回执",
     "Share your activity and status with others.": "与别人分享你的活动和状态。",
@@ -3486,5 +3486,7 @@
     "Room list style": "聊天室列表样式",
     "Compact: tiny avatar together with name and preview in one line": "紧凑：在一行中包含小头像、用户名和消息预览",
     "Intermediate: medium sized avatar with single-line preview": "中等：中等大小头像，用户名与消息预览在头像旁以单行宽度分列",
-    "Roomy: big avatar with two-line preview": "宽敞：大尺寸头像，用户名与消息预览在头像旁以双行宽度分列"
+    "Roomy: big avatar with two-line preview": "宽敞：大尺寸头像，用户名与消息预览在头像旁以双行宽度分列",
+    "QingCloud employees should use the company's unified employee account to login EachChat, if you need to change your password, please go QingCloud SSO.": "QingCloud员工应使用公司统一的员工帐户登录EachChat，如果您需要更改密码，请前往QingCloud SSO。",
+    "Contact":"通讯录"
 }

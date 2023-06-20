@@ -521,6 +521,7 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
         }
         if(SdkConfig.get("setting_defaults")?.onlySSOLogin?.length){
             const {hsName} = this.props.serverConfig;
+            window.serverConfig = this.props.serverConfig;
             const onlySSOLoginArr = SdkConfig.get("setting_defaults")?.onlySSOLogin;
             if(onlySSOLoginArr.find(item=>item===hsName)){
                 order = ["m.login.sso"];

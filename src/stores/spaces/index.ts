@@ -47,7 +47,7 @@ export const getMetaSpaceName = (spaceKey: MetaSpace, allRoomsInHome = false): s
         case MetaSpace.Orphans:
             return _t("Other rooms");
         case MetaSpace.Contact:
-            return "通讯录";
+            return _t("Contact");
     }
 };
 

@@ -78,10 +78,10 @@ const useSpaces = (): [Room[], MetaSpace[], Room[], SpaceKey] => {
         return SpaceStore.instance.invitedSpaces;
     });
 
-    SettingsStore.setValue("Spaces.enabledMetaSpaces", null, SettingLevel.DEVICE, {
-        [MetaSpace.Home]: true,
-        [MetaSpace.Contact]: true,
-    });
+    // SettingsStore.setValue("Spaces.enabledMetaSpaces", null, SettingLevel.DEVICE, {
+    //     [MetaSpace.Home]: true,
+    //     [MetaSpace.Contact]: true,
+    // });
 
     const [metaSpaces, actualSpaces] = useEventEmitterState<[MetaSpace[], Room[]]>(
         SpaceStore.instance,
@@ -409,7 +409,7 @@ const SpacePanel: React.FC = () => {
                             )}
                         </Droppable>
 
-                        {/* <QuickSettingsButton isPanelCollapsed={isPanelCollapsed} /> */}
+                        <QuickSettingsButton isPanelCollapsed={isPanelCollapsed} />
                     </div>
                 )}
             </RovingTabIndexProvider>

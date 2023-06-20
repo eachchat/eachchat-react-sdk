@@ -392,7 +392,7 @@ export default class LeftPanel extends React.Component<IProps, IState> {
         return (
             <div className={containerClasses}>
                 {
-                    this.state.activeSpace === MetaSpace.Home && 
+                    this.state.activeSpace !== MetaSpace.Contact && 
                     <div className="mx_LeftPanel_roomListContainer">
                     {this.renderSearchDialExplore()}
                     {this.renderBreadcrumbs()}

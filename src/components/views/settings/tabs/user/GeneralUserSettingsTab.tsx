@@ -381,15 +381,24 @@ export default class GeneralUserSettingsTab extends React.Component<IProps, ISta
                 </>
             );
         }
+        let ssoLogin = false;
+        if(SdkConfig.get("setting_defaults")?.onlySSOLogin?.length){
+            const onlySSOLoginArr = SdkConfig.get("setting_defaults")?.onlySSOLogin;
+            const server_config = window.serverConfig || SdkConfig.get("validated_server_config");
+            if(onlySSOLoginArr.find(item=>item===server_config?.hsName)){
+                ssoLogin = true;
+            }
+        }
         return (
             <div className="mx_SettingsTab_section mx_GeneralUserSettingsTab_accountSection">
                 <span className="mx_SettingsTab_subheading">{_t("Account")}</span>
                 {externalAccountManagement}
                 {
-                     SdkConfig.get("setting_defaults").sso_change_password ?
+                    
+                    ssoLogin ?
                      <div className="mx_SettingsTab_subsectionText">
-                        修改密码说明： 请前往sso平台修改密码。 
-                        {SdkConfig.get("setting_defaults").sso_url && <a target="_blank" href={SdkConfig.get("setting_defaults").sso_url+'/if/user/#/settings'}>修改密码</a>}
+                        {_t("QingCloud employees should use the company's unified employee account to login EachChat, if you need to change your password, please go QingCloud SSO.")}
+                        {SdkConfig.get("setting_defaults").sso_url && <a target="_blank" href={SdkConfig.get("setting_defaults").sso_url+'/if/user/#/settings'}>{ _t("Change Password") }</a>}
                     </div> :
                      <>
                         <p className="mx_SettingsTab_subsectionText">{passwordChangeText}</p>
