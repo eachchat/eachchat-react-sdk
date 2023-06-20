@@ -15,15 +15,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { ComponentType } from "react";
+import React from "react";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 
+import type ExportE2eKeysDialog from "../../../async-components/views/dialogs/security/ExportE2eKeysDialog";
 import Field from "../elements/Field";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import AccessibleButton from "../elements/AccessibleButton";
 import Spinner from "../elements/Spinner";
 import withValidation, { IFieldState, IValidationResult } from "../elements/Validation";
-import { _t, _td } from "../../../languageHandler";
+import { UserFriendlyError, _t, _td } from "../../../languageHandler";
 import Modal from "../../../Modal";
 import PassphraseField from "../auth/PassphraseField";
 import { PASSWORD_MIN_SCORE } from "../auth/RegistrationForm";
@@ -42,12 +43,12 @@ enum Phase {
 }
 
 interface IProps {
-    onFinished?: (outcome: {
+    onFinished: (outcome: {
         didSetEmail?: boolean;
         /** Was one or more other devices logged out whilst changing the password */
         didLogoutOutOtherDevices: boolean;
     }) => void;
-    onError?: (error: { error: string }) => void;
+    onError: (error: Error) => void;
     rowClassName?: string;
     buttonClassName?: string;
     buttonKind?: string;
@@ -68,9 +69,9 @@ interface IState {
 }
 
 export default class ChangePassword extends React.Component<IProps, IState> {
-    private [FIELD_OLD_PASSWORD]: Field;
-    private [FIELD_NEW_PASSWORD]: Field;
-    private [FIELD_NEW_PASSWORD_CONFIRM]: Field;
+    private [FIELD_OLD_PASSWORD]: Field | null = null;
+    private [FIELD_NEW_PASSWORD]: Field | null = null;
+    private [FIELD_NEW_PASSWORD_CONFIRM]: Field | null = null;
 
     public static defaultProps: Partial<IProps> = {
         onFinished() {},
@@ -100,7 +101,7 @@ export default class ChangePassword extends React.Component<IProps, IState> {
 
         if (userHasOtherDevices && !serverSupportsControlOfDevicesLogout && this.props.confirm) {
             // warn about logging out all devices
-            const { finished } = Modal.createDialog<[boolean]>(QuestionDialog, {
+            const { finished } = Modal.createDialog(QuestionDialog, {
                 title: _t("Warning!"),
                 description: (
                     <div>
@@ -154,7 +155,7 @@ export default class ChangePassword extends React.Component<IProps, IState> {
             },
             // TODO: Remove `user` once servers support proper UIA
             // See https://github.com/matrix-org/synapse/issues/5665
-            user: cli.credentials.userId,
+            user: cli.credentials.userId ?? undefined,
             password: oldPassword,
         };
 
@@ -182,7 +183,16 @@ export default class ChangePassword extends React.Component<IProps, IState> {
                     }
                 },
                 (err) => {
-                    this.props.onError(err);
+                    if (err instanceof Error) {
+                        this.props.onError(err);
+                    } else {
+                        this.props.onError(
+                            new UserFriendlyError("Error while changing password: %(error)s", {
+                                error: String(err),
+                                cause: undefined,
+                            }),
+                        );
+                    }
                 },
             )
             .finally(() => {
@@ -195,15 +205,19 @@ export default class ChangePassword extends React.Component<IProps, IState> {
             });
     }
 
-    private checkPassword(oldPass: string, newPass: string, confirmPass: string): { error: string } {
+    /**
+     * Checks the `newPass` and throws an error if it is unacceptable.
+     * @param oldPass The old password
+     * @param newPass The new password that the user is trying to be set
+     * @param confirmPass The confirmation password where the user types the `newPass`
+     * again for confirmation and should match the `newPass` before we accept their new
+     * password.
+     */
+    private checkPassword(oldPass: string, newPass: string, confirmPass: string): void {
         if (newPass !== confirmPass) {
-            return {
-                error: _t("New passwords don't match"),
-            };
+            throw new UserFriendlyError("New passwords don't match");
         } else if (!newPass || newPass.length === 0) {
-            return {
-                error: _t("Passwords can't be empty"),
-            };
+            throw new UserFriendlyError("Passwords can't be empty");
         }
     }
 
@@ -212,13 +226,13 @@ export default class ChangePassword extends React.Component<IProps, IState> {
         const modal = Modal.createDialog(SetEmailDialog, {
             title: _t("Do you want to set an email address?"),
         });
-        return modal.finished.then(([confirmed]) => confirmed);
+        return modal.finished.then(([confirmed]) => !!confirmed);
     }
 
     private onExportE2eKeysClicked = (): void => {
         Modal.createDialogAsync(
             import("../../../async-components/views/dialogs/security/ExportE2eKeysDialog") as unknown as Promise<
-                ComponentType<{}>
+                typeof ExportE2eKeysDialog
             >,
             {
                 matrixClient: MatrixClientPeg.get(),
@@ -226,7 +240,7 @@ export default class ChangePassword extends React.Component<IProps, IState> {
         );
     };
 
-    private markFieldValid(fieldID: FieldType, valid: boolean): void {
+    private markFieldValid(fieldID: FieldType, valid?: boolean): void {
         const { fieldValid } = this.state;
         fieldValid[fieldID] = valid;
         this.setState({
@@ -306,11 +320,24 @@ export default class ChangePassword extends React.Component<IProps, IState> {
         const oldPassword = this.state.oldPassword;
         const newPassword = this.state.newPassword;
         const confirmPassword = this.state.newPasswordConfirm;
-        const err = this.checkPassword(oldPassword, newPassword, confirmPassword);
-        if (err) {
-            this.props.onError(err);
-        } else {
+        try {
+            // TODO: We can remove this check (but should add some Cypress tests to
+            // sanity check this flow). This logic is redundant with the input field
+            // validation we do and `verifyFieldsBeforeSubmit()` above. See
+            // https://github.com/matrix-org/matrix-react-sdk/pull/10615#discussion_r1167364214
+            this.checkPassword(oldPassword, newPassword, confirmPassword);
             return this.onChangePassword(oldPassword, newPassword);
+        } catch (err) {
+            if (err instanceof Error) {
+                this.props.onError(err);
+            } else {
+                this.props.onError(
+                    new UserFriendlyError("Error while changing password: %(error)s", {
+                        error: String(err),
+                        cause: undefined,
+                    }),
+                );
+            }
         }
     };
 
@@ -367,7 +394,7 @@ export default class ChangePassword extends React.Component<IProps, IState> {
         return Object.values(this.state.fieldValid).every(Boolean);
     }
 
-    private findFirstInvalidField(fieldIDs: FieldType[]): Field {
+    private findFirstInvalidField(fieldIDs: FieldType[]): Field | null {
         for (const fieldID of fieldIDs) {
             if (!this.state.fieldValid[fieldID] && this[fieldID]) {
                 return this[fieldID];

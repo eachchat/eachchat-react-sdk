@@ -26,8 +26,7 @@ interface ISerializedListLayout {
 
 export class ListLayout {
     private _n = 0;
-    // private _previews = false;
-    private _previews = true;
+    private _previews = false;
     private _collapsed = false;
 
     public constructor(public readonly tagId: TagID) {

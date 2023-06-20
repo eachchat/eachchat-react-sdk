@@ -33,7 +33,6 @@ export enum MetaSpace {
     Favourites = "favourites-space",
     People = "people-space",
     Orphans = "orphans-space",
-    Contact = "yiqia-contact",
 }
 
 export const getMetaSpaceName = (spaceKey: MetaSpace, allRoomsInHome = false): string => {
@@ -46,8 +45,6 @@ export const getMetaSpaceName = (spaceKey: MetaSpace, allRoomsInHome = false): s
             return _t("People");
         case MetaSpace.Orphans:
             return _t("Other rooms");
-        case MetaSpace.Contact:
-            return _t("Contact");
     }
 };
 
@@ -62,7 +59,6 @@ export function isMetaSpace(spaceKey?: SpaceKey): boolean {
         spaceKey === MetaSpace.Home ||
         spaceKey === MetaSpace.Favourites ||
         spaceKey === MetaSpace.People ||
-        spaceKey === MetaSpace.Orphans || 
-        spaceKey === MetaSpace.Contact 
+        spaceKey === MetaSpace.Orphans
     );
 }

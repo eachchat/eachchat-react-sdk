@@ -15,13 +15,14 @@ limitations under the License.
 */
 
 import { mocked } from "jest-mock";
-import { MatrixClient } from "matrix-js-sdk/src/matrix";
+import { MatrixClient, MatrixError } from "matrix-js-sdk/src/matrix";
 
 import { MatrixClientPeg } from "../../src/MatrixClientPeg";
-import Modal, { ModalManager } from "../../src/Modal";
+import Modal, { ComponentType, ComponentProps } from "../../src/Modal";
 import SettingsStore from "../../src/settings/SettingsStore";
 import MultiInviter, { CompletionStates } from "../../src/utils/MultiInviter";
 import * as TestUtilsMatrix from "../test-utils";
+import AskInviteAnywayDialog from "../../src/components/views/dialogs/AskInviteAnywayDialog";
 
 const ROOMID = "!room:server";
 
@@ -56,9 +57,11 @@ const mockPromptBeforeInviteUnknownUsers = (value: boolean) => {
 };
 
 const mockCreateTrackedDialog = (callbackName: "onInviteAnyways" | "onGiveUp") => {
-    mocked(Modal.createDialog).mockImplementation((...rest: Parameters<ModalManager["createDialog"]>): any => {
-        rest[1]![callbackName]();
-    });
+    mocked(Modal.createDialog).mockImplementation(
+        (Element: ComponentType, props?: ComponentProps<ComponentType>): any => {
+            (props as ComponentProps<typeof AskInviteAnywayDialog>)[callbackName]();
+        },
+    );
 };
 
 const expectAllInvitedResult = (result: CompletionStates) => {
@@ -77,7 +80,7 @@ describe("MultiInviter", () => {
         jest.resetAllMocks();
 
         TestUtilsMatrix.stubClient();
-        client = MatrixClientPeg.get() as jest.Mocked<MatrixClient>;
+        client = MatrixClientPeg.safeGet() as jest.Mocked<MatrixClient>;
 
         client.invite = jest.fn();
         client.invite.mockResolvedValue({});
@@ -87,7 +90,7 @@ describe("MultiInviter", () => {
             return MXID_PROFILE_STATES[userId] || Promise.reject();
         });
 
-        inviter = new MultiInviter(ROOMID);
+        inviter = new MultiInviter(client, ROOMID);
     });
 
     describe("invite", () => {
@@ -138,6 +141,18 @@ describe("MultiInviter", () => {
                     expectAllInvitedResult(result);
                 });
             });
+        });
+
+        it("should show sensible error when attempting 3pid invite with no identity server", async () => {
+            client.inviteByEmail = jest.fn().mockRejectedValueOnce(
+                new MatrixError({
+                    errcode: "ORG.MATRIX.JSSDK_MISSING_PARAM",
+                }),
+            );
+            await inviter.invite(["foo@bar.com"]);
+            expect(inviter.getErrorText("foo@bar.com")).toMatchInlineSnapshot(
+                `"Cannot invite user by email without an identity server. You can connect to one under "Settings"."`,
+            );
         });
     });
 });

@@ -115,7 +115,7 @@ describe("ThreadView", () => {
 
         stubClient();
         mockPlatformPeg();
-        mockClient = mocked(MatrixClientPeg.get());
+        mockClient = mocked(MatrixClientPeg.safeGet());
         jest.spyOn(mockClient, "supportsThreads").mockReturnValue(true);
 
         room = new Room(ROOM_ID, mockClient, mockClient.getUserId() ?? "", {
@@ -131,7 +131,7 @@ describe("ThreadView", () => {
 
         rootEvent = res.rootEvent;
 
-        DMRoomMap.makeShared();
+        DMRoomMap.makeShared(mockClient);
         jest.spyOn(DMRoomMap.shared(), "getUserIdForRoomId").mockReturnValue(SENDER);
     });
 
@@ -147,7 +147,7 @@ describe("ThreadView", () => {
         );
     });
 
-    it("sends a message with the correct fallback", async () => {
+    it("sends a thread message with the correct fallback", async () => {
         const { container } = await getComponent();
 
         const { rootEvent: rootEvent2 } = mkThread({

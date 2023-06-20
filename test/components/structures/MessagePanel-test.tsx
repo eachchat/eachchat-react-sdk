@@ -46,7 +46,6 @@ const roomId = "!roomId:server_name";
 
 describe("MessagePanel", function () {
     let clock: FakeTimers.InstalledClock;
-    const realSetTimeout = window.setTimeout;
     const events = mkEvents();
     const userId = "@me:here";
     const client = getMockClientWithEventEmitter({
@@ -113,7 +112,7 @@ describe("MessagePanel", function () {
             return arg === "showDisplaynameChanges";
         });
 
-        DMRoomMap.makeShared();
+        DMRoomMap.makeShared(client);
     });
 
     afterEach(function () {
@@ -354,7 +353,7 @@ describe("MessagePanel", function () {
         const tiles = container.getElementsByClassName("mx_EventTile");
 
         // find the <li> which wraps the read marker
-        const [rm] = container.getElementsByClassName("mx_RoomView_myReadMarker_container");
+        const [rm] = container.getElementsByClassName("mx_MessagePanel_myReadMarker");
 
         // it should follow the <li> which wraps the event tile for event 4
         const eventContainer = tiles[4];
@@ -374,7 +373,7 @@ describe("MessagePanel", function () {
         const [summary] = container.getElementsByClassName("mx_GenericEventListSummary");
 
         // find the <li> which wraps the read marker
-        const [rm] = container.getElementsByClassName("mx_RoomView_myReadMarker_container");
+        const [rm] = container.getElementsByClassName("mx_MessagePanel_myReadMarker");
 
         expect(rm.previousSibling).toEqual(summary);
 
@@ -396,7 +395,7 @@ describe("MessagePanel", function () {
         const [summary] = container.getElementsByClassName("mx_GenericEventListSummary");
 
         // find the <li> which wraps the read marker
-        const [rm] = container.getElementsByClassName("mx_RoomView_myReadMarker_container");
+        const [rm] = container.getElementsByClassName("mx_MessagePanel_myReadMarker");
 
         expect(rm.previousSibling).toEqual(summary);
 
@@ -404,7 +403,7 @@ describe("MessagePanel", function () {
         expect(isReadMarkerVisible(rm)).toBeFalsy();
     });
 
-    it("shows a ghost read-marker when the read-marker moves", function (done) {
+    it("shows a ghost read-marker when the read-marker moves", function () {
         // fake the clock so that we can test the velocity animation.
         clock = FakeTimers.install();
 
@@ -421,7 +420,7 @@ describe("MessagePanel", function () {
         const tiles = container.getElementsByClassName("mx_EventTile");
 
         // find the <li> which wraps the read marker
-        const [rm] = container.getElementsByClassName("mx_RoomView_myReadMarker_container");
+        const [rm] = container.getElementsByClassName("mx_MessagePanel_myReadMarker");
         expect(rm.previousSibling).toEqual(tiles[4]);
 
         rerender(
@@ -435,7 +434,7 @@ describe("MessagePanel", function () {
         );
 
         // now there should be two RM containers
-        const readMarkers = container.getElementsByClassName("mx_RoomView_myReadMarker_container");
+        const readMarkers = container.getElementsByClassName("mx_MessagePanel_myReadMarker");
 
         expect(readMarkers.length).toEqual(2);
 
@@ -446,19 +445,9 @@ describe("MessagePanel", function () {
         // the second should be the real thing
         expect(readMarkers[1].previousSibling).toEqual(tiles[6]);
 
-        // advance the clock, and then let the browser run an animation frame,
-        // to let the animation start
+        // advance the clock, and then let the browser run an animation frame to let the animation start
         clock.tick(1500);
-
-        realSetTimeout(() => {
-            // then advance it again to let it complete
-            clock.tick(1000);
-            realSetTimeout(() => {
-                // the ghost should now have finished
-                expect(hr.style.opacity).toEqual("0");
-                done();
-            }, 100);
-        }, 100);
+        expect(hr.style.opacity).toEqual("0");
     });
 
     it("should collapse creation events", function () {
@@ -521,7 +510,7 @@ describe("MessagePanel", function () {
         );
 
         // find the <li> which wraps the read marker
-        const [rm] = container.getElementsByClassName("mx_RoomView_myReadMarker_container");
+        const [rm] = container.getElementsByClassName("mx_MessagePanel_myReadMarker");
 
         const [messageList] = container.getElementsByClassName("mx_RoomView_MessageList");
         const rows = messageList.children;
@@ -679,6 +668,77 @@ describe("MessagePanel", function () {
         const els = container.getElementsByClassName("mx_GenericEventListSummary");
         expect(els.length).toEqual(1);
         expect(els[0].getAttribute("data-scroll-tokens")?.split(",")).toHaveLength(3);
+    });
+
+    it("should handle large numbers of hidden events quickly", () => {
+        // Increase the length of the loop here to test performance issues with
+        // rendering
+
+        const events: MatrixEvent[] = [];
+        for (let i = 0; i < 100; i++) {
+            events.push(
+                TestUtilsMatrix.mkEvent({
+                    event: true,
+                    type: "unknown.event.type",
+                    content: { key: "value" },
+                    room: "!room:id",
+                    user: "@user:id",
+                    ts: 1000000 + i,
+                }),
+            );
+        }
+        const { asFragment } = render(getComponent({ events }, { showHiddenEvents: false }));
+        expect(asFragment()).toMatchSnapshot();
+    });
+
+    it("should handle lots of room creation events quickly", () => {
+        // Increase the length of the loop here to test performance issues with
+        // rendering
+
+        const events = [TestUtilsMatrix.mkRoomCreateEvent("@user:id", "!room:id")];
+        for (let i = 0; i < 100; i++) {
+            events.push(
+                TestUtilsMatrix.mkMembership({
+                    mship: "join",
+                    prevMship: "join",
+                    room: "!room:id",
+                    user: "@user:id",
+                    event: true,
+                    skey: "123",
+                }),
+            );
+        }
+        const { asFragment } = render(getComponent({ events }, { showHiddenEvents: false }));
+        expect(asFragment()).toMatchSnapshot();
+    });
+
+    it("should handle lots of membership events quickly", () => {
+        // Increase the length of the loop here to test performance issues with
+        // rendering
+
+        const events: MatrixEvent[] = [];
+        for (let i = 0; i < 100; i++) {
+            events.push(
+                TestUtilsMatrix.mkMembership({
+                    mship: "join",
+                    prevMship: "join",
+                    room: "!room:id",
+                    user: "@user:id",
+                    event: true,
+                    skey: "123",
+                }),
+            );
+        }
+        const { asFragment } = render(getComponent({ events }, { showHiddenEvents: true }));
+        const cpt = asFragment();
+
+        // Ignore properties that change every time
+        cpt.querySelectorAll("li").forEach((li) => {
+            li.setAttribute("data-scroll-tokens", "__scroll_tokens__");
+            li.setAttribute("data-testid", "__testid__");
+        });
+
+        expect(cpt).toMatchSnapshot();
     });
 });
 

@@ -78,7 +78,7 @@ const BetaCard: React.FC<IProps> = ({ title: titleOverride, featureId }) => {
     const { title, caption, faq, image, feedbackLabel, feedbackSubheading, extraSettings, requiresRefresh } = info;
 
     let feedbackButton;
-    if (value && feedbackLabel && feedbackSubheading && shouldShowFeedback() && !SdkConfig.get("setting_defaults").dis_feedback ) {
+    if (value && feedbackLabel && feedbackSubheading && shouldShowFeedback()) {
         feedbackButton = (
             <AccessibleButton
                 onClick={() => {

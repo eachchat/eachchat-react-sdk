@@ -14,7 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { EventType, IRoomEvent, MatrixClient, MatrixEvent, MsgType, Room, RoomMember } from "matrix-js-sdk/src/matrix";
+import {
+    EventType,
+    IRoomEvent,
+    MatrixClient,
+    MatrixEvent,
+    MsgType,
+    Room,
+    RoomMember,
+    RoomState,
+} from "matrix-js-sdk/src/matrix";
 import fetchMock from "fetch-mock-jest";
 
 import { filterConsole, mkStubRoom, REPEATABLE_DATE, stubClient } from "../../test-utils";
@@ -51,6 +60,20 @@ const EVENT_ATTACHMENT: IRoomEvent = {
     },
 };
 
+const EVENT_ATTACHMENT_MALFORMED: IRoomEvent = {
+    event_id: "$2",
+    type: EventType.RoomMessage,
+    sender: "@alice:example.com",
+    origin_server_ts: 1,
+    content: {
+        msgtype: MsgType.File,
+        body: "hello.txt",
+        file: {
+            url: undefined,
+        },
+    },
+};
+
 describe("HTMLExport", () => {
     let client: jest.Mocked<MatrixClient>;
     let room: Room;
@@ -71,7 +94,7 @@ describe("HTMLExport", () => {
         jest.setSystemTime(REPEATABLE_DATE);
 
         client = stubClient() as jest.Mocked<MatrixClient>;
-        DMRoomMap.makeShared();
+        DMRoomMap.makeShared(client);
 
         room = new Room("!myroom:example.org", client, "@me:example.org");
         client.getRoom.mockReturnValue(room);
@@ -106,6 +129,22 @@ describe("HTMLExport", () => {
         const media = mediaFromMxc(mxc, client);
         fetchMock.get(media.srcHttp!, body);
     }
+
+    it("should throw when created with invalid config for LastNMessages", async () => {
+        expect(
+            () =>
+                new HTMLExporter(
+                    room,
+                    ExportType.LastNMessages,
+                    {
+                        attachmentsIncluded: false,
+                        maxSize: 1_024 * 1_024,
+                        numberOfMessages: undefined,
+                    },
+                    () => {},
+                ),
+        ).toThrow("Invalid export options");
+    });
 
     it("should have an SDK-branded destination file name", () => {
         const roomName = "My / Test / Room: Welcome";
@@ -266,6 +305,56 @@ describe("HTMLExport", () => {
         expect(await file.text()).toBe(avatarContent);
     });
 
+    it("should handle when an event has no sender", async () => {
+        const EVENT_MESSAGE_NO_SENDER: IRoomEvent = {
+            event_id: "$1",
+            type: EventType.RoomMessage,
+            sender: "",
+            origin_server_ts: 0,
+            content: {
+                msgtype: "m.text",
+                body: "Message with no sender",
+            },
+        };
+        mockMessages(EVENT_MESSAGE_NO_SENDER);
+
+        const exporter = new HTMLExporter(
+            room,
+            ExportType.Timeline,
+            {
+                attachmentsIncluded: false,
+                maxSize: 1_024 * 1_024,
+            },
+            () => {},
+        );
+
+        await exporter.export();
+
+        const file = getMessageFile(exporter);
+        expect(await file.text()).toContain(EVENT_MESSAGE_NO_SENDER.content.body);
+    });
+
+    it("should handle when events sender cannot be found in room state", async () => {
+        mockMessages(EVENT_MESSAGE);
+
+        jest.spyOn(RoomState.prototype, "getSentinelMember").mockReturnValue(null);
+
+        const exporter = new HTMLExporter(
+            room,
+            ExportType.Timeline,
+            {
+                attachmentsIncluded: false,
+                maxSize: 1_024 * 1_024,
+            },
+            () => {},
+        );
+
+        await exporter.export();
+
+        const file = getMessageFile(exporter);
+        expect(await file.text()).toContain(EVENT_MESSAGE.content.body);
+    });
+
     it("should include attachments", async () => {
         mockMessages(EVENT_MESSAGE, EVENT_ATTACHMENT);
         const attachmentBody = "Lorem ipsum dolor sit amet";
@@ -292,6 +381,68 @@ describe("HTMLExport", () => {
         // Ensure that the attachment has the expected content
         const text = await file.text();
         expect(text).toBe(attachmentBody);
+    });
+
+    it("should handle when attachment cannot be fetched", async () => {
+        mockMessages(EVENT_MESSAGE, EVENT_ATTACHMENT_MALFORMED, EVENT_ATTACHMENT);
+        const attachmentBody = "Lorem ipsum dolor sit amet";
+
+        mockMxc("mxc://example.org/test-id", attachmentBody);
+
+        const exporter = new HTMLExporter(
+            room,
+            ExportType.Timeline,
+            {
+                attachmentsIncluded: true,
+                maxSize: 1_024 * 1_024,
+            },
+            () => {},
+        );
+
+        await exporter.export();
+
+        // good attachment present
+        const files = getFiles(exporter);
+        const file = files[Object.keys(files).find((k) => k.endsWith(".txt"))!];
+        expect(file).not.toBeUndefined();
+
+        // Ensure that the attachment has the expected content
+        const text = await file.text();
+        expect(text).toBe(attachmentBody);
+
+        // messages export still successful
+        const messagesFile = getMessageFile(exporter);
+        expect(await messagesFile.text()).toBeTruthy();
+    });
+
+    it("should handle when attachment srcHttp is falsy", async () => {
+        mockMessages(EVENT_MESSAGE, EVENT_ATTACHMENT);
+        const attachmentBody = "Lorem ipsum dolor sit amet";
+
+        mockMxc("mxc://example.org/test-id", attachmentBody);
+
+        jest.spyOn(client, "mxcUrlToHttp").mockReturnValue(null);
+
+        const exporter = new HTMLExporter(
+            room,
+            ExportType.Timeline,
+            {
+                attachmentsIncluded: true,
+                maxSize: 1_024 * 1_024,
+            },
+            () => {},
+        );
+
+        await exporter.export();
+
+        // attachment not present
+        const files = getFiles(exporter);
+        const file = files[Object.keys(files).find((k) => k.endsWith(".txt"))!];
+        expect(file).toBeUndefined();
+
+        // messages export still successful
+        const messagesFile = getMessageFile(exporter);
+        expect(await messagesFile.text()).toBeTruthy();
     });
 
     it("should omit attachments", async () => {
@@ -323,37 +474,35 @@ describe("HTMLExport", () => {
             {
                 attachmentsIncluded: false,
                 maxSize: 1_024 * 1_024,
+                numberOfMessages: 5000,
             },
             () => {},
         );
 
         // test link to the first page
         //@ts-ignore private access
-        exporter.wrapHTML("", 0, 3).then((res) => {
-            expect(res).not.toContain("Previous group of messages");
-            expect(res).toContain(
-                '<div style="text-align:center;margin:10px"><a href="./messages2.html" style="font-weight:bold">Next group of messages</a></div>',
-            );
-        });
+        let result = await exporter.wrapHTML("", 0, 3);
+        expect(result).not.toContain("Previous group of messages");
+        expect(result).toContain(
+            '<div style="text-align:center;margin:10px"><a href="./messages2.html" style="font-weight:bold">Next group of messages</a></div>',
+        );
 
         // test link for a middle page
         //@ts-ignore private access
-        exporter.wrapHTML("", 1, 3).then((res) => {
-            expect(res).toContain(
-                '<div style="text-align:center"><a href="./messages.html" style="font-weight:bold">Previous group of messages</a></div>',
-            );
-            expect(res).toContain(
-                '<div style="text-align:center;margin:10px"><a href="./messages3.html" style="font-weight:bold">Next group of messages</a></div>',
-            );
-        });
+        result = await exporter.wrapHTML("", 1, 3);
+        expect(result).toContain(
+            '<div style="text-align:center"><a href="./messages.html" style="font-weight:bold">Previous group of messages</a></div>',
+        );
+        expect(result).toContain(
+            '<div style="text-align:center;margin:10px"><a href="./messages3.html" style="font-weight:bold">Next group of messages</a></div>',
+        );
 
         // test link for last page
         //@ts-ignore private access
-        exporter.wrapHTML("", 2, 3).then((res) => {
-            expect(res).toContain(
-                '<div style="text-align:center"><a href="./messages2.html" style="font-weight:bold">Previous group of messages</a></div>',
-            );
-            expect(res).not.toContain("Next group of messages");
-        });
+        result = await exporter.wrapHTML("", 2, 3);
+        expect(result).toContain(
+            '<div style="text-align:center"><a href="./messages2.html" style="font-weight:bold">Previous group of messages</a></div>',
+        );
+        expect(result).not.toContain("Next group of messages");
     });
 });

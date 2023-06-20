@@ -22,9 +22,8 @@ import { logger } from "matrix-js-sdk/src/logger";
 
 import { MatrixClientPeg } from "../../../../MatrixClientPeg";
 import Field from "../../elements/Field";
-import AccessibleButton from "../../elements/AccessibleButton";
+import AccessibleButton, { ButtonEvent } from "../../elements/AccessibleButton";
 import { _t } from "../../../../languageHandler";
-import { IDialogProps } from "../IDialogProps";
 import { accessSecretStorage } from "../../../../SecurityManager";
 import Modal from "../../../../Modal";
 import InteractiveAuthDialog from "../InteractiveAuthDialog";
@@ -40,9 +39,12 @@ const KEY_FILE_MAX_SIZE = 128;
 // Don't shout at the user that their key is invalid every time they type a key: wait a short time
 const VALIDATION_THROTTLE_MS = 200;
 
-interface IProps extends IDialogProps {
-    keyInfo?: ISecretStorageKeyInfo;
-    checkPrivateKey: (k: { passphrase?: string; recoveryKey?: string }) => boolean;
+export type KeyParams = { passphrase?: string; recoveryKey?: string };
+
+interface IProps {
+    keyInfo: ISecretStorageKeyInfo;
+    checkPrivateKey: (k: KeyParams) => Promise<boolean>;
+    onFinished(result?: false | KeyParams): void;
 }
 
 interface IState {
@@ -61,6 +63,7 @@ interface IState {
  */
 export default class AccessSecretStorageDialog extends React.PureComponent<IProps, IState> {
     private fileUpload = React.createRef<HTMLInputElement>();
+    private inputRef = React.createRef<HTMLInputElement>();
 
     public constructor(props: IProps) {
         super(props);
@@ -127,7 +130,7 @@ export default class AccessSecretStorageDialog extends React.PureComponent<IProp
 
         // also clear the file upload control so that the user can upload the same file
         // the did before (otherwise the onchange wouldn't fire)
-        if (this.fileUpload.current) this.fileUpload.current.value = null;
+        if (this.fileUpload.current) this.fileUpload.current.value = "";
 
         // We don't use Field's validation here because a) we want it in a separate place rather
         // than in a tooltip and b) we want it to display feedback based on the uploaded file
@@ -176,7 +179,10 @@ export default class AccessSecretStorageDialog extends React.PureComponent<IProp
     private onPassPhraseNext = async (ev: FormEvent<HTMLFormElement> | React.MouseEvent): Promise<void> => {
         ev.preventDefault();
 
-        if (this.state.passPhrase.length <= 0) return;
+        if (this.state.passPhrase.length <= 0) {
+            this.inputRef.current?.focus();
+            return;
+        }
 
         this.setState({ keyMatches: null });
         const input = { passphrase: this.state.passPhrase };
@@ -185,6 +191,7 @@ export default class AccessSecretStorageDialog extends React.PureComponent<IProp
             this.props.onFinished(input);
         } else {
             this.setState({ keyMatches });
+            this.inputRef.current?.focus();
         }
     };
 
@@ -210,7 +217,7 @@ export default class AccessSecretStorageDialog extends React.PureComponent<IProp
         });
     };
 
-    private onResetAllClick = (ev: React.MouseEvent<HTMLAnchorElement>): void => {
+    private onResetAllClick = (ev: ButtonEvent): void => {
         ev.preventDefault();
         this.setState({ resetting: true });
     };
@@ -246,7 +253,7 @@ export default class AccessSecretStorageDialog extends React.PureComponent<IProp
 
                 // Now we can indicate that the user is done pressing buttons, finally.
                 // Upstream flows will detect the new secret storage, key backup, etc and use it.
-                this.props.onFinished(true);
+                this.props.onFinished({});
             }, true);
         } catch (e) {
             logger.error(e);
@@ -349,6 +356,7 @@ export default class AccessSecretStorageDialog extends React.PureComponent<IProp
 
                     <form className="mx_AccessSecretStorageDialog_primaryContainer" onSubmit={this.onPassPhraseNext}>
                         <Field
+                            inputRef={this.inputRef}
                             id="mx_passPhraseInput"
                             className="mx_AccessSecretStorageDialog_passPhraseInput"
                             type="password"

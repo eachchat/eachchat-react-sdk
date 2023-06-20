@@ -53,7 +53,7 @@ import { UPDATE_EVENT } from "../../../stores/AsyncStore";
 import { isVideoRoom as calcIsVideoRoom } from "../../../utils/video-rooms";
 import LegacyCallHandler, { LegacyCallHandlerEvent } from "../../../LegacyCallHandler";
 import { useFeatureEnabled, useSettingValue } from "../../../hooks/useSettings";
-import SdkConfig, { DEFAULTS } from "../../../SdkConfig";
+import SdkConfig from "../../../SdkConfig";
 import { useEventEmitterState, useTypedEventEmitterState } from "../../../hooks/useEventEmitter";
 import { useWidgets } from "../right_panel/RoomSummaryCard";
 import { WidgetType } from "../../../widgets/WidgetType";
@@ -69,6 +69,8 @@ import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
 import { GroupCallDuration } from "../voip/CallDuration";
 import { Alignment } from "../elements/Tooltip";
 import RoomCallBanner from "../beacon/RoomCallBanner";
+import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
+import { UIComponent } from "../../../settings/UIFeature";
 
 class DisabledWithReason {
     public constructor(public readonly reason: string) {}
@@ -207,7 +209,7 @@ const VideoCallButton: FC<VideoCallButtonProps> = ({ room, busy, setBusy, behavi
     let menu: JSX.Element | null = null;
     if (menuOpen) {
         const buttonRect = buttonRef.current!.getBoundingClientRect();
-        const brand = SdkConfig.get("element_call").brand ?? DEFAULTS.element_call.brand;
+        const brand = SdkConfig.get("element_call").brand;
         menu = (
             <IconizedContextMenu {...aboveLeftOf(buttonRect)} onFinished={closeMenu}>
                 <IconizedContextMenuOptionList>
@@ -250,7 +252,7 @@ const CallButtons: FC<CallButtonsProps> = ({ room }) => {
     const videoRoomsEnabled = useFeatureEnabled("feature_video_rooms");
     const isVideoRoom = useMemo(() => videoRoomsEnabled && calcIsVideoRoom(room), [videoRoomsEnabled, room]);
     const useElementCallExclusively = useMemo(() => {
-        return SdkConfig.get("element_call").use_exclusively ?? DEFAULTS.element_call.use_exclusively;
+        return SdkConfig.get("element_call").use_exclusively;
     }, []);
 
     const hasLegacyCall = useEventEmitterState(
@@ -591,6 +593,7 @@ export default class RoomHeader extends React.Component<IProps, IState> {
                     })}
                     onClick={this.props.onAppsClick}
                     title={this.props.appsShown ? _t("Hide Widgets") : _t("Show Widgets")}
+                    aria-checked={this.props.appsShown}
                     alignment={Alignment.Bottom}
                     key="apps"
                 />,
@@ -696,7 +699,7 @@ export default class RoomHeader extends React.Component<IProps, IState> {
             </RoomName>
         );
 
-        if (this.props.enableRoomOptionsMenu) {
+        if (this.props.enableRoomOptionsMenu && shouldShowComponent(UIComponent.RoomOptionsMenu)) {
             return (
                 <ContextMenuTooltipButton
                     className="mx_RoomHeader_name"
@@ -733,7 +736,6 @@ export default class RoomHeader extends React.Component<IProps, IState> {
         const icon = this.props.viewingCall ? (
             <div className="mx_RoomHeader_icon mx_RoomHeader_icon_video" />
         ) : this.props.e2eStatus ? (
-            SdkConfig.get("setting_defaults").dis_encryption ? null :
             <E2EIcon className="mx_RoomHeader_icon" status={this.props.e2eStatus} tooltipAlignment={Alignment.Bottom} />
         ) : // If we're expecting an E2EE status to come in, but it hasn't
         // yet been loaded, insert a blank div to reserve space

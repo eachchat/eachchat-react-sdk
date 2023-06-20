@@ -23,10 +23,8 @@ import { MatrixClient } from "matrix-js-sdk/src/client";
 import { GroupCallIntent } from "matrix-js-sdk/src/webrtc/groupCall";
 
 import SettingsStore from "../settings/SettingsStore";
-import EditorStateTransfer from "../utils/EditorStateTransfer";
-import { RoomPermalinkCreator } from "../utils/permalinks/Permalinks";
 import LegacyCallEventGrouper from "../components/structures/LegacyCallEventGrouper";
-import { GetRelationsForEvent } from "../components/views/rooms/EventTile";
+import { EventTileProps } from "../components/views/rooms/EventTile";
 import { TimelineRenderingType } from "../contexts/RoomContext";
 import MessageEvent from "../components/views/messages/MessageEvent";
 import MKeyVerificationConclusion from "../components/views/messages/MKeyVerificationConclusion";
@@ -54,24 +52,26 @@ import {
     shouldDisplayAsVoiceBroadcastStoppedText,
     VoiceBroadcastChunkEventType,
 } from "../voice-broadcast";
-import { CustomEventType } from "../components/views/qingCloud/custom_schema/CustomConstant";
-import SdkConfig from "../SdkConfig";
 
 // Subset of EventTile's IProps plus some mixins
-export interface EventTileTypeProps {
+export interface EventTileTypeProps
+    extends Pick<
+        EventTileProps,
+        | "mxEvent"
+        | "highlights"
+        | "highlightLink"
+        | "showUrlPreview"
+        | "onHeightChanged"
+        | "forExport"
+        | "getRelationsForEvent"
+        | "editState"
+        | "replacingEventId"
+        | "permalinkCreator"
+        | "callEventGrouper"
+        | "isSeeingThroughMessageHiddenForModeration"
+        | "inhibitInteraction"
+    > {
     ref?: React.RefObject<any>; // `any` because it's effectively impossible to convince TS of a reasonable type
-    mxEvent: MatrixEvent;
-    highlights?: string[];
-    highlightLink?: string;
-    showUrlPreview?: boolean;
-    onHeightChanged: () => void;
-    forExport?: boolean;
-    getRelationsForEvent?: GetRelationsForEvent;
-    editState?: EditorStateTransfer;
-    replacingEventId?: string;
-    permalinkCreator: RoomPermalinkCreator;
-    callEventGrouper?: LegacyCallEventGrouper;
-    isSeeingThroughMessageHiddenForModeration?: boolean;
     timestamp?: JSX.Element;
     maxImageHeight?: number; // pixels
     overrideBodyTypes?: Record<string, typeof React.Component>;
@@ -106,11 +106,10 @@ const EVENT_TILE_TYPES = new Map<string, Factory>([
     [EventType.KeyVerificationCancel, KeyVerificationConclFactory],
     [EventType.KeyVerificationDone, KeyVerificationConclFactory],
     [EventType.CallInvite, LegacyCallEventFactory], // note that this requires a special factory type
-    [CustomEventType.QuanXiang, MessageEventFactory],
 ]);
 
 const STATE_EVENT_TILE_TYPES = new Map<string, Factory>([
-    [EventType.RoomEncryption, (ref, props) => !SdkConfig.get("setting_defaults").dis_encryption ? <EncryptionEvent ref={ref} {...props} />: null],
+    [EventType.RoomEncryption, (ref, props) => <EncryptionEvent ref={ref} {...props} />],
     [EventType.RoomCanonicalAlias, TextualEventFactory],
     [EventType.RoomCreate, RoomCreateEventFactory],
     [EventType.RoomMember, TextualEventFactory],
@@ -258,7 +257,7 @@ export function pickFactory(
             return noEventFactoryFactory(); // improper event type to render
         }
 
-        if (STATE_EVENT_TILE_TYPES.get(evType) === TextualEventFactory && !hasText(mxEvent, showHiddenEvents)) {
+        if (STATE_EVENT_TILE_TYPES.get(evType) === TextualEventFactory && !hasText(mxEvent, cli, showHiddenEvents)) {
             return noEventFactoryFactory();
         }
 
@@ -325,6 +324,7 @@ export function renderTile(
         getRelationsForEvent,
         isSeeingThroughMessageHiddenForModeration,
         timestamp,
+        inhibitInteraction,
     } = props;
 
     switch (renderType) {
@@ -343,6 +343,7 @@ export function renderTile(
                 getRelationsForEvent,
                 isSeeingThroughMessageHiddenForModeration,
                 permalinkCreator,
+                inhibitInteraction,
             });
         default:
             // NEARLY ALL THE OPTIONS!
@@ -360,6 +361,7 @@ export function renderTile(
                 getRelationsForEvent,
                 isSeeingThroughMessageHiddenForModeration,
                 timestamp,
+                inhibitInteraction,
             });
     }
 }
@@ -438,7 +440,7 @@ export function haveRendererForEvent(mxEvent: MatrixEvent, showHiddenEvents: boo
     const handler = pickFactory(mxEvent, cli, showHiddenEvents);
     if (!handler) return false;
     if (handler === TextualEventFactory) {
-        return hasText(mxEvent, showHiddenEvents);
+        return hasText(mxEvent, cli, showHiddenEvents);
     } else if (handler === STATE_EVENT_TILE_TYPES.get(EventType.RoomCreate)) {
         const dynamicPredecessorsEnabled = SettingsStore.getValue("feature_dynamic_room_predecessors");
         const predecessor = cli.getRoom(mxEvent.getRoomId())?.findPredecessor(dynamicPredecessorsEnabled);

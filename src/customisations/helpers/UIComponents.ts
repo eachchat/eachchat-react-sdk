@@ -14,13 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import SdkConfig from "../../SdkConfig";
 import { UIComponent } from "../../settings/UIFeature";
 import { ComponentVisibilityCustomisations } from "../ComponentVisibility";
 
 export function shouldShowComponent(component: UIComponent): boolean {
-    if(component === UIComponent.CreateSpaces){
-        return  SdkConfig.get("setting_defaults")[UIComponent.CreateSpaces];
-    }
     return ComponentVisibilityCustomisations.shouldShowComponent?.(component) ?? true;
 }

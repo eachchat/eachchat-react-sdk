@@ -122,7 +122,7 @@ export const SpaceButton = forwardRef<HTMLElement, IButtonProps>(
         }
 
         let contextMenu: JSX.Element | undefined;
-        if (menuDisplayed && handle.current && ContextMenuComponent) {
+        if (space && menuDisplayed && handle.current && ContextMenuComponent) {
             contextMenu = (
                 <ContextMenuComponent
                     {...toRightOf(handle.current.getBoundingClientRect(), 0)}
@@ -185,7 +185,7 @@ interface IItemProps extends InputHTMLAttributes<HTMLLIElement> {
     onExpand?: Function;
     parents?: Set<string>;
     innerRef?: LegacyRef<HTMLLIElement>;
-    dragHandleProps?: DraggableProvidedDragHandleProps;
+    dragHandleProps?: DraggableProvidedDragHandleProps | null;
 }
 
 interface IItemState {

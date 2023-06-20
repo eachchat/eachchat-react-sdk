@@ -14,16 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-export class ValidatedServerConfig {
-    public hsUrl: string;
-    public hsName: string;
-    public hsNameIsDifferent: boolean;
+import { IDelegatedAuthConfig } from "matrix-js-sdk/src/client";
+import { ValidatedIssuerConfig } from "matrix-js-sdk/src/oidc/validate";
 
-    public isUrl: string;
+export interface ValidatedServerConfig {
+    hsUrl: string;
+    hsName: string;
+    hsNameIsDifferent: boolean;
 
-    public isDefault: boolean;
+    isUrl: string;
+
+    isDefault: boolean;
     // when the server config is based on static URLs the hsName is not resolvable and things may wish to use hsUrl
-    public isNameResolvable: boolean;
+    isNameResolvable: boolean;
 
-    public warning: string | Error;
+    warning: string | Error;
+
+    delegatedAuthentication?: IDelegatedAuthConfig & ValidatedIssuerConfig;
 }

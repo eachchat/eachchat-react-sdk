@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import url from "url";
 import React, { ReactNode } from "react";
 import { logger } from "matrix-js-sdk/src/logger";
 import { IThreepid } from "matrix-js-sdk/src/@types/threepids";
@@ -25,7 +24,7 @@ import Modal from "../../../Modal";
 import dis from "../../../dispatcher/dispatcher";
 import { getThreepidsWithBindStatus } from "../../../boundThreepids";
 import IdentityAuthClient from "../../../IdentityAuthClient";
-import { abbreviateUrl, unabbreviateUrl } from "../../../utils/UrlUtils";
+import { abbreviateUrl, parseUrl, unabbreviateUrl } from "../../../utils/UrlUtils";
 import { getDefaultIdentityServerUrl, doesIdentityServerHaveTerms } from "../../../utils/IdentityServerUtils";
 import { timeout } from "../../../utils/promise";
 import { ActionPayload } from "../../../dispatcher/payloads";
@@ -33,6 +32,8 @@ import InlineSpinner from "../elements/InlineSpinner";
 import AccessibleButton from "../elements/AccessibleButton";
 import Field from "../elements/Field";
 import QuestionDialog from "../dialogs/QuestionDialog";
+import SettingsFieldset from "./SettingsFieldset";
+import { SettingsSubsectionText } from "./shared/SettingsSubsection";
 
 // We'll wait up to this long when checking for 3PID bindings on the IS.
 const REACHABILITY_TIMEOUT = 10000; // ms
@@ -44,7 +45,7 @@ const REACHABILITY_TIMEOUT = 10000; // ms
  * @returns {string} null if url passes all checks, otherwise i18ned error string
  */
 async function checkIdentityServerUrl(u: string): Promise<string | null> {
-    const parsedUrl = url.parse(u);
+    const parsedUrl = parseUrl(u);
 
     if (parsedUrl.protocol !== "https:") return _t("Identity server URL must be HTTPS");
 
@@ -72,8 +73,8 @@ interface IProps {
 
 interface IState {
     defaultIdServer?: string;
-    currentClientIdServer: string;
-    idServer?: string;
+    currentClientIdServer?: string;
+    idServer: string;
     error?: string;
     busy: boolean;
     disconnectBusy: boolean;
@@ -81,7 +82,7 @@ interface IState {
 }
 
 export default class SetIdServer extends React.Component<IProps, IState> {
-    private dispatcherRef: string;
+    private dispatcherRef?: string;
 
     public constructor(props: IProps) {
         super(props);
@@ -97,7 +98,6 @@ export default class SetIdServer extends React.Component<IProps, IState> {
             defaultIdServer,
             currentClientIdServer: MatrixClientPeg.get().getIdentityServerUrl(),
             idServer: "",
-            error: null,
             busy: false,
             disconnectBusy: false,
             checking: false,
@@ -109,7 +109,7 @@ export default class SetIdServer extends React.Component<IProps, IState> {
     }
 
     public componentWillUnmount(): void {
-        dis.unregister(this.dispatcherRef);
+        if (this.dispatcherRef) dis.unregister(this.dispatcherRef);
     }
 
     private onAction = (payload: ActionPayload): void => {
@@ -128,7 +128,7 @@ export default class SetIdServer extends React.Component<IProps, IState> {
         this.setState({ idServer: u });
     };
 
-    private getTooltip = (): JSX.Element => {
+    private getTooltip = (): ReactNode => {
         if (this.state.checking) {
             return (
                 <div>
@@ -154,7 +154,7 @@ export default class SetIdServer extends React.Component<IProps, IState> {
         });
         this.setState({
             busy: false,
-            error: null,
+            error: undefined,
             currentClientIdServer: fullUrl,
             idServer: "",
         });
@@ -164,7 +164,7 @@ export default class SetIdServer extends React.Component<IProps, IState> {
         e.preventDefault();
         const { idServer, currentClientIdServer } = this.state;
 
-        this.setState({ busy: true, checking: true, error: null });
+        this.setState({ busy: true, checking: true, error: undefined });
 
         const fullUrl = unabbreviateUrl(idServer);
 
@@ -181,10 +181,10 @@ export default class SetIdServer extends React.Component<IProps, IState> {
                 let save = true;
 
                 // Double check that the identity server even has terms of service.
-                const hasTerms = await doesIdentityServerHaveTerms(fullUrl);
+                const hasTerms = await doesIdentityServerHaveTerms(MatrixClientPeg.get(), fullUrl);
                 if (!hasTerms) {
                     const [confirmed] = await this.showNoTermsWarning(fullUrl);
-                    save = confirmed;
+                    save = !!confirmed;
                 }
 
                 // Show a general warning, possibly with details about any bound
@@ -193,7 +193,7 @@ export default class SetIdServer extends React.Component<IProps, IState> {
                     const [confirmed] = await this.showServerChangeWarning({
                         title: _t("Change identity server"),
                         unboundMessage: _t(
-                            "Disconnect from the identity server <current /> and " + "connect to <new /> instead?",
+                            "Disconnect from the identity server <current /> and connect to <new /> instead?",
                             {},
                             {
                                 current: (sub) => <b>{abbreviateUrl(currentClientIdServer)}</b>,
@@ -202,7 +202,7 @@ export default class SetIdServer extends React.Component<IProps, IState> {
                         ),
                         button: _t("Continue"),
                     });
-                    save = confirmed;
+                    save = !!confirmed;
                 }
 
                 if (save) {
@@ -216,13 +216,13 @@ export default class SetIdServer extends React.Component<IProps, IState> {
         this.setState({
             busy: false,
             checking: false,
-            error: errStr,
+            error: errStr ?? undefined,
             currentClientIdServer: MatrixClientPeg.get().getIdentityServerUrl(),
         });
     };
 
-    private showNoTermsWarning(fullUrl: string): Promise<[boolean]> {
-        const { finished } = Modal.createDialog<[boolean]>(QuestionDialog, {
+    private showNoTermsWarning(fullUrl: string): Promise<[ok?: boolean]> {
+        const { finished } = Modal.createDialog(QuestionDialog, {
             title: _t("Identity server has no terms of service"),
             description: (
                 <div>
@@ -265,7 +265,7 @@ export default class SetIdServer extends React.Component<IProps, IState> {
         title: string;
         unboundMessage: ReactNode;
         button: string;
-    }): Promise<[boolean]> {
+    }): Promise<[ok?: boolean]> {
         const { currentClientIdServer } = this.state;
 
         let threepids: IThreepid[] = [];
@@ -331,7 +331,7 @@ export default class SetIdServer extends React.Component<IProps, IState> {
                 <div>
                     <p>
                         {_t(
-                            "You are still <b>sharing your personal data</b> on the identity " + "server <idserver />.",
+                            "You are still <b>sharing your personal data</b> on the identity server <idserver />.",
                             {},
                             messageElements,
                         )}
@@ -350,7 +350,7 @@ export default class SetIdServer extends React.Component<IProps, IState> {
             message = unboundMessage;
         }
 
-        const { finished } = Modal.createDialog<[boolean]>(QuestionDialog, {
+        const { finished } = Modal.createDialog(QuestionDialog, {
             title,
             description: message,
             button,
@@ -375,7 +375,7 @@ export default class SetIdServer extends React.Component<IProps, IState> {
 
         this.setState({
             busy: false,
-            error: null,
+            error: undefined,
             currentClientIdServer: MatrixClientPeg.get().getIdentityServerUrl(),
             idServer: newFieldVal,
         });
@@ -430,41 +430,41 @@ export default class SetIdServer extends React.Component<IProps, IState> {
                 discoButtonContent = <InlineSpinner />;
             }
             discoSection = (
-                <div>
-                    <span className="mx_SettingsTab_subsectionText">{discoBodyText}</span>
+                <>
+                    <SettingsSubsectionText>{discoBodyText}</SettingsSubsectionText>
                     <AccessibleButton onClick={this.onDisconnectClicked} kind="danger_sm">
                         {discoButtonContent}
                     </AccessibleButton>
-                </div>
+                </>
             );
         }
 
         return (
-            <form className="mx_SetIdServer" onSubmit={this.checkIdServer}>
-                <span className="mx_SettingsTab_subheading">{sectionTitle}</span>
-                <span className="mx_SettingsTab_subsectionText">{bodyText}</span>
-                <Field
-                    label={_t("Enter a new identity server")}
-                    type="text"
-                    autoComplete="off"
-                    placeholder={this.state.defaultIdServer}
-                    value={this.state.idServer}
-                    onChange={this.onIdentityServerChanged}
-                    tooltipContent={this.getTooltip()}
-                    tooltipClassName="mx_SetIdServer_tooltip"
-                    disabled={this.state.busy}
-                    forceValidity={this.state.error ? false : null}
-                />
-                <AccessibleButton
-                    type="submit"
-                    kind="primary_sm"
-                    onClick={this.checkIdServer}
-                    disabled={!this.idServerChangeEnabled()}
-                >
-                    {_t("Change")}
-                </AccessibleButton>
-                {discoSection}
-            </form>
+            <SettingsFieldset legend={sectionTitle} description={bodyText}>
+                <form className="mx_SetIdServer" onSubmit={this.checkIdServer}>
+                    <Field
+                        label={_t("Enter a new identity server")}
+                        type="text"
+                        autoComplete="off"
+                        placeholder={this.state.defaultIdServer}
+                        value={this.state.idServer}
+                        onChange={this.onIdentityServerChanged}
+                        tooltipContent={this.getTooltip()}
+                        tooltipClassName="mx_SetIdServer_tooltip"
+                        disabled={this.state.busy}
+                        forceValidity={this.state.error ? false : undefined}
+                    />
+                    <AccessibleButton
+                        type="submit"
+                        kind="primary_sm"
+                        onClick={this.checkIdServer}
+                        disabled={!this.idServerChangeEnabled()}
+                    >
+                        {_t("Change")}
+                    </AccessibleButton>
+                    {discoSection}
+                </form>
+            </SettingsFieldset>
         );
     }
 }

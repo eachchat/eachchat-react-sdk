@@ -44,9 +44,6 @@ import MBeaconBody from "./MBeaconBody";
 import { DecryptionFailureBody } from "./DecryptionFailureBody";
 import { GetRelationsForEvent, IEventTileOps } from "../rooms/EventTile";
 import { VoiceBroadcastBody, VoiceBroadcastInfoEventType, VoiceBroadcastInfoState } from "../../../voice-broadcast";
-import NextCloudShareNoticeCard from "../qingCloud/next_cloud/NextCloudShareNoticeCard";
-import CustomSchema from "../qingCloud/custom_schema";
-import { CustomEventTypeShowArr } from "../qingCloud/custom_schema/CustomConstant";
 
 // onMessageAllowed is handled internally
 interface IProps extends Omit<IBodyProps, "onMessageAllowed" | "mediaEventHelper"> {
@@ -61,7 +58,7 @@ interface IProps extends Omit<IBodyProps, "onMessageAllowed" | "mediaEventHelper
 }
 
 export interface IOperableEventTile {
-    getEventTileOps(): IEventTileOps;
+    getEventTileOps(): IEventTileOps | null;
 }
 
 const baseBodyTypes = new Map<string, typeof React.Component>([
@@ -72,7 +69,6 @@ const baseBodyTypes = new Map<string, typeof React.Component>([
     [MsgType.File, MFileBody],
     [MsgType.Audio, MVoiceOrAudioBody],
     [MsgType.Video, MVideoBody],
-    ['m.next.cloud.share.link', NextCloudShareNoticeCard],
 ]);
 const baseEvTypes = new Map<string, React.ComponentType<Partial<IBodyProps>>>([
     [EventType.Sticker, MStickerBody],
@@ -86,7 +82,7 @@ const baseEvTypes = new Map<string, React.ComponentType<Partial<IBodyProps>>>([
 
 export default class MessageEvent extends React.Component<IProps> implements IMediaBody, IOperableEventTile {
     private body: React.RefObject<React.Component | IOperableEventTile> = createRef();
-    private mediaHelper: MediaEventHelper;
+    private mediaHelper?: MediaEventHelper;
     private bodyTypes = new Map<string, typeof React.Component>(baseBodyTypes.entries());
     private evTypes = new Map<string, React.ComponentType<Partial<IBodyProps>>>(baseEvTypes.entries());
 
@@ -137,7 +133,7 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
         return (this.body.current as IOperableEventTile)?.getEventTileOps?.() || null;
     };
 
-    public getMediaHelper(): MediaEventHelper {
+    public getMediaHelper(): MediaEventHelper | undefined {
         return this.mediaHelper;
     }
 
@@ -163,12 +159,12 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
             if (this.props.mxEvent.isDecryptionFailure()) {
                 BodyType = DecryptionFailureBody;
             } else if (type && this.evTypes.has(type)) {
-                BodyType = this.evTypes.get(type);
+                BodyType = this.evTypes.get(type)!;
             } else if (msgtype && this.bodyTypes.has(msgtype)) {
-                BodyType = this.bodyTypes.get(msgtype);
+                BodyType = this.bodyTypes.get(msgtype)!;
             } else if (content.url) {
                 // Fallback to MFileBody if there's a content URL
-                BodyType = this.bodyTypes.get(MsgType.File);
+                BodyType = this.bodyTypes.get(MsgType.File)!;
             } else {
                 // Fallback to UnknownBody otherwise if not redacted
                 BodyType = UnknownBody;
@@ -189,19 +185,14 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
             const allowRender = localStorage.getItem(key) === "true";
 
             if (!allowRender) {
-                const userDomain = this.props.mxEvent.getSender().split(":").slice(1).join(":");
-                const userBanned = Mjolnir.sharedInstance().isUserBanned(this.props.mxEvent.getSender());
-                const serverBanned = Mjolnir.sharedInstance().isServerBanned(userDomain);
+                const userDomain = this.props.mxEvent.getSender()?.split(":").slice(1).join(":");
+                const userBanned = Mjolnir.sharedInstance().isUserBanned(this.props.mxEvent.getSender()!);
+                const serverBanned = userDomain && Mjolnir.sharedInstance().isServerBanned(userDomain);
 
                 if (userBanned || serverBanned) {
                     BodyType = MjolnirBody;
                 }
             }
-        }
-
-         // 自定义类型
-        if (type && CustomEventTypeShowArr.includes(type)) {
-            BodyType = CustomSchema;
         }
 
         // @ts-ignore - this is a dynamic react component
@@ -222,6 +213,7 @@ export default class MessageEvent extends React.Component<IProps> implements IMe
                 mediaEventHelper={this.mediaHelper}
                 getRelationsForEvent={this.props.getRelationsForEvent}
                 isSeeingThroughMessageHiddenForModeration={this.props.isSeeingThroughMessageHiddenForModeration}
+                inhibitInteraction={this.props.inhibitInteraction}
             />
         ) : null;
     }

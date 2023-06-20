@@ -28,6 +28,7 @@ import { logger } from "matrix-js-sdk/src/logger";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { ClientEvent, MatrixClient } from "matrix-js-sdk/src/client";
 import { ISyncStateData, SyncState } from "matrix-js-sdk/src/sync";
+import { HTTPError } from "matrix-js-sdk/src/http-api";
 
 import PlatformPeg from "../PlatformPeg";
 import { MatrixClientPeg } from "../MatrixClientPeg";
@@ -56,6 +57,7 @@ export default class EventIndex extends EventEmitter {
 
     public async init(): Promise<void> {
         const indexManager = PlatformPeg.get()?.getEventIndexingManager();
+        if (!indexManager) return;
 
         this.crawlerCheckpoints = await indexManager.loadCheckpoints();
         logger.log("EventIndex: Loaded checkpoints", this.crawlerCheckpoints);
@@ -93,6 +95,7 @@ export default class EventIndex extends EventEmitter {
      */
     public async addInitialCheckpoints(): Promise<void> {
         const indexManager = PlatformPeg.get()?.getEventIndexingManager();
+        if (!indexManager) return;
         const client = MatrixClientPeg.get();
         const rooms = client.getRooms();
 
@@ -160,6 +163,7 @@ export default class EventIndex extends EventEmitter {
      */
     private onSync = async (state: SyncState, prevState: SyncState | null, data?: ISyncStateData): Promise<void> => {
         const indexManager = PlatformPeg.get()?.getEventIndexingManager();
+        if (!indexManager) return;
 
         if (prevState === "PREPARED" && state === "SYNCING") {
             // If our indexer is empty we're most likely running Element the
@@ -190,7 +194,7 @@ export default class EventIndex extends EventEmitter {
     private onRoomTimeline = async (
         ev: MatrixEvent,
         room: Room | undefined,
-        toStartOfTimeline: boolean,
+        toStartOfTimeline: boolean | undefined,
         removed: boolean,
         data: IRoomTimelineData,
     ): Promise<void> => {
@@ -230,9 +234,13 @@ export default class EventIndex extends EventEmitter {
      */
     private redactEvent = async (ev: MatrixEvent): Promise<void> => {
         const indexManager = PlatformPeg.get()?.getEventIndexingManager();
+        if (!indexManager) return;
+
+        const associatedId = ev.getAssociatedId();
+        if (!associatedId) return;
 
         try {
-            await indexManager.deleteEvent(ev.getAssociatedId());
+            await indexManager.deleteEvent(associatedId);
         } catch (e) {
             logger.log("EventIndex: Error deleting event from index", e);
         }
@@ -355,6 +363,7 @@ export default class EventIndex extends EventEmitter {
 
     private async addRoomCheckpoint(roomId: string, fullCrawl = false): Promise<void> {
         const indexManager = PlatformPeg.get()?.getEventIndexingManager();
+        if (!indexManager) return;
         const client = MatrixClientPeg.get();
         const room = client.getRoom(roomId);
 
@@ -403,6 +412,7 @@ export default class EventIndex extends EventEmitter {
 
         const client = MatrixClientPeg.get();
         const indexManager = PlatformPeg.get()?.getEventIndexingManager();
+        if (!indexManager) return;
 
         this.crawler = {
             cancel: () => {
@@ -462,7 +472,7 @@ export default class EventIndex extends EventEmitter {
                     checkpoint.direction,
                 );
             } catch (e) {
-                if (e.httpStatus === 403) {
+                if (e instanceof HTTPError && e.httpStatus === 403) {
                     logger.log(
                         "EventIndex: Removing checkpoint as we don't have ",
                         "permissions to fetch messages from this room.",
@@ -513,10 +523,10 @@ export default class EventIndex extends EventEmitter {
             const profiles: Record<string, IMatrixProfile> = {};
 
             stateEvents.forEach((ev) => {
-                if (ev.event.content && ev.event.content.membership === "join") {
-                    profiles[ev.event.sender] = {
-                        displayname: ev.event.content.displayname,
-                        avatar_url: ev.event.content.avatar_url,
+                if (ev.getContent().membership === "join") {
+                    profiles[ev.getSender()!] = {
+                        displayname: ev.getContent().displayname,
+                        avatar_url: ev.getContent().avatar_url,
                     };
                 }
             });
@@ -555,7 +565,7 @@ export default class EventIndex extends EventEmitter {
                 return object;
             });
 
-            let newCheckpoint;
+            let newCheckpoint: ICrawlerCheckpoint | null = null;
 
             // The token can be null for some reason. Don't create a checkpoint
             // in that case since adding it to the db will fail.
@@ -653,7 +663,7 @@ export default class EventIndex extends EventEmitter {
         const indexManager = PlatformPeg.get()?.getEventIndexingManager();
         this.removeListeners();
         this.stopCrawler();
-        await indexManager.closeEventIndex();
+        await indexManager?.closeEventIndex();
     }
 
     /**
@@ -665,9 +675,9 @@ export default class EventIndex extends EventEmitter {
      * @return {Promise<IResultRoomEvents[]>} A promise that will resolve to an array
      * of search results once the search is done.
      */
-    public async search(searchArgs: ISearchArgs): Promise<IResultRoomEvents> {
+    public async search(searchArgs: ISearchArgs): Promise<IResultRoomEvents | undefined> {
         const indexManager = PlatformPeg.get()?.getEventIndexingManager();
-        return indexManager.searchEventIndex(searchArgs);
+        return indexManager?.searchEventIndex(searchArgs);
     }
 
     /**
@@ -699,6 +709,7 @@ export default class EventIndex extends EventEmitter {
     ): Promise<MatrixEvent[]> {
         const client = MatrixClientPeg.get();
         const indexManager = PlatformPeg.get()?.getEventIndexingManager();
+        if (!indexManager) return [];
 
         const loadArgs: ILoadArgs = {
             roomId: room.roomId,
@@ -726,7 +737,7 @@ export default class EventIndex extends EventEmitter {
         const matrixEvents = events.map((e) => {
             const matrixEvent = eventMapper(e.event);
 
-            const member = new RoomMember(room.roomId, matrixEvent.getSender());
+            const member = new RoomMember(room.roomId, matrixEvent.getSender()!);
 
             // We can't really reconstruct the whole room state from our
             // EventIndex to calculate the correct display name. Use the

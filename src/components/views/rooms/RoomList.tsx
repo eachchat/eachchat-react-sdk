@@ -16,7 +16,7 @@ limitations under the License.
 
 import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
 import { Room } from "matrix-js-sdk/src/models/room";
-import React, { ComponentType, createRef, ReactComponentElement, RefObject, SyntheticEvent } from "react";
+import React, { ComponentType, createRef, ReactComponentElement, SyntheticEvent } from "react";
 
 import { IState as IRovingTabIndexState, RovingTabIndexProvider } from "../../../accessibility/RovingTabIndex";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
@@ -62,8 +62,6 @@ import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
 import ExtraTile from "./ExtraTile";
 import RoomSublist, { IAuxButtonProps } from "./RoomSublist";
 import { SdkContextClass } from "../../../contexts/SDKContext";
-import classNames from "classnames";
-import { autoAddRobot } from "../qingCloud/utils";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -81,14 +79,12 @@ interface IState {
     currentRoomId?: string;
     suggestedRooms: ISuggestedRoom[];
     feature_favourite_messages: boolean;
-    unifiedRoomList: boolean;
 }
 
 export const TAG_ORDER: TagID[] = [
     DefaultTagID.Invite,
     DefaultTagID.SavedItems,
     DefaultTagID.Favourite,
-    DefaultTagID.Unified,
     DefaultTagID.DM,
     DefaultTagID.Untagged,
     DefaultTagID.LowPriority,
@@ -97,7 +93,6 @@ export const TAG_ORDER: TagID[] = [
     DefaultTagID.Archived,
 ];
 const ALWAYS_VISIBLE_TAGS: TagID[] = [DefaultTagID.DM, DefaultTagID.Untagged];
-const ALWAYS_VISIBLE_UNIFIED_TAGS: TagID[] = [DefaultTagID.Unified];
 
 interface ITagAesthetics {
     sectionLabel: string;
@@ -111,8 +106,8 @@ type TagAestheticsMap = Partial<{
     [tagId in TagID]: ITagAesthetics;
 }>;
 
-const auxButtonContextMenuPosition = (handle: RefObject<HTMLDivElement>): MenuProps => {
-    const rect = handle.current.getBoundingClientRect();
+const auxButtonContextMenuPosition = (handle: HTMLDivElement): MenuProps => {
+    const rect = handle.getBoundingClientRect();
     return {
         chevronFace: ChevronFace.None,
         left: rect.left - 7,
@@ -122,7 +117,7 @@ const auxButtonContextMenuPosition = (handle: RefObject<HTMLDivElement>): MenuPr
 
 const DmAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, dispatcher = defaultDispatcher }) => {
     const [menuDisplayed, handle, openMenu, closeMenu] = useContextMenu<HTMLDivElement>();
-    const activeSpace: Room = useEventEmitterState(SpaceStore.instance, UPDATE_SELECTED_SPACE, () => {
+    const activeSpace = useEventEmitterState(SpaceStore.instance, UPDATE_SELECTED_SPACE, () => {
         return SpaceStore.instance.activeSpaceRoom;
     });
 
@@ -130,12 +125,12 @@ const DmAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, dispatcher = default
     const showInviteUsers = shouldShowComponent(UIComponent.InviteUsers);
 
     if (activeSpace && (showCreateRooms || showInviteUsers)) {
-        let contextMenu: JSX.Element;
-        if (menuDisplayed) {
+        let contextMenu: JSX.Element | undefined;
+        if (menuDisplayed && handle.current) {
             const canInvite = shouldShowSpaceInvite(activeSpace);
 
             contextMenu = (
-                <IconizedContextMenu {...auxButtonContextMenuPosition(handle)} onFinished={closeMenu} compact>
+                <IconizedContextMenu {...auxButtonContextMenuPosition(handle.current)} onFinished={closeMenu} compact>
                     <IconizedContextMenuOptionList first>
                         {showCreateRooms && (
                             <IconizedContextMenuOption
@@ -211,21 +206,23 @@ const DmAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, dispatcher = default
     return null;
 };
 
-const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, className }) => {
+const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex }) => {
     const [menuDisplayed, handle, openMenu, closeMenu] = useContextMenu<HTMLDivElement>();
-    const activeSpace = useEventEmitterState<Room>(SpaceStore.instance, UPDATE_SELECTED_SPACE, () => {
+    const activeSpace = useEventEmitterState<Room | null>(SpaceStore.instance, UPDATE_SELECTED_SPACE, () => {
         return SpaceStore.instance.activeSpaceRoom;
     });
 
     const showCreateRoom = shouldShowComponent(UIComponent.CreateRooms);
+    const showExploreRooms = shouldShowComponent(UIComponent.ExploreRooms);
+
     const videoRoomsEnabled = useFeatureEnabled("feature_video_rooms");
     const elementCallVideoRoomsEnabled = useFeatureEnabled("feature_element_call_video_rooms");
 
-    let contextMenuContent: JSX.Element | null = null;
+    let contextMenuContent: JSX.Element | undefined;
     if (menuDisplayed && activeSpace) {
         const canAddRooms = activeSpace.currentState.maySendStateEvent(
             EventType.SpaceChild,
-            MatrixClientPeg.get().getUserId(),
+            MatrixClientPeg.get().getUserId()!,
         );
 
         contextMenuContent = (
@@ -342,56 +339,52 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, className }) =
                         )}
                     </>
                 )}
-                <IconizedContextMenuOption
-                    label={_t("Explore public rooms")}
-                    iconClassName="mx_RoomList_iconExplore"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        closeMenu();
-                        PosthogTrackers.trackInteraction("WebRoomListRoomsSublistPlusMenuExploreRoomsItem", e);
-                        defaultDispatcher.fire(Action.ViewRoomDirectory);
-                    }}
-                />
+                {showExploreRooms ? (
+                    <IconizedContextMenuOption
+                        label={_t("Explore public rooms")}
+                        iconClassName="mx_RoomList_iconExplore"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            closeMenu();
+                            PosthogTrackers.trackInteraction("WebRoomListRoomsSublistPlusMenuExploreRoomsItem", e);
+                            defaultDispatcher.fire(Action.ViewRoomDirectory);
+                        }}
+                    />
+                ) : null}
             </IconizedContextMenuOptionList>
         );
     }
 
     let contextMenu: JSX.Element | null = null;
-    if (menuDisplayed) {
+    if (menuDisplayed && handle.current) {
         contextMenu = (
-            <IconizedContextMenu {...auxButtonContextMenuPosition(handle)} onFinished={closeMenu} compact>
+            <IconizedContextMenu {...auxButtonContextMenuPosition(handle.current)} onFinished={closeMenu} compact>
                 {contextMenuContent}
             </IconizedContextMenu>
         );
     }
 
-    return (
-        <>
-            <ContextMenuTooltipButton
-                tabIndex={tabIndex}
-                onClick={openMenu}
-                className={classNames('mx_RoomSublist_auxButton', className)}
-                tooltipClassName="mx_RoomSublist_addRoomTooltip"
-                aria-label={_t("Add room")}
-                title={_t("Add room")}
-                isExpanded={menuDisplayed}
-                inputRef={handle}
-            />
-            {contextMenu}
-        </>
-    );
-};
+    if (showCreateRoom || showExploreRooms) {
+        return (
+            <>
+                <ContextMenuTooltipButton
+                    tabIndex={tabIndex}
+                    onClick={openMenu}
+                    className="mx_RoomSublist_auxButton"
+                    tooltipClassName="mx_RoomSublist_addRoomTooltip"
+                    aria-label={_t("Add room")}
+                    title={_t("Add room")}
+                    isExpanded={menuDisplayed}
+                    inputRef={handle}
+                />
 
-const UnifiedAuxButton: React.FC<IAuxButtonProps> = (iAuxButtonProps: IAuxButtonProps) => {
-    return (
-        <>
-            {/* eslint-disable-next-line new-cap */}
-            {DmAuxButton(iAuxButtonProps)}
-            {/* eslint-disable-next-line new-cap */}
-            {UntaggedAuxButton({...iAuxButtonProps, className: "mx_RoomSublist_auxGroupButton"})}
-        </>
-    );
+                {contextMenu}
+            </>
+        );
+    }
+
+    return null;
 };
 
 const TAG_AESTHETICS: TagAestheticsMap = {
@@ -409,12 +402,6 @@ const TAG_AESTHETICS: TagAestheticsMap = {
         sectionLabel: _td("Saved Items"),
         isInvite: false,
         defaultHidden: false,
-    },
-    [DefaultTagID.Unified]: {
-        sectionLabel: _td("Normal priority"),
-        isInvite: false,
-        defaultHidden: false,
-        AuxButtonComponent: UnifiedAuxButton,
     },
     [DefaultTagID.DM]: {
         sectionLabel: _td("People"),
@@ -455,9 +442,8 @@ const TAG_AESTHETICS: TagAestheticsMap = {
 
 export default class RoomList extends React.PureComponent<IProps, IState> {
     private dispatcherRef?: string;
-    private readonly unifiedRoomListWatcherRef: string;
     private treeRef = createRef<HTMLDivElement>();
-    private favouriteMessageWatcher: string;
+    private favouriteMessageWatcher?: string;
 
     public static contextType = MatrixClientContext;
     public context!: React.ContextType<typeof MatrixClientContext>;
@@ -469,14 +455,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             sublists: {},
             suggestedRooms: SpaceStore.instance.suggestedRooms,
             feature_favourite_messages: SettingsStore.getValue("feature_favourite_messages"),
-            unifiedRoomList: SettingsStore.getValue("unifiedRoomList"),
         };
-
-        this.unifiedRoomListWatcherRef = SettingsStore.watchSetting(
-            "unifiedRoomList",
-            null,
-            this.onUnifiedRoomListChange,
-        );
     }
 
     public componentDidMount(): void {
@@ -492,28 +471,19 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             },
         );
         this.updateLists(); // trigger the first update
-
-        // 自动添加机器人
-        //  autoAddRobot();
     }
 
     public componentWillUnmount(): void {
         SpaceStore.instance.off(UPDATE_SUGGESTED_ROOMS, this.updateSuggestedRooms);
         RoomListStore.instance.off(LISTS_UPDATE_EVENT, this.updateLists);
-        SettingsStore.unwatchSetting(this.favouriteMessageWatcher);
-        defaultDispatcher.unregister(this.dispatcherRef);
+        if (this.favouriteMessageWatcher) SettingsStore.unwatchSetting(this.favouriteMessageWatcher);
+        if (this.dispatcherRef) defaultDispatcher.unregister(this.dispatcherRef);
         SdkContextClass.instance.roomViewStore.off(UPDATE_EVENT, this.onRoomViewStoreUpdate);
     }
 
-    private onUnifiedRoomListChange = (): void => {
-        this.setState({
-            unifiedRoomList: SettingsStore.getValue("unifiedRoomList"),
-        });
-    };
-
     private onRoomViewStoreUpdate = (): void => {
         this.setState({
-            currentRoomId: SdkContextClass.instance.roomViewStore.getRoomId(),
+            currentRoomId: SdkContextClass.instance.roomViewStore.getRoomId() ?? undefined,
         });
     };
 
@@ -521,6 +491,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         if (payload.action === Action.ViewRoomDelta) {
             const viewRoomDeltaPayload = payload as ViewRoomDeltaPayload;
             const currentRoomId = SdkContextClass.instance.roomViewStore.getRoomId();
+            if (!currentRoomId) return;
             const room = this.getRoomDelta(currentRoomId, viewRoomDeltaPayload.delta, viewRoomDeltaPayload.unread);
             if (room) {
                 defaultDispatcher.dispatch<ViewRoomPayload>({
@@ -667,7 +638,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             Object.values(RoomListStore.instance.orderedLists).every((list) => !list?.length);
 
         return TAG_ORDER.map((orderedTagId) => {
-            let extraTiles = null;
+            let extraTiles: ReactComponentElement<typeof ExtraTile>[] | undefined;
             if (orderedTagId === DefaultTagID.Suggested) {
                 extraTiles = this.renderSuggestedRooms();
             } else if (this.state.feature_favourite_messages && orderedTagId === DefaultTagID.SavedItems) {
@@ -677,10 +648,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             const aesthetics = TAG_AESTHETICS[orderedTagId];
             if (!aesthetics) throw new Error(`Tag ${orderedTagId} does not have aesthetics`);
 
-            let alwaysVisible = (
-                this.state.unifiedRoomList ? ALWAYS_VISIBLE_UNIFIED_TAGS : ALWAYS_VISIBLE_TAGS
-            ).includes(orderedTagId);
-
+            let alwaysVisible = ALWAYS_VISIBLE_TAGS.includes(orderedTagId);
             if (
                 (this.props.activeSpace === MetaSpace.Favourites && orderedTagId !== DefaultTagID.Favourite) ||
                 (this.props.activeSpace === MetaSpace.People && orderedTagId !== DefaultTagID.DM) ||
