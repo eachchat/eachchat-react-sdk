@@ -78,7 +78,7 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
         const cli = MatrixClientPeg.get();
         this.state = {
             isPublic: this.props.defaultPublic || false,
-            isEncrypted: this.props.defaultEncrypted ?? privateShouldBeEncrypted(cli),
+            isEncrypted: false, // this.props.defaultEncrypted ?? privateShouldBeEncrypted(cli), 
             joinRule,
             name: this.props.defaultName || "",
             topic: "",
