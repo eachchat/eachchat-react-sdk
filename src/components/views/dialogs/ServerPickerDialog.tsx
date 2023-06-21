@@ -157,9 +157,10 @@ export default class ServerPickerDialog extends React.PureComponent<IProps, ISta
     private onSubmit = async (ev: SyntheticEvent): Promise<void> => {
         ev.preventDefault();
 
-        if (this.state.defaultChosen) {
-            this.props.onFinished(this.defaultServer);
-        }
+        // 更新后有bug 下次版本跟新在更新
+        // if (this.state.defaultChosen) {
+        //     this.props.onFinished(this.defaultServer);
+        // }
 
         const valid = await this.fieldRef.current?.validate({ allowEmpty: false });
 
@@ -169,7 +170,8 @@ export default class ServerPickerDialog extends React.PureComponent<IProps, ISta
             return;
         }
 
-        this.props.onFinished(this.validatedConf);
+        // this.props.onFinished(this.validatedConf);
+        this.props.onFinished(this.state.defaultChosen ? this.defaultServer : this.validatedConf);
     };
 
     public render(): React.ReactNode {
