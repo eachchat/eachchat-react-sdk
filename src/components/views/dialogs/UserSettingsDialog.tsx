@@ -195,6 +195,9 @@ export default class UserSettingsDialog extends React.Component<IProps, IState> 
                 "UserSettingsHelpAbout",
             ),
         );
+        
+        // 用户设置中不显示帮助与关于
+        tabs.pop();
 
         return tabs as NonEmptyArray<Tab<UserTab>>;
     }

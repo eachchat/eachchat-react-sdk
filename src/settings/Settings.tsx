@@ -180,7 +180,7 @@ export type ISetting = IBaseSetting | IFeature;
 
 export const SETTINGS: { [setting: string]: ISetting } = {
     "feature_video_rooms": {
-        isFeature: true,
+        isFeature: false,
         labsGroup: LabGroup.VoiceAndVideo,
         displayName: _td("Video rooms"),
         supportedLevels: LEVELS_FEATURE,
@@ -1065,7 +1065,7 @@ export const SETTINGS: { [setting: string]: ISetting } = {
     },
     [UIFeature.Feedback]: {
         supportedLevels: LEVELS_UI_FEATURE,
-        default: true,
+        default: false,
     },
     [UIFeature.Registration]: {
         supportedLevels: LEVELS_UI_FEATURE,
