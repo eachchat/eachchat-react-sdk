@@ -143,6 +143,17 @@ export default class AppearanceUserSettingsTab extends React.Component<IProps, I
         );
     }
 
+    // 新增使用组合列表显示所有人员和房间
+    private renderRoomListSection(): JSX.Element {
+        return (
+            <>
+                <div className="mx_Heading_h3 mx_SettingsSubsectionHeading_heading">{_t("Room list")}</div>
+                <div className="mx_SettingsTab_section mx_AppearanceUserSettingsTab_fontScaling">
+                    <SettingsFlag name="unifiedRoomList" level={SettingLevel.DEVICE} useCheckbox={true} />
+                </div>
+            </>
+        );
+    }
     public render(): React.ReactNode {
         const brand = SdkConfig.get().brand;
 
@@ -153,6 +164,8 @@ export default class AppearanceUserSettingsTab extends React.Component<IProps, I
                         {_t("Appearance Settings only affect this %(brand)s session.", { brand })}
                     </SettingsSubsectionText>
                     <ThemeChoicePanel />
+                    {/* 新增使用组合列表显示所有人员和房间 */}
+                    {this.renderRoomListSection()}
                     <LayoutSwitcher
                         userId={this.state.userId}
                         displayName={this.state.displayName}

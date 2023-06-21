@@ -3751,5 +3751,9 @@
     "Activate selected button": "Activate selected button",
     "New line": "New line",
     "Force complete": "Force complete",
+    "QingCloud employees should use the company's unified employee account to login EachChat, if you need to change your password, please go QingCloud SSO.": "QingCloud employees should use the company's unified employee account to login EachChat, if you need to change your password, please go QingCloud SSO.",
+    "Contact":"Contact",
+    "Show people and rooms in a combined list": "Show people and rooms in a combined list",
+    "Normal priority": "Normal priority",
     "Search (must be enabled)": "Search (must be enabled)"
 }

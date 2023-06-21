@@ -1137,4 +1137,11 @@ export const SETTINGS: { [setting: string]: ISetting } = {
         displayName: _td("Enable hardware acceleration"),
         default: true,
     },
+    // 新增使用组合列表显示所有人员和房间
+    "unifiedRoomList": {
+        supportedLevels: LEVELS_ACCOUNT_SETTINGS,
+        displayName: _td("Show people and rooms in a combined list"),
+        default: true,
+        controller: new ReloadOnChangeController(),
+    },
 };

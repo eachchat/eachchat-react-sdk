@@ -78,6 +78,12 @@ export class Algorithm extends EventEmitter {
      */
     public updatesInhibited = false;
 
+    // 新增使用组合列表显示所有人员和房间
+    private unifiedRoomList: boolean;
+    public setUnifiedRoomList(unifiedRoomList: boolean): void {
+        this.unifiedRoomList = unifiedRoomList;
+    }
+
     public start(): void {
         CallStore.instance.on(CallStoreEvent.ActiveCalls, this.onActiveCalls);
     }
@@ -514,12 +520,23 @@ export class Algorithm extends EventEmitter {
                 }
             }
 
+            // 新增使用组合列表显示所有人员和房间
             if (!inTag) {
                 if (DMRoomMap.shared().getUserIdForRoomId(room.roomId)) {
-                    newTags[DefaultTagID.DM].push(room);
-                } else {
-                    newTags[DefaultTagID.Untagged].push(room);
-                }
+                    // SC: Unified list for DMs and groups
+                    if (this.unifiedRoomList) {
+                       newTags[DefaultTagID.Unified]?.push(room);
+                   } else {
+                       newTags[DefaultTagID.DM].push(room);
+                   }
+               } else {
+                   // SC: Unified list for DMs and groups
+                   if (this.unifiedRoomList) {
+                       newTags[DefaultTagID.Unified]?.push(room);
+                   } else {
+                       newTags[DefaultTagID.Untagged].push(room);
+                   }
+               }
             }
         }
 
@@ -556,7 +573,14 @@ export class Algorithm extends EventEmitter {
             tags.push(...this.getTagsOfJoinedRoom(room));
         }
 
-        if (!tags.length) tags.push(DefaultTagID.Untagged);
+        // 新增使用组合列表显示所有人员和房间
+        if (!tags.length) {
+            if (this.unifiedRoomList) {
+                tags.push(DefaultTagID.Unified);
+            } else {
+                tags.push(DefaultTagID.Untagged);
+            }
+        };
 
         return tags;
     }
@@ -564,11 +588,17 @@ export class Algorithm extends EventEmitter {
     private getTagsOfJoinedRoom(room: Room): TagID[] {
         let tags = Object.keys(room.tags || {});
 
+        // 新增使用组合列表显示所有人员和房间
         if (tags.length === 0) {
             // Check to see if it's a DM if it isn't anything else
             if (DMRoomMap.shared().getUserIdForRoomId(room.roomId)) {
-                tags = [DefaultTagID.DM];
-            }
+                // SC: Unified list for DMs and groups
+                if (this.unifiedRoomList) {
+                   tags = [DefaultTagID.Unified];
+               } else {
+                   tags = [DefaultTagID.DM];
+               }
+           }
         }
 
         return tags;

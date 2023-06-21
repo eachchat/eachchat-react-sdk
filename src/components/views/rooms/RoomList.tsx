@@ -79,6 +79,7 @@ interface IState {
     currentRoomId?: string;
     suggestedRooms: ISuggestedRoom[];
     feature_favourite_messages: boolean;
+    unifiedRoomList: boolean; //新增使用组合列表显示所有人员和房间
 }
 
 export const TAG_ORDER: TagID[] = [
@@ -91,8 +92,11 @@ export const TAG_ORDER: TagID[] = [
     DefaultTagID.ServerNotice,
     DefaultTagID.Suggested,
     DefaultTagID.Archived,
+    DefaultTagID.Unified, //新增使用组合列表显示所有人员和房间
 ];
 const ALWAYS_VISIBLE_TAGS: TagID[] = [DefaultTagID.DM, DefaultTagID.Untagged];
+const ALWAYS_VISIBLE_UNIFIED_TAGS: TagID[] = [DefaultTagID.Unified]; //新增使用组合列表显示所有人员和房间
+
 
 interface ITagAesthetics {
     sectionLabel: string;
@@ -206,7 +210,8 @@ const DmAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, dispatcher = default
     return null;
 };
 
-const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex }) => {
+// 新增使用组合列表显示所有人员和房间
+const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, className }) => {
     const [menuDisplayed, handle, openMenu, closeMenu] = useContextMenu<HTMLDivElement>();
     const activeSpace = useEventEmitterState<Room | null>(SpaceStore.instance, UPDATE_SELECTED_SPACE, () => {
         return SpaceStore.instance.activeSpaceRoom;
@@ -371,7 +376,7 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex }) => {
                 <ContextMenuTooltipButton
                     tabIndex={tabIndex}
                     onClick={openMenu}
-                    className="mx_RoomSublist_auxButton"
+                    className={`mx_RoomSublist_auxButton ${className}`} //新增使用组合列表显示所有人员和房间
                     tooltipClassName="mx_RoomSublist_addRoomTooltip"
                     aria-label={_t("Add room")}
                     title={_t("Add room")}
@@ -385,6 +390,18 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex }) => {
     }
 
     return null;
+};
+
+// 新增使用组合列表显示所有人员和房间
+const UnifiedAuxButton: React.FC<IAuxButtonProps> = (iAuxButtonProps: IAuxButtonProps) => {
+    return (
+        <>
+            {/* eslint-disable-next-line new-cap */}
+            {DmAuxButton(iAuxButtonProps)}
+            {/* eslint-disable-next-line new-cap */}
+            {UntaggedAuxButton({...iAuxButtonProps, className: "mx_RoomSublist_auxGroupButton"})}
+        </>
+    );
 };
 
 const TAG_AESTHETICS: TagAestheticsMap = {
@@ -438,6 +455,13 @@ const TAG_AESTHETICS: TagAestheticsMap = {
         isInvite: false,
         defaultHidden: false,
     },
+    // 新增使用组合列表显示所有人员和房间
+    [DefaultTagID.Unified]: {
+        sectionLabel: _td("Normal priority"),
+        isInvite: false,
+        defaultHidden: false,
+        AuxButtonComponent: UnifiedAuxButton,
+    },
 };
 
 export default class RoomList extends React.PureComponent<IProps, IState> {
@@ -455,7 +479,15 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             sublists: {},
             suggestedRooms: SpaceStore.instance.suggestedRooms,
             feature_favourite_messages: SettingsStore.getValue("feature_favourite_messages"),
+            unifiedRoomList: SettingsStore.getValue("unifiedRoomList"),//新增使用组合列表显示所有人员和房间
         };
+
+        // 新增使用组合列表显示所有人员和房间
+        this.unifiedRoomListWatcherRef = SettingsStore.watchSetting(
+            "unifiedRoomList",
+            null,
+            this.onUnifiedRoomListChange,
+        );
     }
 
     public componentDidMount(): void {
@@ -480,6 +512,13 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         if (this.dispatcherRef) defaultDispatcher.unregister(this.dispatcherRef);
         SdkContextClass.instance.roomViewStore.off(UPDATE_EVENT, this.onRoomViewStoreUpdate);
     }
+
+    // 新增使用组合列表显示所有人员和房间
+    private onUnifiedRoomListChange = (): void => {
+        this.setState({
+            unifiedRoomList: SettingsStore.getValue("unifiedRoomList"),
+        });
+    };
 
     private onRoomViewStoreUpdate = (): void => {
         this.setState({
@@ -648,7 +687,8 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             const aesthetics = TAG_AESTHETICS[orderedTagId];
             if (!aesthetics) throw new Error(`Tag ${orderedTagId} does not have aesthetics`);
 
-            let alwaysVisible = ALWAYS_VISIBLE_TAGS.includes(orderedTagId);
+            //新增使用组合列表显示所有人员和房间
+            let alwaysVisible = (this.state.unifiedRoomList ? ALWAYS_VISIBLE_UNIFIED_TAGS : ALWAYS_VISIBLE_TAGS).includes(orderedTagId);
             if (
                 (this.props.activeSpace === MetaSpace.Favourites && orderedTagId !== DefaultTagID.Favourite) ||
                 (this.props.activeSpace === MetaSpace.People && orderedTagId !== DefaultTagID.DM) ||

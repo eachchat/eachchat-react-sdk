@@ -36,6 +36,7 @@ export const OrderedDefaultTagIDs = [
     DefaultTagID.ServerNotice,
     DefaultTagID.Suggested,
     DefaultTagID.Archived,
+    DefaultTagID.Unified, //
 ];
 
 export type TagID = string | DefaultTagID;
@@ -46,5 +47,5 @@ export enum RoomUpdateCause {
     PossibleMuteChange = "POSSIBLE_MUTE_CHANGE",
     ReadReceipt = "READ_RECEIPT",
     NewRoom = "NEW_ROOM",
-    RoomRemoved = "ROOM_REMOVED",
+    RoomRemoved = "ROOM_REMOVED", //新增使用组合列表显示所有人员和房间
 }

@@ -505,6 +505,9 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
                 this.setAndPersistListOrder(tag, listOrder);
             }
         }
+        // 新增使用组合列表显示所有人员和房间
+        // SC: Unified list for DMs and groups
+        this.algorithm.setUnifiedRoomList(SettingsStore.getValue("unifiedRoomList"));
     }
 
     private onAlgorithmListUpdated = (forceUpdate: boolean): void => {
@@ -619,7 +622,22 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
      */
     public getTagsForRoom(room: Room): TagID[] {
         const algorithmTags = this.algorithm.getTagsForRoom(room);
-        if (!algorithmTags) return [DefaultTagID.Untagged];
+        // 新增使用组合列表显示所有人员和房间
+        if (!algorithmTags) {
+            if (SettingsStore.getValue("unifiedRoomList")) {
+                return [DefaultTagID.Unified];
+            } else {
+                return [DefaultTagID.Untagged];
+            }
+        }
+        const dmTagIndex = algorithmTags?.indexOf(DefaultTagID.DM);
+        if (dmTagIndex !== -1) {
+            algorithmTags[dmTagIndex] = DefaultTagID.Unified;
+        }
+        const untaggedTagIndex = algorithmTags?.indexOf(DefaultTagID.Untagged);
+        if (untaggedTagIndex !== -1) {
+            algorithmTags[untaggedTagIndex] = DefaultTagID.Unified;
+        }
         return algorithmTags;
     }
 
