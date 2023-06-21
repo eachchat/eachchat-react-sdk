@@ -24,6 +24,7 @@ export enum DefaultTagID {
     ServerNotice = "m.server_notice",
     Suggested = "im.vector.fake.suggested",
     SavedItems = "im.vector.fake.saved_items",
+    Unified = "de.spiritcroc.fake.unified", //新增使用组合列表显示所有人员和房间
 }
 
 export const OrderedDefaultTagIDs = [
@@ -36,7 +37,7 @@ export const OrderedDefaultTagIDs = [
     DefaultTagID.ServerNotice,
     DefaultTagID.Suggested,
     DefaultTagID.Archived,
-    DefaultTagID.Unified, //
+    DefaultTagID.Unified, //新增使用组合列表显示所有人员和房间
 ];
 
 export type TagID = string | DefaultTagID;

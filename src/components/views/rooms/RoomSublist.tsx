@@ -254,6 +254,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         // Using the passive option to not block the main thread
         // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#improving_scrolling_performance_with_passive_listeners
         this.tilesRef.current?.addEventListener("scroll", this.onScrollPrevent, { passive: true });
+        this.onUnreadFirstChanged(); //新增使用组合列表显示所有人员和房间
     }
 
     public componentWillUnmount(): void {
