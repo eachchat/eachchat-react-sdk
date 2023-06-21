@@ -62,6 +62,7 @@ import { SettingsSubsectionHeading } from "../../shared/SettingsSubsectionHeadin
 import Heading from "../../../typography/Heading";
 import InlineSpinner from "../../../elements/InlineSpinner";
 import MatrixClientContext from "../../../../../contexts/MatrixClientContext";
+import SdkConfig from "../../../../../SdkConfig";  // 新增仅支持sso登录
 
 interface IProps {
     closeSettingsFn: () => void;
@@ -413,11 +414,39 @@ export default class GeneralUserSettingsTab extends React.Component<IProps, ISta
                 </>
             );
         }
+
+        // 新增仅支持sso登录
+        let ssoLogin = false;
+        let ssoUrl ='';
+        if(SdkConfig.get("setting_defaults")?.QingCloud?.onlySSOLogin?.length){
+            try {
+                const mxHsUrl = localStorage.getItem("mx_hs_url");
+                // window.serverConfig = this.props.serverConfig;
+                const onlySSOLoginArr = SdkConfig.get("setting_defaults")?.QingCloud?.onlySSOLogin;
+                const ssoItem: any = onlySSOLoginArr?.find(item=>item?.hostName && (mxHsUrl.indexOf(item.hostName) > -1));
+                if(ssoItem){
+                    ssoLogin = true;
+                    ssoUrl = ssoItem?.ssoUrl;
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
         return (
             <>
                 <SettingsSubsection heading={_t("Account")} stretchContent data-testid="accountSection">
                     {externalAccountManagement}
-                    {passwordChangeSection}
+                    {
+                        // 新增仅支持sso登录
+                        ssoLogin ?
+                        <div className="mx_SettingsTab_subsectionText">
+                        {_t("QingCloud employees should use the company's unified employee account to login EachChat, if you need to change your password, please go QingCloud SSO.")}
+                        {ssoUrl && <a target="_blank" href={ssoUrl+'/if/user/#/settings'}>{ _t("Change Password") }</a>}
+                        </div> :
+                        <>
+                            {passwordChangeSection}
+                        </>
+                    }
                 </SettingsSubsection>
                 {threepidSection}
             </>

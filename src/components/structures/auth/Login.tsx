@@ -38,6 +38,7 @@ import AuthHeader from "../../views/auth/AuthHeader";
 import AccessibleButton, { ButtonEvent } from "../../views/elements/AccessibleButton";
 import { ValidatedServerConfig } from "../../../utils/ValidatedServerConfig";
 import { filterBoolean } from "../../../utils/arrays";
+import SdkConfig from "../../../SdkConfig"; //新增仅支持sso登录
 
 // These are used in several places, and come from the js-sdk's autodiscovery
 // stuff. We define them here so that they'll be picked up by i18n.
@@ -415,8 +416,25 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
         if (!this.state.flows) return null;
 
         // this is the ideal order we want to show the flows in
-        const order = ["m.login.password", "m.login.sso"];
 
+        // const order = ["m.login.password", "m.login.sso"];
+        // 新增仅支持sso登录
+        let order = ["m.login.password", "m.login.sso"];
+        if(SdkConfig.get("setting_defaults")?.QingCloud?.onlySSOLogin?.length){
+            try {
+                const {hsName} = this.props.serverConfig;
+                // window.serverConfig = this.props.serverConfig;
+                const onlySSOLoginArr = SdkConfig.get("setting_defaults")?.QingCloud?.onlySSOLogin;
+                console.log('this.props.serverConfig',this.props.serverConfig)
+                console.log('onlySSOLoginArr',onlySSOLoginArr)
+                if(onlySSOLoginArr?.find(item=>item?.hostName && (item.hostName === hsName))){
+                    order = ["m.login.sso"];
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        
         const flows = filterBoolean(order.map((type) => this.state.flows?.find((flow) => flow.type === type)));
         return (
             <React.Fragment>
@@ -504,21 +522,37 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
                 </div>
             );
         } else if (SettingsStore.getValue(UIFeature.Registration)) {
-            footer = (
-                <span className="mx_AuthBody_changeFlow">
-                    {_t(
-                        "New? <a>Create account</a>",
-                        {},
-                        {
-                            a: (sub) => (
-                                <AccessibleButton kind="link_inline" onClick={this.onTryRegisterClick}>
-                                    {sub}
-                                </AccessibleButton>
-                            ),
-                        },
-                    )}
-                </span>
-            );
+            // 新增仅支持sso登录
+            let onlySSOLogin = false;
+            if(SdkConfig.get("setting_defaults")?.QingCloud?.onlySSOLogin?.length){
+                try {
+                    const {hsName} = this.props.serverConfig;
+                    // window.serverConfig = this.props.serverConfig;
+                    const onlySSOLoginArr = SdkConfig.get("setting_defaults")?.QingCloud?.onlySSOLogin;
+                    if(onlySSOLoginArr?.find(item=>item?.hostName && (item.hostName === hsName))){
+                        onlySSOLogin = true
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+            if(!onlySSOLogin){
+                footer = (
+                    <span className="mx_AuthBody_changeFlow">
+                        {_t(
+                            "New? <a>Create account</a>",
+                            {},
+                            {
+                                a: (sub) => (
+                                    <AccessibleButton kind="link_inline" onClick={this.onTryRegisterClick}>
+                                        {sub}
+                                    </AccessibleButton>
+                                ),
+                            },
+                        )}
+                    </span>
+                )
+            }
         }
 
         return (
