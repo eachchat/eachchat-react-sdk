@@ -26,7 +26,6 @@ interface ISerializedListLayout {
 
 export class ListLayout {
     private _n = 0;
-    // private _previews = false;
     private _previews = true;
     private _collapsed = false;
 

@@ -18,9 +18,9 @@ limitations under the License.
 /** The types of page which can be shown by the LoggedInView */
 enum PageType {
     HomePage = "home_page",
+    YiqiaContactUserPage = "yiqia_contact_user_page", //新增通讯录
     RoomView = "room_view",
     UserView = "user_view",
-    YiqiaContactUserPage = "yiqia_contact_user_page",
 }
 
 export default PageType;

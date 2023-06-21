@@ -24,20 +24,20 @@ export enum DefaultTagID {
     ServerNotice = "m.server_notice",
     Suggested = "im.vector.fake.suggested",
     SavedItems = "im.vector.fake.saved_items",
-    Unified = "de.spiritcroc.fake.unified",
+    Unified = "de.spiritcroc.fake.unified", //新增使用组合列表显示所有人员和房间
 }
 
 export const OrderedDefaultTagIDs = [
     DefaultTagID.Invite,
     DefaultTagID.Favourite,
     DefaultTagID.SavedItems,
-    DefaultTagID.Unified,
     DefaultTagID.DM,
     DefaultTagID.Untagged,
     DefaultTagID.LowPriority,
     DefaultTagID.ServerNotice,
     DefaultTagID.Suggested,
     DefaultTagID.Archived,
+    DefaultTagID.Unified, //新增使用组合列表显示所有人员和房间
 ];
 
 export type TagID = string | DefaultTagID;
@@ -45,7 +45,8 @@ export type TagID = string | DefaultTagID;
 export enum RoomUpdateCause {
     Timeline = "TIMELINE",
     PossibleTagChange = "POSSIBLE_TAG_CHANGE",
+    PossibleMuteChange = "POSSIBLE_MUTE_CHANGE",
     ReadReceipt = "READ_RECEIPT",
     NewRoom = "NEW_ROOM",
-    RoomRemoved = "ROOM_REMOVED",
+    RoomRemoved = "ROOM_REMOVED", //新增使用组合列表显示所有人员和房间
 }

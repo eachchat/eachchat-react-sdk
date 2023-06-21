@@ -77,12 +77,6 @@ const useSpaces = (): [Room[], MetaSpace[], Room[], SpaceKey] => {
     const invites = useEventEmitterState<Room[]>(SpaceStore.instance, UPDATE_INVITED_SPACES, () => {
         return SpaceStore.instance.invitedSpaces;
     });
-
-    // SettingsStore.setValue("Spaces.enabledMetaSpaces", null, SettingLevel.DEVICE, {
-    //     [MetaSpace.Home]: true,
-    //     [MetaSpace.Contact]: true,
-    // });
-
     const [metaSpaces, actualSpaces] = useEventEmitterState<[MetaSpace[], Room[]]>(
         SpaceStore.instance,
         UPDATE_TOP_LEVEL_SPACES,
@@ -239,6 +233,7 @@ const CreateSpaceButton: React.FC<Pick<IInnerSpacePanelProps, "isPanelCollapsed"
                 collapsed: isPanelCollapsed,
             })}
             role="treeitem"
+            aria-selected={false}
         >
             <SpaceButton
                 data-testid="create-space-button"
@@ -256,7 +251,8 @@ const CreateSpaceButton: React.FC<Pick<IInnerSpacePanelProps, "isPanelCollapsed"
     );
 };
 
-const YiqiaContactButton = ({ selected, isPanelCollapsed }: MetaSpaceButtonProps) => {
+// 新增通讯录
+const YiqiaContactButton: React.FC<MetaSpaceButtonProps> = ({ selected, isPanelCollapsed }: any) => {
     return <MetaSpaceButton
         spaceKey={MetaSpace.Contact}
         className="mx_SpaceButton_people"
@@ -268,10 +264,10 @@ const YiqiaContactButton = ({ selected, isPanelCollapsed }: MetaSpaceButtonProps
 
 const metaSpaceComponentMap: Record<MetaSpace, typeof HomeButton> = {
     [MetaSpace.Home]: HomeButton,
+    [MetaSpace.Contact]: YiqiaContactButton, //新增通讯录
     [MetaSpace.Favourites]: FavouritesButton,
     [MetaSpace.People]: PeopleButton,
     [MetaSpace.Orphans]: OrphansButton,
-    [MetaSpace.Contact]: YiqiaContactButton,
 };
 
 interface IInnerSpacePanelProps extends DroppableProvidedProps {
@@ -346,10 +342,11 @@ const InnerSpacePanel = React.memo<IInnerSpacePanelProps>(
 );
 
 const SpacePanel: React.FC = () => {
+    const [dragging, setDragging] = useState(false);
     const [isPanelCollapsed, setPanelCollapsed] = useState(true);
-    const ref = useRef<HTMLDivElement>();
+    const ref = useRef<HTMLDivElement>(null);
     useLayoutEffect(() => {
-        UIStore.instance.trackElementDimensions("SpacePanel", ref.current);
+        if (ref.current) UIStore.instance.trackElementDimensions("SpacePanel", ref.current);
         return () => UIStore.instance.stopTrackingElementDimensions("SpacePanel");
     }, []);
 
@@ -360,14 +357,19 @@ const SpacePanel: React.FC = () => {
     });
 
     return (
-        <DragDropContext
-            onDragEnd={(result) => {
-                if (!result.destination) return; // dropped outside the list
-                SpaceStore.instance.moveRootSpace(result.source.index, result.destination.index);
-            }}
-        >
-            <RovingTabIndexProvider handleHomeEnd handleUpDown>
-                {({ onKeyDownHandler }) => (
+        <RovingTabIndexProvider handleHomeEnd handleUpDown={!dragging}>
+            {({ onKeyDownHandler, onDragEndHandler }) => (
+                <DragDropContext
+                    onDragStart={() => {
+                        setDragging(true);
+                    }}
+                    onDragEnd={(result) => {
+                        setDragging(false);
+                        if (!result.destination) return; // dropped outside the list
+                        SpaceStore.instance.moveRootSpace(result.source.index, result.destination.index);
+                        onDragEndHandler();
+                    }}
+                >
                     <div
                         className={classNames("mx_SpacePanel", { collapsed: isPanelCollapsed })}
                         onKeyDown={onKeyDownHandler}
@@ -411,9 +413,9 @@ const SpacePanel: React.FC = () => {
 
                         <QuickSettingsButton isPanelCollapsed={isPanelCollapsed} />
                     </div>
-                )}
-            </RovingTabIndexProvider>
-        </DragDropContext>
+                </DragDropContext>
+            )}
+        </RovingTabIndexProvider>
     );
 };
 

@@ -77,8 +77,9 @@ export class Algorithm extends EventEmitter {
      * Set to true to suspend emissions of algorithm updates.
      */
     public updatesInhibited = false;
-    private unifiedRoomList: boolean;
 
+    // 新增使用组合列表显示所有人员和房间
+    private unifiedRoomList: boolean;
     public setUnifiedRoomList(unifiedRoomList: boolean): void {
         this.unifiedRoomList = unifiedRoomList;
     }
@@ -497,6 +498,7 @@ export class Algorithm extends EventEmitter {
 
         // Split out the easy rooms first (leave and invite)
         const memberships = splitRoomsByMembership(rooms);
+
         for (const room of memberships[EffectiveMembership.Invite]) {
             newTags[DefaultTagID.Invite].push(room);
         }
@@ -518,22 +520,23 @@ export class Algorithm extends EventEmitter {
                 }
             }
 
+            // 新增使用组合列表显示所有人员和房间
             if (!inTag) {
                 if (DMRoomMap.shared().getUserIdForRoomId(room.roomId)) {
-                     // SC: Unified list for DMs and groups
-                     if (this.unifiedRoomList) {
-                        newTags[DefaultTagID.Unified]?.push(room);
-                    } else {
-                        newTags[DefaultTagID.DM].push(room);
-                    }
-                } else {
                     // SC: Unified list for DMs and groups
                     if (this.unifiedRoomList) {
-                        newTags[DefaultTagID.Unified]?.push(room);
-                    } else {
-                        newTags[DefaultTagID.Untagged].push(room);
-                    }
-                }
+                       newTags[DefaultTagID.Unified]?.push(room);
+                   } else {
+                       newTags[DefaultTagID.DM].push(room);
+                   }
+               } else {
+                   // SC: Unified list for DMs and groups
+                   if (this.unifiedRoomList) {
+                       newTags[DefaultTagID.Unified]?.push(room);
+                   } else {
+                       newTags[DefaultTagID.Untagged].push(room);
+                   }
+               }
             }
         }
 
@@ -570,6 +573,7 @@ export class Algorithm extends EventEmitter {
             tags.push(...this.getTagsOfJoinedRoom(room));
         }
 
+        // 新增使用组合列表显示所有人员和房间
         if (!tags.length) {
             if (this.unifiedRoomList) {
                 tags.push(DefaultTagID.Unified);
@@ -584,16 +588,17 @@ export class Algorithm extends EventEmitter {
     private getTagsOfJoinedRoom(room: Room): TagID[] {
         let tags = Object.keys(room.tags || {});
 
+        // 新增使用组合列表显示所有人员和房间
         if (tags.length === 0) {
             // Check to see if it's a DM if it isn't anything else
             if (DMRoomMap.shared().getUserIdForRoomId(room.roomId)) {
-                 // SC: Unified list for DMs and groups
-                 if (this.unifiedRoomList) {
-                    tags = [DefaultTagID.Unified];
-                } else {
-                    tags = [DefaultTagID.DM];
-                }
-            }
+                // SC: Unified list for DMs and groups
+                if (this.unifiedRoomList) {
+                   tags = [DefaultTagID.Unified];
+               } else {
+                   tags = [DefaultTagID.DM];
+               }
+           }
         }
 
         return tags;

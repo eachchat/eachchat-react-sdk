@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 import { IInvite3PID, MatrixClient, Room } from "matrix-js-sdk/src/matrix";
+import { Optional } from "matrix-events-sdk";
 
 import { Action } from "../../dispatcher/actions";
 import { ViewRoomPayload } from "../../dispatcher/payloads/ViewRoomPayload";
@@ -25,7 +26,6 @@ import { findDMForUser } from "./findDMForUser";
 import dis from "../../dispatcher/dispatcher";
 import { getAddressType } from "../../UserAddress";
 import createRoom from "../../createRoom";
-import SdkConfig from "../../SdkConfig";
 
 /**
  * Start a DM.
@@ -36,11 +36,11 @@ export async function startDm(client: MatrixClient, targets: Member[], showSpinn
     const targetIds = targets.map((t) => t.userId);
 
     // Check if there is already a DM with these people and reuse it if possible.
-    let existingRoom: Room | undefined;
+    let existingRoom: Optional<Room>;
     if (targetIds.length === 1) {
         existingRoom = findDMForUser(client, targetIds[0]);
     } else {
-        existingRoom = DMRoomMap.shared().getDMRoomForIdentifiers(targetIds);
+        existingRoom = DMRoomMap.shared().getDMRoomForIdentifiers(targetIds) ?? undefined;
     }
     if (existingRoom && !isLocalRoom(existingRoom)) {
         dis.dispatch<ViewRoomPayload>({
@@ -56,7 +56,7 @@ export async function startDm(client: MatrixClient, targets: Member[], showSpinn
     const createRoomOptions = { inlineErrors: true } as any; // XXX: Type out `createRoomOptions`
 
     if (await determineCreateRoomEncryptionOption(client, targets)) {
-        createRoomOptions.encryption = !SdkConfig.get("setting_defaults").dis_encryption;
+        createRoomOptions.encryption = true;
     }
 
     // Check if it's a traditional DM and create the room if required.
@@ -90,5 +90,5 @@ export async function startDm(client: MatrixClient, targets: Member[], showSpinn
     }
 
     createRoomOptions.spinner = showSpinner;
-    return createRoom(createRoomOptions);
+    return createRoom(client, createRoomOptions);
 }

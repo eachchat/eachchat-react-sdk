@@ -347,8 +347,9 @@ export enum Action {
      */
     ShowThread = "show_thread",
 
-    ViewYiqiaContact = "view_yiqia_contact",
+    //新增通讯录
+    ViewYiqiaContact = "view_yiqia_contact", 
 
+    //新增通讯录
     ActiveContactData = "view_yiqia_active_contact_data",
-
 }

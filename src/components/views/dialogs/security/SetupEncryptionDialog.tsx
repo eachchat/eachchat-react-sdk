@@ -20,9 +20,8 @@ import SetupEncryptionBody from "../../../structures/auth/SetupEncryptionBody";
 import BaseDialog from "../BaseDialog";
 import { _t } from "../../../../languageHandler";
 import { SetupEncryptionStore, Phase } from "../../../../stores/SetupEncryptionStore";
-import { IDialogProps } from "../IDialogProps";
 
-function iconFromPhase(phase: Phase): string {
+function iconFromPhase(phase?: Phase): string {
     if (phase === Phase.Done) {
         return require("../../../../../res/img/e2e/verified-deprecated.svg").default;
     } else {
@@ -30,7 +29,9 @@ function iconFromPhase(phase: Phase): string {
     }
 }
 
-interface IProps extends IDialogProps {}
+interface IProps {
+    onFinished(): void;
+}
 interface IState {
     icon: string;
 }

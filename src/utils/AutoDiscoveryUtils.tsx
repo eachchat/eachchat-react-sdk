@@ -16,11 +16,12 @@ limitations under the License.
 
 import React, { ReactNode } from "react";
 import { AutoDiscovery, ClientConfig } from "matrix-js-sdk/src/autodiscovery";
+import { IDelegatedAuthConfig, M_AUTHENTICATION } from "matrix-js-sdk/src/client";
 import { logger } from "matrix-js-sdk/src/logger";
 import { IClientWellKnown } from "matrix-js-sdk/src/matrix";
+import { ValidatedIssuerConfig } from "matrix-js-sdk/src/oidc/validate";
 
-import { _t, _td, newTranslatableError } from "../languageHandler";
-import { makeType } from "./TypeUtils";
+import { _t, UserFriendlyError } from "../languageHandler";
 import SdkConfig from "../SdkConfig";
 import { ValidatedServerConfig } from "./ValidatedServerConfig";
 
@@ -43,7 +44,7 @@ export default class AutoDiscoveryUtils {
      * @param {string | Error} error The error to check
      * @returns {boolean} True if the error is a liveliness error.
      */
-    public static isLivelinessError(error: string | Error): boolean {
+    public static isLivelinessError(error?: string | Error | null): boolean {
         if (!error) return false;
         return !!LIVELINESS_DISCOVERY_ERRORS.find((e) =>
             typeof error === "string" ? e === error : e === error.message,
@@ -147,7 +148,7 @@ export default class AutoDiscoveryUtils {
         syntaxOnly = false,
     ): Promise<ValidatedServerConfig> {
         if (!homeserverUrl) {
-            throw newTranslatableError(_td("No homeserver URL provided"));
+            throw new UserFriendlyError("No homeserver URL provided");
         }
 
         const wellknownConfig: IClientWellKnown = {
@@ -190,16 +191,16 @@ export default class AutoDiscoveryUtils {
      * @returns {Promise<ValidatedServerConfig>} Resolves to the validated configuration.
      */
     public static buildValidatedConfigFromDiscovery(
-        serverName: string,
-        discoveryResult: ClientConfig,
+        serverName?: string,
+        discoveryResult?: ClientConfig,
         syntaxOnly = false,
         isSynthetic = false,
     ): ValidatedServerConfig {
-        if (!discoveryResult || !discoveryResult["m.homeserver"]) {
+        if (!discoveryResult?.["m.homeserver"]) {
             // This shouldn't happen without major misconfiguration, so we'll log a bit of information
-            // in the log so we can find this bit of codee but otherwise tell teh user "it broke".
+            // in the log so we can find this bit of code but otherwise tell the user "it broke".
             logger.error("Ended up in a state of not knowing which homeserver to connect to.");
-            throw newTranslatableError(_td("Unexpected error resolving homeserver configuration"));
+            throw new UserFriendlyError("Unexpected error resolving homeserver configuration");
         }
 
         const hsResult = discoveryResult["m.homeserver"];
@@ -216,14 +217,14 @@ export default class AutoDiscoveryUtils {
         // of Element.
         let preferredIdentityUrl = defaultConfig && defaultConfig["isUrl"];
         if (isResult && isResult.state === AutoDiscovery.SUCCESS) {
-            preferredIdentityUrl = isResult["base_url"];
+            preferredIdentityUrl = isResult["base_url"] ?? undefined;
         } else if (isResult && isResult.state !== AutoDiscovery.PROMPT) {
             logger.error("Error determining preferred identity server URL:", isResult);
             if (isResult.state === AutoDiscovery.FAIL_ERROR) {
                 if (AutoDiscovery.ALL_ERRORS.indexOf(isResult.error as string) !== -1) {
-                    throw newTranslatableError(isResult.error as string);
+                    throw new UserFriendlyError(String(isResult.error));
                 }
-                throw newTranslatableError(_td("Unexpected error resolving identity server configuration"));
+                throw new UserFriendlyError("Unexpected error resolving identity server configuration");
             } // else the error is not related to syntax - continue anyways.
 
             // rewrite homeserver error since we don't care about problems
@@ -237,14 +238,20 @@ export default class AutoDiscoveryUtils {
             logger.error("Error processing homeserver config:", hsResult);
             if (!syntaxOnly || !AutoDiscoveryUtils.isLivelinessError(hsResult.error)) {
                 if (AutoDiscovery.ALL_ERRORS.indexOf(hsResult.error as string) !== -1) {
-                    throw newTranslatableError(hsResult.error as string);
+                    throw new UserFriendlyError(String(hsResult.error));
                 }
-                throw newTranslatableError(_td("Unexpected error resolving homeserver configuration"));
+                throw new UserFriendlyError("Unexpected error resolving homeserver configuration");
             } // else the error is not related to syntax - continue anyways.
         }
 
         const preferredHomeserverUrl = hsResult["base_url"];
-        let preferredHomeserverName = serverName ? serverName : hsResult["server_name"];
+
+        if (!preferredHomeserverUrl) {
+            logger.error("No homeserver URL configured");
+            throw new UserFriendlyError("Unexpected error resolving homeserver configuration");
+        }
+
+        let preferredHomeserverName = serverName ?? hsResult["server_name"];
 
         const url = new URL(preferredHomeserverUrl);
         if (!preferredHomeserverName) preferredHomeserverName = url.hostname;
@@ -252,10 +259,24 @@ export default class AutoDiscoveryUtils {
         // It should have been set by now, so check it
         if (!preferredHomeserverName) {
             logger.error("Failed to parse homeserver name from homeserver URL");
-            throw newTranslatableError(_td("Unexpected error resolving homeserver configuration"));
+            throw new UserFriendlyError("Unexpected error resolving homeserver configuration");
         }
 
-        return makeType(ValidatedServerConfig, {
+        let delegatedAuthentication = undefined;
+        if (discoveryResult[M_AUTHENTICATION.stable!]?.state === AutoDiscovery.SUCCESS) {
+            const { authorizationEndpoint, registrationEndpoint, tokenEndpoint, account, issuer } = discoveryResult[
+                M_AUTHENTICATION.stable!
+            ] as IDelegatedAuthConfig & ValidatedIssuerConfig;
+            delegatedAuthentication = {
+                authorizationEndpoint,
+                registrationEndpoint,
+                tokenEndpoint,
+                account,
+                issuer,
+            };
+        }
+
+        return {
             hsUrl: preferredHomeserverUrl,
             hsName: preferredHomeserverName,
             hsNameIsDifferent: url.hostname !== preferredHomeserverName,
@@ -263,6 +284,7 @@ export default class AutoDiscoveryUtils {
             isDefault: false,
             warning: hsResult.error,
             isNameResolvable: !isSynthetic,
-        });
+            delegatedAuthentication,
+        } as ValidatedServerConfig;
     }
 }

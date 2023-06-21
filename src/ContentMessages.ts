@@ -22,7 +22,14 @@ import encrypt from "matrix-encrypt-attachment";
 import extractPngChunks from "png-chunks-extract";
 import { IImageInfo } from "matrix-js-sdk/src/@types/partials";
 import { logger } from "matrix-js-sdk/src/logger";
-import { IEventRelation, ISendEventResponse, MatrixEvent, UploadOpts, UploadProgress } from "matrix-js-sdk/src/matrix";
+import {
+    HTTPError,
+    IEventRelation,
+    ISendEventResponse,
+    MatrixEvent,
+    UploadOpts,
+    UploadProgress,
+} from "matrix-js-sdk/src/matrix";
 import { THREAD_RELATION_TYPE } from "matrix-js-sdk/src/models/thread";
 import { removeElement } from "matrix-js-sdk/src/utils";
 
@@ -48,7 +55,7 @@ import ErrorDialog from "./components/views/dialogs/ErrorDialog";
 import UploadFailureDialog from "./components/views/dialogs/UploadFailureDialog";
 import UploadConfirmDialog from "./components/views/dialogs/UploadConfirmDialog";
 import { createThumbnail } from "./utils/image-media";
-import { attachRelation } from "./components/views/rooms/SendMessageComposer";
+import { attachMentions, attachRelation } from "./components/views/rooms/SendMessageComposer";
 import { doMaybeLocalRoomAction } from "./utils/local-room";
 import { SdkContextClass } from "./contexts/SDKContext";
 
@@ -96,17 +103,22 @@ async function loadImageElement(imageFile: File): Promise<{
         // Thus we could slice the file down to only sniff the first 0x1000
         // bytes (but this makes extractPngChunks choke on the corrupt file)
         const headers = imageFile; //.slice(0, 0x1000);
-        parsePromise = readFileAsArrayBuffer(headers).then((arrayBuffer) => {
-            const buffer = new Uint8Array(arrayBuffer);
-            const chunks = extractPngChunks(buffer);
-            for (const chunk of chunks) {
-                if (chunk.name === "pHYs") {
-                    if (chunk.data.byteLength !== PHYS_HIDPI.length) return false;
-                    return chunk.data.every((val, i) => val === PHYS_HIDPI[i]);
+        parsePromise = readFileAsArrayBuffer(headers)
+            .then((arrayBuffer) => {
+                const buffer = new Uint8Array(arrayBuffer);
+                const chunks = extractPngChunks(buffer);
+                for (const chunk of chunks) {
+                    if (chunk.name === "pHYs") {
+                        if (chunk.data.byteLength !== PHYS_HIDPI.length) return false;
+                        return chunk.data.every((val, i) => val === PHYS_HIDPI[i]);
+                    }
                 }
-            }
-            return false;
-        });
+                return false;
+            })
+            .catch((e) => {
+                console.error("Failed to parse PNG", e);
+                return false;
+            });
     }
 
     const [hidpi] = await Promise.all([parsePromise, imgPromise]);
@@ -152,7 +164,7 @@ async function infoForImageFile(
     // For lesser supported image types, always include the thumbnail even if it is larger
     if (!ALWAYS_INCLUDE_THUMBNAIL.includes(imageFile.type)) {
         // we do all sizing checks here because we still rely on thumbnail generation for making a blurhash from.
-        const sizeDifference = imageFile.size - imageInfo.thumbnail_info.size;
+        const sizeDifference = imageFile.size - imageInfo.thumbnail_info!.size;
         if (
             // image is small enough already
             imageFile.size <= IMAGE_SIZE_THRESHOLD_THUMBNAIL ||
@@ -373,8 +385,13 @@ export default class ContentMessages {
         if (!this.mediaConfig) {
             // hot-path optimization to not flash a spinner if we don't need to
             const modal = Modal.createDialog(Spinner, undefined, "mx_Dialog_spinner");
-            await this.ensureMediaConfigFetched(matrixClient);
-            modal.close();
+            await Promise.race([this.ensureMediaConfigFetched(matrixClient), modal.finished]);
+            if (!this.mediaConfig) {
+                // User cancelled by clicking away on the spinner
+                return;
+            } else {
+                modal.close();
+            }
         }
 
         const tooBigFiles: File[] = [];
@@ -389,7 +406,7 @@ export default class ContentMessages {
         }
 
         if (tooBigFiles.length > 0) {
-            const { finished } = Modal.createDialog<[boolean]>(UploadFailureDialog, {
+            const { finished } = Modal.createDialog(UploadFailureDialog, {
                 badFiles: tooBigFiles,
                 totalFiles: files.length,
                 contentMessages: this,
@@ -407,7 +424,7 @@ export default class ContentMessages {
             const loopPromiseBefore = promBefore;
 
             if (!uploadAll) {
-                const { finished } = Modal.createDialog<[boolean, boolean]>(UploadConfirmDialog, {
+                const { finished } = Modal.createDialog(UploadConfirmDialog, {
                     file,
                     currentIndex: i,
                     totalFiles: okFiles.length,
@@ -419,15 +436,18 @@ export default class ContentMessages {
                 }
             }
 
-            promBefore = doMaybeLocalRoomAction(roomId, (actualRoomId) =>
-                this.sendContentToRoom(
-                    file,
-                    actualRoomId,
-                    relation,
-                    matrixClient,
-                    replyToEvent ?? undefined,
-                    loopPromiseBefore,
-                ),
+            promBefore = doMaybeLocalRoomAction(
+                roomId,
+                (actualRoomId) =>
+                    this.sendContentToRoom(
+                        file,
+                        actualRoomId,
+                        relation,
+                        matrixClient,
+                        replyToEvent ?? undefined,
+                        loopPromiseBefore,
+                    ),
+                matrixClient,
             );
         }
 
@@ -482,6 +502,8 @@ export default class ContentMessages {
             msgtype: MsgType.File, // set more specifically later
         };
 
+        // Attach mentions, which really only applies if there's a replyToEvent.
+        attachMentions(matrixClient.getSafeUserId(), content, null, replyToEvent);
         attachRelation(content, relation);
         if (replyToEvent) {
             addReplyToMessageContent(content, replyToEvent, {
@@ -514,7 +536,11 @@ export default class ContentMessages {
                     const imageInfo = await infoForImageFile(matrixClient, roomId, file);
                     Object.assign(content.info, imageInfo);
                 } catch (e) {
-                    // Failed to thumbnail, fall back to uploading an m.file
+                    if (e instanceof HTTPError) {
+                        // re-throw to main upload error handler
+                        throw e;
+                    }
+                    // Otherwise we failed to thumbnail, fall back to uploading an m.file
                     logger.error(e);
                     content.msgtype = MsgType.File;
                 }
@@ -546,7 +572,7 @@ export default class ContentMessages {
             if (upload.cancelled) throw new UploadCanceledError();
             const threadId = relation?.rel_type === THREAD_RELATION_TYPE.name ? relation.event_id : null;
 
-            const response = await matrixClient.sendMessage(roomId, threadId, content);
+            const response = await matrixClient.sendMessage(roomId, threadId ?? null, content);
 
             if (SettingsStore.getValue("Performance.addSendMessageTimingMetadata")) {
                 sendRoundTripMetric(matrixClient, roomId, response.event_id);
@@ -557,13 +583,13 @@ export default class ContentMessages {
         } catch (error) {
             // 413: File was too big or upset the server in some way:
             // clear the media size limit so we fetch it again next time we try to upload
-            if (error?.httpStatus === 413) {
+            if (error instanceof HTTPError && error.httpStatus === 413) {
                 this.mediaConfig = null;
             }
 
             if (!upload.cancelled) {
                 let desc = _t("The file '%(fileName)s' failed to upload.", { fileName: upload.fileName });
-                if (error.httpStatus === 413) {
+                if (error instanceof HTTPError && error.httpStatus === 413) {
                     desc = _t("The file '%(fileName)s' exceeds this homeserver's size limit for uploads", {
                         fileName: upload.fileName,
                     });

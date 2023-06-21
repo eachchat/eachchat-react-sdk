@@ -58,14 +58,15 @@ import { ShowThreadPayload } from "../../../dispatcher/payloads/ShowThreadPayloa
 import useFavouriteMessages from "../../../hooks/useFavouriteMessages";
 import { GetRelationsForEvent } from "../rooms/EventTile";
 import { VoiceBroadcastInfoEventType } from "../../../voice-broadcast/types";
-import NextCloudUploadButton from "../qingCloud/next_cloud/NextCloudUploadButton";
+import { ButtonEvent } from "../elements/AccessibleButton";
+import NextCloudUploadButton from "../qingCloud/next_cloud/NextCloudUploadButton"; //新增网盘共享
 
 interface IOptionsButtonProps {
     mxEvent: MatrixEvent;
     // TODO: Types
     getTile: () => any | null;
-    getReplyChain: () => ReplyChain;
-    permalinkCreator: RoomPermalinkCreator;
+    getReplyChain: () => ReplyChain | null;
+    permalinkCreator?: RoomPermalinkCreator;
     onFocusChange: (menuDisplayed: boolean) => void;
     getRelationsForEvent?: GetRelationsForEvent;
 }
@@ -85,7 +86,7 @@ const OptionsButton: React.FC<IOptionsButtonProps> = ({
     }, [onFocusChange, menuDisplayed]);
 
     const onOptionsClick = useCallback(
-        (e: React.MouseEvent): void => {
+        (e: ButtonEvent): void => {
             // Don't open the regular browser or our context menu on right-click
             e.preventDefault();
             e.stopPropagation();
@@ -98,10 +99,10 @@ const OptionsButton: React.FC<IOptionsButtonProps> = ({
         [openMenu, onFocus],
     );
 
-    let contextMenu: ReactElement | null;
-    if (menuDisplayed) {
+    let contextMenu: ReactElement | undefined;
+    if (menuDisplayed && button.current) {
         const tile = getTile && getTile();
-        const replyChain = getReplyChain && getReplyChain();
+        const replyChain = getReplyChain();
 
         const buttonRect = button.current.getBoundingClientRect();
         contextMenu = (
@@ -110,7 +111,7 @@ const OptionsButton: React.FC<IOptionsButtonProps> = ({
                 mxEvent={mxEvent}
                 permalinkCreator={permalinkCreator}
                 eventTileOps={tile && tile.getEventTileOps ? tile.getEventTileOps() : undefined}
-                collapseReplyChain={replyChain && replyChain.canCollapse() ? replyChain.collapse : undefined}
+                collapseReplyChain={replyChain?.canCollapse() ? replyChain.collapse : undefined}
                 onFinished={closeMenu}
                 getRelationsForEvent={getRelationsForEvent}
             />
@@ -149,8 +150,8 @@ const ReactButton: React.FC<IReactButtonProps> = ({ mxEvent, reactions, onFocusC
         onFocusChange(menuDisplayed);
     }, [onFocusChange, menuDisplayed]);
 
-    let contextMenu;
-    if (menuDisplayed) {
+    let contextMenu: JSX.Element | undefined;
+    if (menuDisplayed && button.current) {
         const buttonRect = button.current.getBoundingClientRect();
         contextMenu = (
             <ContextMenu {...aboveLeftOf(buttonRect)} onFinished={closeMenu} managed={false}>
@@ -160,7 +161,7 @@ const ReactButton: React.FC<IReactButtonProps> = ({ mxEvent, reactions, onFocusC
     }
 
     const onClick = useCallback(
-        (e: React.MouseEvent) => {
+        (e: ButtonEvent) => {
             // Don't open the regular browser or our context menu on right-click
             e.preventDefault();
             e.stopPropagation();
@@ -204,15 +205,16 @@ const ReplyInThreadButton: React.FC<IReplyInThreadButton> = ({ mxEvent }) => {
     const relationType = mxEvent?.getRelation()?.rel_type;
     const hasARelation = !!relationType && relationType !== RelationType.Thread;
 
-    const onClick = (e: React.MouseEvent): void => {
+    const onClick = (e: ButtonEvent): void => {
         // Don't open the regular browser or our context menu on right-click
         e.preventDefault();
         e.stopPropagation();
 
-        if (mxEvent.getThread() && !mxEvent.isThreadRoot) {
+        const thread = mxEvent.getThread();
+        if (thread?.rootEvent && !mxEvent.isThreadRoot) {
             defaultDispatcher.dispatch<ShowThreadPayload>({
                 action: Action.ShowThread,
-                rootEvent: mxEvent.getThread().rootEvent,
+                rootEvent: thread.rootEvent,
                 initialEvent: mxEvent,
                 scroll_into_view: true,
                 highlighted: true,
@@ -260,13 +262,13 @@ interface IFavouriteButtonProp {
 const FavouriteButton: React.FC<IFavouriteButtonProp> = ({ mxEvent }) => {
     const { isFavourite, toggleFavourite } = useFavouriteMessages();
 
-    const eventId = mxEvent.getId();
+    const eventId = mxEvent.getId()!;
     const classes = classNames("mx_MessageActionBar_iconButton mx_MessageActionBar_favouriteButton", {
         mx_MessageActionBar_favouriteButton_fillstar: isFavourite(eventId),
     });
 
     const onClick = useCallback(
-        (e: React.MouseEvent) => {
+        (e: ButtonEvent) => {
             // Don't open the regular browser or our context menu on right-click
             e.preventDefault();
             e.stopPropagation();
@@ -294,7 +296,7 @@ interface IMessageActionBarProps {
     reactions?: Relations | null | undefined;
     // TODO: Types
     getTile: () => any | null;
-    getReplyChain: () => ReplyChain | undefined;
+    getReplyChain: () => ReplyChain | null;
     permalinkCreator?: RoomPermalinkCreator;
     onFocusChange?: (menuDisplayed: boolean) => void;
     toggleThreadExpanded: () => void;
@@ -345,7 +347,7 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
         this.props.onFocusChange?.(focused);
     };
 
-    private onReplyClick = (e: React.MouseEvent): void => {
+    private onReplyClick = (e: ButtonEvent): void => {
         // Don't open the regular browser or our context menu on right-click
         e.preventDefault();
         e.stopPropagation();
@@ -357,12 +359,17 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
         });
     };
 
-    private onEditClick = (e: React.MouseEvent): void => {
+    private onEditClick = (e: ButtonEvent): void => {
         // Don't open the regular browser or our context menu on right-click
         e.preventDefault();
         e.stopPropagation();
 
-        editEvent(this.props.mxEvent, this.context.timelineRenderingType, this.props.getRelationsForEvent);
+        editEvent(
+            MatrixClientPeg.get(),
+            this.props.mxEvent,
+            this.context.timelineRenderingType,
+            this.props.getRelationsForEvent,
+        );
     };
 
     private readonly forbiddenThreadHeadMsgType = [MsgType.KeyVerificationRequest];
@@ -406,24 +413,24 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
         }
     }
 
-    private onResendClick = (ev: React.MouseEvent): void => {
+    private onResendClick = (ev: ButtonEvent): void => {
         // Don't open the regular browser or our context menu on right-click
         ev.preventDefault();
         ev.stopPropagation();
 
-        this.runActionOnFailedEv((tarEv) => Resend.resend(tarEv));
+        this.runActionOnFailedEv((tarEv) => Resend.resend(MatrixClientPeg.get(), tarEv));
     };
 
-    private onCancelClick = (ev: React.MouseEvent): void => {
+    private onCancelClick = (ev: ButtonEvent): void => {
         this.runActionOnFailedEv(
-            (tarEv) => Resend.removeFromQueue(tarEv),
+            (tarEv) => Resend.removeFromQueue(MatrixClientPeg.get(), tarEv),
             (testEv) => canCancel(testEv.status),
         );
     };
 
     public render(): React.ReactNode {
-        const toolbarOpts = [];
-        if (canEditContent(this.props.mxEvent)) {
+        const toolbarOpts: JSX.Element[] = [];
+        if (canEditContent(MatrixClientPeg.get(), this.props.mxEvent)) {
             toolbarOpts.push(
                 <RovingAccessibleTooltipButton
                     className="mx_MessageActionBar_iconButton"
@@ -453,8 +460,8 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
 
         // We show a different toolbar for failed events, so detect that first.
         const mxEvent = this.props.mxEvent;
-        const editStatus = mxEvent.replacingEvent() && mxEvent.replacingEvent().status;
-        const redactStatus = mxEvent.localRedactionEvent() && mxEvent.localRedactionEvent().status;
+        const editStatus = mxEvent.replacingEvent()?.status;
+        const redactStatus = mxEvent.localRedactionEvent()?.status;
         const allowCancel = canCancel(mxEvent.status) || canCancel(editStatus) || canCancel(redactStatus);
         const isFailed = [mxEvent.status, editStatus, redactStatus].includes(EventStatus.NOT_SENT);
         if (allowCancel && isFailed) {
@@ -518,6 +525,7 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
 
                 // XXX: Assuming that the underlying tile will be a media event if it is eligible media.
                 if (MediaEventHelper.isEligible(this.props.mxEvent)) {
+                    // 新增网盘共享
                     toolbarOpts.splice(0, 0, <NextCloudUploadButton
                         mxEvent={this.props.mxEvent}
                         mediaEventHelperGet={() => this.props.getTile?.().getMediaHelper?.()}

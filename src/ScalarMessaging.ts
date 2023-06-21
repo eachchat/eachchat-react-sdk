@@ -411,6 +411,7 @@ function kickUser(event: MessageEvent<any>, roomId: string, userId: string): voi
 }
 
 function setWidget(event: MessageEvent<any>, roomId: string | null): void {
+    const client = MatrixClientPeg.get();
     const widgetId = event.data.widget_id;
     let widgetType = event.data.type;
     const widgetUrl = event.data.url;
@@ -458,7 +459,7 @@ function setWidget(event: MessageEvent<any>, roomId: string | null): void {
     widgetType = WidgetType.fromString(widgetType);
 
     if (userWidget) {
-        WidgetUtils.setUserWidget(widgetId, widgetType, widgetUrl, widgetName, widgetData)
+        WidgetUtils.setUserWidget(client, widgetId, widgetType, widgetUrl, widgetName, widgetData)
             .then(() => {
                 sendResponse(event, {
                     success: true,
@@ -476,6 +477,7 @@ function setWidget(event: MessageEvent<any>, roomId: string | null): void {
             return;
         }
         WidgetUtils.setRoomWidget(
+            client,
             roomId,
             widgetId,
             widgetType,
@@ -516,7 +518,7 @@ function getWidgets(event: MessageEvent<any>, roomId: string | null): void {
     }
 
     // Add user widgets (not linked to a specific room)
-    const userWidgets = WidgetUtils.getUserWidgetsArray();
+    const userWidgets = WidgetUtils.getUserWidgetsArray(client);
     widgetStateEvents = widgetStateEvents.concat(userWidgets);
 
     sendResponse(event, widgetStateEvents);
@@ -858,8 +860,7 @@ async function readEvents(
 
 const onMessage = function (event: MessageEvent<any>): void {
     if (!event.origin) {
-        // stupid chrome
-        // @ts-ignore
+        // @ts-ignore - stupid chrome
         event.origin = event.originalEvent.origin;
     }
 
@@ -867,15 +868,15 @@ const onMessage = function (event: MessageEvent<any>): void {
     // This means the URL could contain a path (like /develop) and still be used
     // to validate event origins, which do not specify paths.
     // (See https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)
-    let configUrl;
+    let configUrl: URL | undefined;
     try {
-        if (!openManagerUrl) openManagerUrl = IntegrationManagers.sharedInstance().getPrimaryManager().uiUrl;
-        configUrl = new URL(openManagerUrl);
+        if (!openManagerUrl) openManagerUrl = IntegrationManagers.sharedInstance().getPrimaryManager()?.uiUrl;
+        configUrl = new URL(openManagerUrl!);
     } catch (e) {
         // No integrations UI URL, ignore silently.
         return;
     }
-    let eventOriginUrl;
+    let eventOriginUrl: URL;
     try {
         eventOriginUrl = new URL(event.origin);
     } catch (e) {
@@ -987,7 +988,7 @@ const onMessage = function (event: MessageEvent<any>): void {
 };
 
 let listenerCount = 0;
-let openManagerUrl: string | null = null;
+let openManagerUrl: string | undefined;
 
 export function startListening(): void {
     if (listenerCount === 0) {

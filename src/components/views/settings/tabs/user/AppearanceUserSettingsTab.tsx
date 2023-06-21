@@ -31,6 +31,9 @@ import LayoutSwitcher from "../../LayoutSwitcher";
 import FontScalingPanel from "../../FontScalingPanel";
 import ThemeChoicePanel from "../../ThemeChoicePanel";
 import ImageSizePanel from "../../ImageSizePanel";
+import SettingsTab from "../SettingsTab";
+import { SettingsSection } from "../../shared/SettingsSection";
+import SettingsSubsection, { SettingsSubsectionText } from "../../shared/SettingsSubsection";
 
 interface IProps {}
 
@@ -88,7 +91,11 @@ export default class AppearanceUserSettingsTab extends React.Component<IProps, I
 
         const brand = SdkConfig.get().brand;
         const toggle = (
-            <AccessibleButton kind="link" onClick={() => this.setState({ showAdvanced: !this.state.showAdvanced })}>
+            <AccessibleButton
+                kind="link"
+                onClick={() => this.setState({ showAdvanced: !this.state.showAdvanced })}
+                aria-expanded={this.state.showAdvanced}
+            >
                 {this.state.showAdvanced ? _t("Hide advanced") : _t("Show advanced")}
             </AccessibleButton>
         );
@@ -111,7 +118,7 @@ export default class AppearanceUserSettingsTab extends React.Component<IProps, I
                         onChange={(checked) => this.setState({ useSystemFont: checked })}
                     />
                     <Field
-                        className="mx_AppearanceUserSettingsTab_systemFont"
+                        className="mx_AppearanceUserSettingsTab_checkboxControlledField"
                         label={SettingsStore.getDisplayName("systemFont")!}
                         onChange={(value: ChangeEvent<HTMLInputElement>) => {
                             this.setState({
@@ -129,46 +136,48 @@ export default class AppearanceUserSettingsTab extends React.Component<IProps, I
             );
         }
         return (
-            <div className="mx_SettingsTab_section mx_AppearanceUserSettingsTab_Advanced">
+            <SettingsSubsection>
                 {toggle}
                 {advanced}
-            </div>
+            </SettingsSubsection>
         );
     }
 
+    // 新增使用组合列表显示所有人员和房间
     private renderRoomListSection(): JSX.Element {
         return (
             <>
-                <div className="mx_SettingsTab_heading">{_t("Room list")}</div>
+                <div className="mx_Heading_h3 mx_SettingsSubsectionHeading_heading">{_t("Room list")}</div>
                 <div className="mx_SettingsTab_section mx_AppearanceUserSettingsTab_fontScaling">
                     <SettingsFlag name="unifiedRoomList" level={SettingLevel.DEVICE} useCheckbox={true} />
                 </div>
             </>
         );
     }
-    
     public render(): React.ReactNode {
         const brand = SdkConfig.get().brand;
 
         return (
-            <div className="mx_SettingsTab mx_AppearanceUserSettingsTab">
-                <div className="mx_SettingsTab_heading">{_t("Customise your appearance")}</div>
-                <div className="mx_SettingsTab_subsectionText">
-                    {_t("Appearance Settings only affect this %(brand)s session.", { brand })}
-                </div>
-                <ThemeChoicePanel />
-                {this.renderRoomListSection()}
-                <LayoutSwitcher
-                    userId={this.state.userId}
-                    displayName={this.state.displayName}
-                    avatarUrl={this.state.avatarUrl}
-                    messagePreviewText={this.MESSAGE_PREVIEW_TEXT}
-                    onLayoutChanged={this.onLayoutChanged}
-                />
-                <FontScalingPanel />
-                {this.renderAdvancedSection()}
-                <ImageSizePanel />
-            </div>
+            <SettingsTab data-testid="mx_AppearanceUserSettingsTab">
+                <SettingsSection heading={_t("Customise your appearance")}>
+                    <SettingsSubsectionText>
+                        {_t("Appearance Settings only affect this %(brand)s session.", { brand })}
+                    </SettingsSubsectionText>
+                    <ThemeChoicePanel />
+                    {/* 新增使用组合列表显示所有人员和房间 */}
+                    {this.renderRoomListSection()}
+                    <LayoutSwitcher
+                        userId={this.state.userId}
+                        displayName={this.state.displayName}
+                        avatarUrl={this.state.avatarUrl}
+                        messagePreviewText={this.MESSAGE_PREVIEW_TEXT}
+                        onLayoutChanged={this.onLayoutChanged}
+                    />
+                    <FontScalingPanel />
+                    {this.renderAdvancedSection()}
+                    <ImageSizePanel />
+                </SettingsSection>
+            </SettingsTab>
         );
     }
 }

@@ -100,7 +100,7 @@ function exitFullscreen(): void {
 }
 
 export default class LegacyCallView extends React.Component<IProps, IState> {
-    private dispatcherRef: string;
+    private dispatcherRef?: string;
     private contentWrapperRef = createRef<HTMLDivElement>();
     private buttonsRef = createRef<LegacyCallViewButtons>();
 
@@ -137,7 +137,7 @@ export default class LegacyCallView extends React.Component<IProps, IState> {
 
         document.removeEventListener("keydown", this.onNativeKeyDown);
         this.updateCallListeners(this.props.call, null);
-        dis.unregister(this.dispatcherRef);
+        if (this.dispatcherRef) dis.unregister(this.dispatcherRef);
     }
 
     public static getDerivedStateFromProps(props: IProps): Partial<IState> {
@@ -290,7 +290,7 @@ export default class LegacyCallView extends React.Component<IProps, IState> {
             isScreensharing = await this.props.call.setScreensharingEnabled(false);
         } else {
             if (PlatformPeg.get()?.supportsDesktopCapturer()) {
-                const { finished } = Modal.createDialog<[string]>(DesktopCapturerSourcePicker);
+                const { finished } = Modal.createDialog(DesktopCapturerSourcePicker);
                 const [source] = await finished;
                 if (!source) return;
 
@@ -339,16 +339,17 @@ export default class LegacyCallView extends React.Component<IProps, IState> {
 
     private onCallResumeClick = (): void => {
         const userFacingRoomId = LegacyCallHandler.instance.roomIdForCall(this.props.call);
-        LegacyCallHandler.instance.setActiveCallRoomId(userFacingRoomId);
+        if (userFacingRoomId) LegacyCallHandler.instance.setActiveCallRoomId(userFacingRoomId);
     };
 
     private onTransferClick = (): void => {
         const transfereeCall = LegacyCallHandler.instance.getTransfereeForCallId(this.props.call.callId);
-        this.props.call.transferToCall(transfereeCall);
+        if (transfereeCall) this.props.call.transferToCall(transfereeCall);
     };
 
     private onHangupClick = (): void => {
-        LegacyCallHandler.instance.hangupOrReject(LegacyCallHandler.instance.roomIdForCall(this.props.call));
+        const roomId = LegacyCallHandler.instance.roomIdForCall(this.props.call);
+        if (roomId) LegacyCallHandler.instance.hangupOrReject(roomId);
     };
 
     private onToggleSidebar = (): void => {
@@ -430,7 +431,8 @@ export default class LegacyCallView extends React.Component<IProps, IState> {
         const { pipMode, call, onResize } = this.props;
         const { isLocalOnHold, isRemoteOnHold, sidebarShown, primaryFeed, secondaryFeed, sidebarFeeds } = this.state;
 
-        const callRoom = MatrixClientPeg.get().getRoom(call.roomId) ?? undefined;
+        const callRoomId = LegacyCallHandler.instance.roomIdForCall(call);
+        const callRoom = (callRoomId ? MatrixClientPeg.get().getRoom(callRoomId) : undefined) ?? undefined;
         const avatarSize = pipMode ? 76 : 160;
         const transfereeCall = LegacyCallHandler.instance.getTransfereeForCallId(call.callId);
         const isOnHold = isLocalOnHold || isRemoteOnHold;
@@ -450,13 +452,12 @@ export default class LegacyCallView extends React.Component<IProps, IState> {
 
             let holdTransferContent: React.ReactNode;
             if (transfereeCall) {
-                const transferTargetRoom = MatrixClientPeg.get().getRoom(
-                    LegacyCallHandler.instance.roomIdForCall(call),
-                );
+                const cli = MatrixClientPeg.get();
+                const callRoomId = LegacyCallHandler.instance.roomIdForCall(call);
+                const transferTargetRoom = callRoomId ? cli.getRoom(callRoomId) : null;
                 const transferTargetName = transferTargetRoom ? transferTargetRoom.name : _t("unknown person");
-                const transfereeRoom = MatrixClientPeg.get().getRoom(
-                    LegacyCallHandler.instance.roomIdForCall(transfereeCall),
-                );
+                const transfereeCallRoomId = LegacyCallHandler.instance.roomIdForCall(transfereeCall);
+                const transfereeRoom = transfereeCallRoomId ? cli.getRoom(transfereeCallRoomId) : null;
                 const transfereeName = transfereeRoom ? transfereeRoom.name : _t("unknown person");
 
                 holdTransferContent = (
@@ -527,23 +528,44 @@ export default class LegacyCallView extends React.Component<IProps, IState> {
                 </div>
             );
         } else if (pipMode) {
+            // We've already checked that we have feeds so we cast away the optional when passing the feed
             return (
                 <div className="mx_LegacyCallView_content" onMouseMove={this.onMouseMove}>
-                    <VideoFeed feed={primaryFeed} call={call} pipMode={pipMode} onResize={onResize} primary={true} />
+                    <VideoFeed
+                        feed={primaryFeed as CallFeed}
+                        call={call}
+                        pipMode={pipMode}
+                        onResize={onResize}
+                        primary={true}
+                    />
                 </div>
             );
         } else if (secondaryFeed) {
             return (
                 <div className="mx_LegacyCallView_content" onMouseMove={this.onMouseMove}>
-                    <VideoFeed feed={primaryFeed} call={call} pipMode={pipMode} onResize={onResize} primary={true} />
+                    <VideoFeed
+                        feed={primaryFeed as CallFeed}
+                        call={call}
+                        pipMode={pipMode}
+                        onResize={onResize}
+                        primary={true}
+                    />
                     {secondaryFeedElement}
                 </div>
             );
         } else {
             return (
                 <div className="mx_LegacyCallView_content" onMouseMove={this.onMouseMove}>
-                    <VideoFeed feed={primaryFeed} call={call} pipMode={pipMode} onResize={onResize} primary={true} />
-                    {sidebarShown && <LegacyCallViewSidebar feeds={sidebarFeeds} call={call} pipMode={pipMode} />}
+                    <VideoFeed
+                        feed={primaryFeed as CallFeed}
+                        call={call}
+                        pipMode={pipMode}
+                        onResize={onResize}
+                        primary={true}
+                    />
+                    {sidebarShown && (
+                        <LegacyCallViewSidebar feeds={sidebarFeeds} call={call} pipMode={Boolean(pipMode)} />
+                    )}
                 </div>
             );
         }
@@ -557,6 +579,8 @@ export default class LegacyCallView extends React.Component<IProps, IState> {
         const callRoomId = LegacyCallHandler.instance.roomIdForCall(call);
         const secondaryCallRoomId = LegacyCallHandler.instance.roomIdForCall(secondaryCall);
         const callRoom = callRoomId ? client.getRoom(callRoomId) : null;
+        if (!callRoom) return null;
+
         const secCallRoom = secondaryCallRoomId ? client.getRoom(secondaryCallRoomId) : null;
 
         const callViewClasses = classNames({

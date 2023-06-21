@@ -15,13 +15,14 @@ limitations under the License.
 */
 
 import classnames from "classnames";
+import { ComponentProps } from "react";
+import { MatrixClient } from "matrix-js-sdk/src/matrix";
 
 import defaultDispatcher from "../dispatcher/dispatcher";
 import { ActionPayload } from "../dispatcher/payloads";
 import Modal from "../Modal";
 import RoomSettingsDialog from "../components/views/dialogs/RoomSettingsDialog";
 import ForwardDialog from "../components/views/dialogs/ForwardDialog";
-import { MatrixClientPeg } from "../MatrixClientPeg";
 import { Action } from "../dispatcher/actions";
 import ReportEventDialog from "../components/views/dialogs/ReportEventDialog";
 import SpacePreferencesDialog from "../components/views/dialogs/SpacePreferencesDialog";
@@ -42,18 +43,21 @@ export class DialogOpener {
     public static readonly instance = new DialogOpener();
 
     private isRegistered = false;
+    private matrixClient?: MatrixClient;
 
     private constructor() {}
 
     // We could do this in the constructor, but then we wouldn't have
     // a function to call from Lifecycle to capture the class.
-    public prepare(): void {
+    public prepare(matrixClient: MatrixClient): void {
+        this.matrixClient = matrixClient;
         if (this.isRegistered) return;
         defaultDispatcher.register(this.onDispatch);
         this.isRegistered = true;
     }
 
     private onDispatch = (payload: ActionPayload): void => {
+        if (!this.matrixClient) return;
         switch (payload.action) {
             case "open_room_settings":
                 Modal.createDialog(
@@ -69,7 +73,7 @@ export class DialogOpener {
                 break;
             case Action.OpenForwardDialog:
                 Modal.createDialog(ForwardDialog, {
-                    matrixClient: MatrixClientPeg.get(),
+                    matrixClient: this.matrixClient,
                     event: payload.event,
                     permalinkCreator: payload.permalinkCreator,
                 });
@@ -114,7 +118,7 @@ export class DialogOpener {
                         kind: payload.kind,
                         call: payload.call,
                         roomId: payload.roomId,
-                    },
+                    } as Omit<ComponentProps<typeof InviteDialog>, "onFinished">,
                     classnames("mx_InviteDialog_flexWrapper", payload.className),
                     false,
                     true,

@@ -70,6 +70,9 @@ const useMapWithStyle = ({
         if (map && centerGeoUri) {
             try {
                 const coords = parseGeoUri(centerGeoUri);
+                if (!coords) {
+                    throw new Error("Invalid geo URI");
+                }
                 map.setCenter({ lon: coords.longitude, lat: coords.latitude });
             } catch (_error) {
                 logger.error("Could not set map center");
@@ -155,7 +158,7 @@ interface MapProps {
     children?: (renderProps: { map: maplibregl.Map }) => ReactNode;
 }
 
-const Map: React.FC<MapProps> = ({
+const MapComponent: React.FC<MapProps> = ({
     bounds,
     centerGeoUri,
     children,
@@ -185,4 +188,4 @@ const Map: React.FC<MapProps> = ({
     );
 };
 
-export default Map;
+export default MapComponent;

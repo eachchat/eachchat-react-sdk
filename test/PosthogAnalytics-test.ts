@@ -33,9 +33,13 @@ const getFakePosthog = (): PostHog =>
         identify: jest.fn(),
         reset: jest.fn(),
         register: jest.fn(),
+        get_distinct_id: jest.fn(),
+        persistence: {
+            get_user_state: jest.fn(),
+        },
     } as unknown as PostHog);
 
-export interface ITestEvent extends IPosthogEvent {
+interface ITestEvent extends IPosthogEvent {
     eventName: "JestTestEvents";
     foo?: string;
 }
@@ -52,25 +56,28 @@ describe("PosthogAnalytics", () => {
     beforeEach(() => {
         fakePosthog = getFakePosthog();
 
-        window.crypto = {
-            subtle: {
-                digest: async (_: AlgorithmIdentifier, encodedMessage: BufferSource) => {
-                    const message = new TextDecoder().decode(encodedMessage);
-                    const hexHash = shaHashes[message];
-                    const bytes: number[] = [];
-                    for (let c = 0; c < hexHash.length; c += 2) {
-                        bytes.push(parseInt(hexHash.slice(c, c + 2), 16));
-                    }
-                    return bytes as unknown as ArrayBuffer;
+        Object.defineProperty(window, "crypto", {
+            value: {
+                subtle: {
+                    digest: async (_: AlgorithmIdentifier, encodedMessage: BufferSource) => {
+                        const message = new TextDecoder().decode(encodedMessage);
+                        const hexHash = shaHashes[message];
+                        const bytes: number[] = [];
+                        for (let c = 0; c < hexHash.length; c += 2) {
+                            bytes.push(parseInt(hexHash.slice(c, c + 2), 16));
+                        }
+                        return bytes;
+                    },
                 },
-            } as unknown as SubtleCrypto,
-        } as unknown as Crypto;
+            },
+        });
     });
 
     afterEach(() => {
-        // @ts-ignore
-        window.crypto = null;
-        SdkConfig.unset(); // we touch the config, so clean up
+        Object.defineProperty(window, "crypto", {
+            value: null,
+        });
+        SdkConfig.reset(); // we touch the config, so clean up
     });
 
     describe("Initialisation", () => {

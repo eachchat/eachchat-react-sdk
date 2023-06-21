@@ -43,7 +43,7 @@ describe("<MessageEditHistory />", () => {
         return result;
     }
 
-    function mockEdits(...edits: { msg: string; ts: number | undefined }[]) {
+    function mockEdits(...edits: { msg: string; ts?: number }[]) {
         client.relations.mockImplementation(() =>
             Promise.resolve({
                 events: edits.map(
@@ -69,7 +69,7 @@ describe("<MessageEditHistory />", () => {
         expect(container).toMatchSnapshot();
     });
 
-    it("should support events with ", async () => {
+    it("should support events with", async () => {
         mockEdits(
             { msg: "My Great Massage", ts: undefined },
             { msg: "My Great Massage?", ts: undefined },

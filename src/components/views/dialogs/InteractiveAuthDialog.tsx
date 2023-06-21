@@ -22,10 +22,13 @@ import { AuthType, IAuthData } from "matrix-js-sdk/src/interactive-auth";
 
 import { _t } from "../../../languageHandler";
 import AccessibleButton from "../elements/AccessibleButton";
-import InteractiveAuth, { ERROR_USER_CANCELLED, InteractiveAuthCallback } from "../../structures/InteractiveAuth";
+import InteractiveAuth, {
+    ERROR_USER_CANCELLED,
+    InteractiveAuthCallback,
+    InteractiveAuthProps,
+} from "../../structures/InteractiveAuth";
 import { SSOAuthEntry } from "../auth/InteractiveAuthEntryComponents";
 import BaseDialog from "./BaseDialog";
-import { IDialogProps } from "./IDialogProps";
 
 type DialogAesthetics = Partial<{
     [x in AuthType]: {
@@ -38,16 +41,10 @@ type DialogAesthetics = Partial<{
     };
 }>;
 
-export interface InteractiveAuthDialogProps extends IDialogProps {
+export interface InteractiveAuthDialogProps<T = unknown>
+    extends Pick<InteractiveAuthProps<T>, "makeRequest" | "authData"> {
     // matrix client to use for UI auth requests
     matrixClient: MatrixClient;
-
-    // response from initial request. If not supplied, will do a request on
-    // mount.
-    authData?: IAuthData;
-
-    // callback
-    makeRequest: (auth: IAuthData) => Promise<IAuthData>;
 
     // Optional title and body to show when not showing a particular stage
     title?: string;
@@ -72,18 +69,20 @@ export interface InteractiveAuthDialogProps extends IDialogProps {
     //
     // Default is defined in _getDefaultDialogAesthetics()
     aestheticsForStagePhases?: DialogAesthetics;
+
+    onFinished(success?: boolean, result?: IAuthData | Error | null): void;
 }
 
 interface IState {
-    authError: Error;
+    authError: Error | null;
 
     // See _onUpdateStagePhase()
     uiaStage: AuthType | null;
     uiaStagePhase: number | null;
 }
 
-export default class InteractiveAuthDialog extends React.Component<InteractiveAuthDialogProps, IState> {
-    public constructor(props: InteractiveAuthDialogProps) {
+export default class InteractiveAuthDialog<T> extends React.Component<InteractiveAuthDialogProps<T>, IState> {
+    public constructor(props: InteractiveAuthDialogProps<T>) {
         super(props);
 
         this.state = {
@@ -146,20 +145,26 @@ export default class InteractiveAuthDialog extends React.Component<InteractiveAu
 
         let title = this.state.authError ? "Error" : this.props.title || _t("Authentication");
         let body = this.state.authError ? null : this.props.body;
-        let continueText = null;
-        let continueKind = null;
+        let continueText: string | undefined;
+        let continueKind: string | undefined;
         const dialogAesthetics = this.props.aestheticsForStagePhases || this.getDefaultDialogAesthetics();
         if (!this.state.authError && dialogAesthetics) {
-            if (dialogAesthetics[this.state.uiaStage]) {
-                const aesthetics = dialogAesthetics[this.state.uiaStage][this.state.uiaStagePhase];
-                if (aesthetics && aesthetics.title) title = aesthetics.title;
-                if (aesthetics && aesthetics.body) body = aesthetics.body;
-                if (aesthetics && aesthetics.continueText) continueText = aesthetics.continueText;
-                if (aesthetics && aesthetics.continueKind) continueKind = aesthetics.continueKind;
+            if (
+                this.state.uiaStage !== null &&
+                this.state.uiaStagePhase !== null &&
+                dialogAesthetics[this.state.uiaStage]
+            ) {
+                const aesthetics = dialogAesthetics[this.state.uiaStage]![this.state.uiaStagePhase];
+                if (aesthetics) {
+                    if (aesthetics.title) title = aesthetics.title;
+                    if (aesthetics.body) body = aesthetics.body;
+                    if (aesthetics.continueText) continueText = aesthetics.continueText;
+                    if (aesthetics.continueKind) continueKind = aesthetics.continueKind;
+                }
             }
         }
 
-        let content;
+        let content: JSX.Element;
         if (this.state.authError) {
             content = (
                 <div id="mx_Dialog_content">

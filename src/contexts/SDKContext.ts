@@ -21,12 +21,14 @@ import defaultDispatcher from "../dispatcher/dispatcher";
 import LegacyCallHandler from "../LegacyCallHandler";
 import { PosthogAnalytics } from "../PosthogAnalytics";
 import { SlidingSyncManager } from "../SlidingSyncManager";
+import { AccountPasswordStore } from "../stores/AccountPasswordStore";
 import { MemberListStore } from "../stores/MemberListStore";
 import { RoomNotificationStateStore } from "../stores/notifications/RoomNotificationStateStore";
 import RightPanelStore from "../stores/right-panel/RightPanelStore";
 import { RoomViewStore } from "../stores/RoomViewStore";
 import SpaceStore, { SpaceStoreClass } from "../stores/spaces/SpaceStore";
 import TypingStore from "../stores/TypingStore";
+import { UserProfilesStore } from "../stores/UserProfilesStore";
 import { WidgetLayoutStore } from "../stores/widgets/WidgetLayoutStore";
 import { WidgetPermissionStore } from "../stores/widgets/WidgetPermissionStore";
 import WidgetStore from "../stores/WidgetStore";
@@ -36,7 +38,10 @@ import {
     VoiceBroadcastRecordingsStore,
 } from "../voice-broadcast";
 
-export const SDKContext = createContext<SdkContextClass>(undefined);
+// This context is available to components under MatrixChat,
+// the context must not be used by components outside a SdkContextClass tree.
+// This assertion allows us to make the type not nullable.
+export const SDKContext = createContext<SdkContextClass>(null as any);
 SDKContext.displayName = "SDKContext";
 
 /**
@@ -73,6 +78,8 @@ export class SdkContextClass {
     protected _VoiceBroadcastRecordingsStore?: VoiceBroadcastRecordingsStore;
     protected _VoiceBroadcastPreRecordingStore?: VoiceBroadcastPreRecordingStore;
     protected _VoiceBroadcastPlaybacksStore?: VoiceBroadcastPlaybacksStore;
+    protected _AccountPasswordStore?: AccountPasswordStore;
+    protected _UserProfilesStore?: UserProfilesStore;
 
     /**
      * Automatically construct stores which need to be created eagerly so they can register with
@@ -175,5 +182,28 @@ export class SdkContextClass {
             this._VoiceBroadcastPlaybacksStore = new VoiceBroadcastPlaybacksStore(this.voiceBroadcastRecordingsStore);
         }
         return this._VoiceBroadcastPlaybacksStore;
+    }
+
+    public get accountPasswordStore(): AccountPasswordStore {
+        if (!this._AccountPasswordStore) {
+            this._AccountPasswordStore = new AccountPasswordStore();
+        }
+        return this._AccountPasswordStore;
+    }
+
+    public get userProfilesStore(): UserProfilesStore {
+        if (!this.client) {
+            throw new Error("Unable to create UserProfilesStore without a client");
+        }
+
+        if (!this._UserProfilesStore) {
+            this._UserProfilesStore = new UserProfilesStore(this.client);
+        }
+
+        return this._UserProfilesStore;
+    }
+
+    public onLoggedOut(): void {
+        this._UserProfilesStore = undefined;
     }
 }
