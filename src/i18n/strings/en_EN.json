@@ -3753,6 +3753,11 @@
     "Force complete": "Force complete",
     "QingCloud employees should use the company's unified employee account to login EachChat, if you need to change your password, please go QingCloud SSO.": "QingCloud employees should use the company's unified employee account to login EachChat, if you need to change your password, please go QingCloud SSO.",
     "Contact":"Contact",
+    "NextCloud Share": "NextCloud Share",
+    "Save to NextCloud":"Save to NextCloud",
+    "Save to NextCloud success":"Save to NextCloud success",
+    "Save to NextCloud failed":"Save to NextCloud failed",
+    "Failed": "Failed",
     "Show people and rooms in a combined list": "Show people and rooms in a combined list",
     "Normal priority": "Normal priority",
     "Search (must be enabled)": "Search (must be enabled)"

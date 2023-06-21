@@ -44,7 +44,7 @@ import MBeaconBody from "./MBeaconBody";
 import { DecryptionFailureBody } from "./DecryptionFailureBody";
 import { GetRelationsForEvent, IEventTileOps } from "../rooms/EventTile";
 import { VoiceBroadcastBody, VoiceBroadcastInfoEventType, VoiceBroadcastInfoState } from "../../../voice-broadcast";
-
+import NextCloudShareNoticeCard from "../qingCloud/next_cloud/NextCloudShareNoticeCard"; //新增网盘共享
 // onMessageAllowed is handled internally
 interface IProps extends Omit<IBodyProps, "onMessageAllowed" | "mediaEventHelper"> {
     /* overrides for the msgtype-specific components, used by ReplyTile to override file rendering */
@@ -69,6 +69,7 @@ const baseBodyTypes = new Map<string, typeof React.Component>([
     [MsgType.File, MFileBody],
     [MsgType.Audio, MVoiceOrAudioBody],
     [MsgType.Video, MVideoBody],
+    ['m.next.cloud.share.link', NextCloudShareNoticeCard], //新增网盘共享
 ]);
 const baseEvTypes = new Map<string, React.ComponentType<Partial<IBodyProps>>>([
     [EventType.Sticker, MStickerBody],

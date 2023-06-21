@@ -3441,6 +3441,11 @@
     "Identity server not set": "身份服务器未设置",
     "QingCloud employees should use the company's unified employee account to login EachChat, if you need to change your password, please go QingCloud SSO.": "QingCloud员工应使用公司统一的员工帐户登录EachChat，如果您需要更改密码，请前往QingCloud SSO。",
     "Contact":"通讯录",
+    "NextCloud Share":"网盘共享",
+    "Save to NextCloud":"保存到网盘",
+    "Save to NextCloud success":"保存到网盘成功",
+    "Save to NextCloud failed":"保存到网盘失败",
+    "Failed": "失败",
     "Show people and rooms in a combined list": "使用组合列表显示所有人员和房间",
     "Normal priority": "正常优先级",
     "The add / bind with MSISDN flow is misconfigured": "MSISDN的新增/绑定流程配置错误"

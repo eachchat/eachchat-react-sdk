@@ -42,6 +42,7 @@ import { EmojiButton } from "./EmojiButton";
 import { filterBoolean } from "../../../utils/arrays";
 import { useSettingValue } from "../../../hooks/useSettings";
 import { ButtonEvent } from "../elements/AccessibleButton";
+import ShareNextCloudButton from "../qingCloud/next_cloud/nextCloudShareButton"; //新增网盘共享
 
 interface IProps {
     addEmoji: (emoji: string) => boolean;
@@ -88,6 +89,7 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
             ) : (
                 emojiButton(props)
             ),
+            shareNextCloudButton({ ...props, room, roomId: room.roomId, matrixClient }), //新增网盘共享
         ];
         moreButtons = [
             uploadButton(), // props passed via UploadButtonContext
@@ -108,6 +110,7 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
             ) : (
                 emojiButton(props)
             ),
+            shareNextCloudButton({ ...props, room, roomId: room.roomId, matrixClient }), //新增网盘共享
             uploadButton(), // props passed via UploadButtonContext
         ];
         moreButtons = [
@@ -381,6 +384,11 @@ function ComposerModeButton({ isRichTextEnabled, onClick }: WysiwygToggleButtonP
             title={title}
         />
     );
+}
+
+// 新增网盘共享
+function shareNextCloudButton(props): ReactElement {
+    return <ShareNextCloudButton key="controls_nextCloud_share" {...props} />;
 }
 
 export default MessageComposerButtons;

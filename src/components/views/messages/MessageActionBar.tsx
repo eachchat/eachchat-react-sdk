@@ -59,6 +59,7 @@ import useFavouriteMessages from "../../../hooks/useFavouriteMessages";
 import { GetRelationsForEvent } from "../rooms/EventTile";
 import { VoiceBroadcastInfoEventType } from "../../../voice-broadcast/types";
 import { ButtonEvent } from "../elements/AccessibleButton";
+import NextCloudUploadButton from "../qingCloud/next_cloud/NextCloudUploadButton"; //新增网盘共享
 
 interface IOptionsButtonProps {
     mxEvent: MatrixEvent;
@@ -524,6 +525,12 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
 
                 // XXX: Assuming that the underlying tile will be a media event if it is eligible media.
                 if (MediaEventHelper.isEligible(this.props.mxEvent)) {
+                    // 新增网盘共享
+                    toolbarOpts.splice(0, 0, <NextCloudUploadButton
+                        mxEvent={this.props.mxEvent}
+                        mediaEventHelperGet={() => this.props.getTile?.().getMediaHelper?.()}
+                        key="upload"
+                    />);
                     toolbarOpts.splice(
                         0,
                         0,
