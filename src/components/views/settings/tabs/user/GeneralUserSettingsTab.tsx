@@ -440,7 +440,7 @@ export default class GeneralUserSettingsTab extends React.Component<IProps, ISta
                         ssoLogin ?
                         <div className="mx_SettingsTab_subsectionText">
                         {_t("QingCloud employees should use the company's unified employee account to login EachChat, if you need to change your password, please go QingCloud SSO.")}
-                        {ssoUrl && <a target="_blank" href={ssoUrl+'/if/user/#/settings'}>{ _t("Change Password") }</a>}
+                        {ssoUrl && <div><a target="_blank" href={ssoUrl+'/if/user/#/settings'}>{ _t("Change Password") }</a></div>}
                         </div> :
                         <>
                             {passwordChangeSection}

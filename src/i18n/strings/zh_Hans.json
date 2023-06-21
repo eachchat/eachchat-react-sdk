@@ -3439,7 +3439,7 @@
     "No identity access token found": "找不到身份访问令牌",
     "This session is backing up your keys.": "此会话正在备份你的密钥。",
     "Identity server not set": "身份服务器未设置",
-    "QingCloud employees should use the company's unified employee account to login EachChat, if you need to change your password, please go QingCloud SSO.": "QingCloud员工应使用公司统一的员工帐户登录EachChat，如果您需要更改密码，请前往QingCloud SSO。",
+    "QingCloud employees should use the company's unified employee account to login EachChat, if you need to change your password, please go QingCloud SSO.": "青云员工应使用公司统一的员工帐户登录EachChat，如果您需要更改密码，请前往青云SSO。",
     "Contact":"通讯录",
     "NextCloud Share":"网盘共享",
     "Save to NextCloud":"保存到网盘",
