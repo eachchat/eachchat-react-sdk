@@ -979,6 +979,7 @@ export const SETTINGS: { [setting: string]: ISetting } = {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         default: {
             [MetaSpace.Home]: true,
+            [MetaSpace.Contact]: true, //新增通讯录
         },
     },
     "Spaces.showPeopleInSpace": {

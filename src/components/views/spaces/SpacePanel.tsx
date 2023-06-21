@@ -251,8 +251,20 @@ const CreateSpaceButton: React.FC<Pick<IInnerSpacePanelProps, "isPanelCollapsed"
     );
 };
 
+// 新增通讯录
+const YiqiaContactButton: React.FC<MetaSpaceButtonProps> = ({ selected, isPanelCollapsed }: any) => {
+    return <MetaSpaceButton
+        spaceKey={MetaSpace.Contact}
+        className="mx_SpaceButton_people"
+        selected={selected}
+        isPanelCollapsed={isPanelCollapsed}
+        label={getMetaSpaceName(MetaSpace.Contact)}
+    />;
+};
+
 const metaSpaceComponentMap: Record<MetaSpace, typeof HomeButton> = {
     [MetaSpace.Home]: HomeButton,
+    [MetaSpace.Contact]: YiqiaContactButton, //新增通讯录
     [MetaSpace.Favourites]: FavouritesButton,
     [MetaSpace.People]: PeopleButton,
     [MetaSpace.Orphans]: OrphansButton,

@@ -346,4 +346,10 @@ export enum Action {
      * Fired when we want to view a thread, either a new one or an existing one
      */
     ShowThread = "show_thread",
+
+    //新增通讯录
+    ViewYiqiaContact = "view_yiqia_contact", 
+
+    //新增通讯录
+    ActiveContactData = "view_yiqia_active_contact_data",
 }

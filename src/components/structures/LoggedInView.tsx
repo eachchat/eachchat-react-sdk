@@ -71,6 +71,9 @@ import { UserOnboardingPage } from "../views/user-onboarding/UserOnboardingPage"
 import { PipContainer } from "./PipContainer";
 import { monitorSyncedPushRules } from "../../utils/pushRules/monitorSyncedPushRules";
 import { ConfigOptions } from "../../SdkConfig";
+// 新增通讯录
+import YiQiaContactView from "../views/qingCloud/yiqia/YiQiaContactView";
+ 
 
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
@@ -644,6 +647,11 @@ class LoggedInView extends React.Component<IProps, IState> {
             case PageTypes.HomePage:
                 pageElement = <UserOnboardingPage justRegistered={this.props.justRegistered} />;
                 break;
+            
+            //新增通讯录 
+            case PageTypes.YiqiaContactUserPage:
+            pageElement = <YiQiaContactView data={this.props?.activeContactData} />;
+            break;
 
             case PageTypes.UserView:
                 if (!!this.props.currentUserId) {

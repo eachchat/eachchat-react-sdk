@@ -30,6 +30,7 @@ export const UPDATE_SUGGESTED_ROOMS = Symbol("suggested-rooms");
 
 export enum MetaSpace {
     Home = "home-space",
+    Contact = "yiqia-contact", //新增通讯录
     Favourites = "favourites-space",
     People = "people-space",
     Orphans = "orphans-space",
@@ -39,6 +40,8 @@ export const getMetaSpaceName = (spaceKey: MetaSpace, allRoomsInHome = false): s
     switch (spaceKey) {
         case MetaSpace.Home:
             return allRoomsInHome ? _t("All rooms") : _t("Home");
+        case MetaSpace.Contact: //新增通讯录 
+            return _t("Contact");
         case MetaSpace.Favourites:
             return _t("Favourites");
         case MetaSpace.People:
@@ -55,8 +58,10 @@ export interface ISuggestedRoom extends IHierarchyRoom {
 }
 
 export function isMetaSpace(spaceKey?: SpaceKey): boolean {
+    // 新增通讯录
     return (
         spaceKey === MetaSpace.Home ||
+        spaceKey === MetaSpace.Contact ||
         spaceKey === MetaSpace.Favourites ||
         spaceKey === MetaSpace.People ||
         spaceKey === MetaSpace.Orphans

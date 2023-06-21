@@ -699,6 +699,23 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 }
                 break;
             }
+            // 新增通讯录
+            case Action.ViewYiqiaContact: {
+                const { context }=payload;
+                this.setState({
+                    yiqiaContactActiveItemKey: context,
+                });
+                this.viewYiqiaContact();
+                break;
+            }
+             // 新增通讯录
+            case Action.ActiveContactData: {
+                const { context }=payload;
+                this.setState({
+                    activeContactData: context,
+                });
+                break;
+            }
             case Action.ViewUserDeviceSettings: {
                 viewUserDeviceSettings();
                 break;
@@ -1034,6 +1051,18 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         });
         this.setPage(PageType.HomePage);
         this.notifyNewScreen("home");
+        ThemeController.isLogin = false;
+        this.themeWatcher.recheck();
+    }
+
+    // 新增通讯录
+    private viewYiqiaContact(context?: any) {
+        // The home page requires the "logged in" view, so we'll set that.
+        this.setStateForNewView({
+            view: Views.LOGGED_IN,
+        });
+        this.setPage(PageType.YiqiaContactUserPage);
+        this.notifyNewScreen('yiqiaContact');
         ThemeController.isLogin = false;
         this.themeWatcher.recheck();
     }
@@ -1761,6 +1790,10 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         } else if (screen === "home") {
             dis.dispatch({
                 action: Action.ViewHomePage,
+            });
+        } else if (screen === 'yiqiaContact') { //新增通讯录
+            dis.dispatch({
+                action: Action.ViewYiqiaContact,
             });
         } else if (screen === "start") {
             this.showScreen("home");
