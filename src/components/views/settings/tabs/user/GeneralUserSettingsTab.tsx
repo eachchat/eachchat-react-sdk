@@ -421,7 +421,6 @@ export default class GeneralUserSettingsTab extends React.Component<IProps, ISta
         if(SdkConfig.get("setting_defaults")?.QingCloud?.onlySSOLogin?.length){
             try {
                 const mxHsUrl = localStorage.getItem("mx_hs_url");
-                // window.serverConfig = this.props.serverConfig;
                 const onlySSOLoginArr = SdkConfig.get("setting_defaults")?.QingCloud?.onlySSOLogin;
                 const ssoItem: any = onlySSOLoginArr?.find(item=>item?.hostName && (mxHsUrl.indexOf(item.hostName) > -1));
                 if(ssoItem){
