@@ -3448,5 +3448,7 @@
     "Failed": "失败",
     "Show people and rooms in a combined list": "使用组合列表显示所有人员和房间",
     "Normal priority": "正常优先级",
+    "Match default setting":"使用默认",
+    "Mute room": "关闭",
     "The add / bind with MSISDN flow is misconfigured": "MSISDN的新增/绑定流程配置错误"
 }

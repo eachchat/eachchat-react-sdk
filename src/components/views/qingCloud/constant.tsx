@@ -18,6 +18,6 @@ export  const ConfitProviderToken =  {
     colorBgContainer: 'transparent',
 }
 
-const desktop_host = SdkConfig.get('setting_defaults').desktop_host;
-export const elementBaseURL = desktop_host ? `${desktop_host}/element` : 'element';
-export const nextCloudBaseURL = desktop_host ? `${desktop_host}/nextCloud` : 'nextCloud';
+const desktopHost = SdkConfig.get('setting_defaults')?.QingCloud?.desktop_host;
+export const elementBaseURL = desktopHost ? `${desktopHost}/element` : 'element';
+export const nextCloudBaseURL = desktopHost ? `${desktopHost}/nextCloud` : 'nextCloud';
