@@ -96,7 +96,7 @@
         "maplibre-gl": "^2.0.0",
         "matrix-encrypt-attachment": "^1.0.3",
         "matrix-events-sdk": "0.0.1",
-        "matrix-js-sdk": "https://git.yunify.com/dtd/matrix-js-sdk.git",
+        "matrix-js-sdk": "github:eachchat/eachchat-js-sdk#main",
         "matrix-widget-api": "^1.4.0",
         "memoize-one": "^6.0.0",
         "minimist": "^1.2.5",
