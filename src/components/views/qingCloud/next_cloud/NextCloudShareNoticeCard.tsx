@@ -74,7 +74,7 @@ export default class NextCloudShareNoticeCard extends React.Component {
                             </div>
                         </Card> :
                         <Card title={<Title />}  size="small">
-                             <div className="content pointer hover-active" onClick={() => this.onBodyLinkClick(SdkConfig.get("setting_defaults").next_cloud_url)}>
+                             <div className="content pointer hover-active" onClick={() => this.onBodyLinkClick(SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_url)}>
                                 {isFolder ? <FolderOutlined /> : <FileOutlined />}
                                 <span className="name">  {fileName} </span>
                             </div>
