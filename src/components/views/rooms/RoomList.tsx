@@ -91,8 +91,8 @@ export const TAG_ORDER: TagID[] = [
     DefaultTagID.LowPriority,
     DefaultTagID.ServerNotice,
     DefaultTagID.Suggested,
-    DefaultTagID.Archived,
     DefaultTagID.Unified, //新增使用组合列表显示所有人员和房间
+    DefaultTagID.Archived,
 ];
 const ALWAYS_VISIBLE_TAGS: TagID[] = [DefaultTagID.DM, DefaultTagID.Untagged];
 const ALWAYS_VISIBLE_UNIFIED_TAGS: TagID[] = [DefaultTagID.Unified]; //新增使用组合列表显示所有人员和房间
