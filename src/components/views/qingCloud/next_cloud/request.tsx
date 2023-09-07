@@ -4,6 +4,7 @@ import { parseString } from 'xml2js';
 import { notification } from 'antd';
 import { downFlowFiles, formatFilesXmlObj } from "./utils";
 import { elementBaseURL, nextCloudBaseURL } from "../constant";
+import SdkConfig from "../../../../SdkConfig";
 
 export const requestElement =() => {
     const MatrixID = localStorage.getItem("mx_user_id");
@@ -17,11 +18,22 @@ export const requestElement =() => {
     });
 };
 
+
+export const requestNextcloud =() => {
+    return axios.create({
+        baseURL: nextCloudBaseURL,
+    });
+};
+
+
 export const requestNextCloud = () => {
     const MatrixID = localStorage.getItem("mx_user_id");
-    const Authorization = `Bearer ${window?.mxMatrixClientPeg?.matrixClient.getAccessToken()}`;
-    const NextCloudUserName = localStorage.getItem('mx_next_cloud_username');
-    const NextCloudAuthorization ='Basic ' + btoa(`${NextCloudUserName}:${MatrixID}|${Authorization}`);
+    // const Authorization = `Bearer ${window?.mxMatrixClientPeg?.matrixClient.getAccessToken()}`;
+    // const NextCloudUserName = localStorage.getItem('mx_next_cloud_username');
+    // const NextCloudAuthorization ='Basic ' + btoa(`${NextCloudUserName}:${MatrixID}|${Authorization}`);
+    const appPassword = sessionStorage.getItem('appPassword');
+    const  NextCloudEmail = sessionStorage.getItem('NextCloudEmail');
+    const NextCloudAuthorization ='Basic ' + btoa(`${NextCloudEmail}:${appPassword}`);
     return axios.create({
         baseURL: nextCloudBaseURL,
         headers: {
@@ -49,12 +61,58 @@ export const errorNotification = (errMessage) => {
 
 // 获取nextCloud用户名
 export const getNextCloudUserName = () => {
-    return requestElement()({
+    // const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
+    // const mx_user_id = localStorage.getItem('mx_user_id');
+    // const name = mx_user_id.split(':')?.[0]?.replace('@','');
+    // const email =  `${name}${next_cloud_email_suffix}`;
+    // const data = {
+    //     username: email
+    // }
+    // sessionStorage.setItem('NextCloudEmail',email);
+    // return  Promise.resolve(data);
+    const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
+    const mx_user_id = localStorage.getItem('mx_user_id');
+    const name = mx_user_id.split(':')?.[0]?.replace('@','');
+    const email = `${name}${next_cloud_email_suffix}`
+    return requestNextcloud()({
         method: 'GET',
-        url: "api/v1/nextcloud/whoami",
+        url: `/api/v1/nextcloud/apppassword?email=${email}`,
     })
-        .then((res: any) => res?.data)
+        .then((res: any) => {
+            const {appPassword}=res?.data ||{};
+            sessionStorage.setItem('appPassword',appPassword);
+             const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
+                const mx_user_id = localStorage.getItem('mx_user_id');
+                const name = mx_user_id.split(':')?.[0]?.replace('@','');
+                const email =  `${name}${next_cloud_email_suffix}`;
+                const data = {
+                    username: email
+                }
+                sessionStorage.setItem('NextCloudEmail',email);
+            return data;
+        })
         .catch(err => {
+            console.log(err)
+        });
+};
+
+// 查询nextcloud app password
+export const getNextCloudPassword = () => {
+    const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
+    const mx_user_id = localStorage.getItem('mx_user_id');
+    const name = mx_user_id.split(':')?.[0]?.replace('@','');
+    const email = `${name}${next_cloud_email_suffix}`
+    return requestNextcloud()({
+        method: 'GET',
+        url: `/api/v1/nextcloud/apppassword?email=${email}`,
+    })
+        .then((res: any) => {
+            const {appPassword}=res?.data ||{};
+            sessionStorage.setItem('appPassword',appPassword);
+            return res?.data;
+        })
+        .catch(err => {
+            console.log(err)
         });
 };
 
