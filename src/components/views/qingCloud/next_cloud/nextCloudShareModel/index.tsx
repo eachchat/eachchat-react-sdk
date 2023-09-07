@@ -39,12 +39,18 @@ const NextCloudShareModel= (props: any) => {
     }, [userName]);
 
     const getUserName = () => {
+        // getNextCloudUserName()
+        //     .then((res: any) => {
+        //         setUserName(res?.username);
+        //     }).catch(err => {
+        //         console.log('getUserName error', err);
+        //     });
         getNextCloudUserName()
-            .then((res: any) => {
-                setUserName(res?.username);
-            }).catch(err => {
-                console.log('getUserName error', err);
-            });
+        .then((res: any) => {
+            setUserName(res?.username);
+        }).catch(err => {
+            console.log('getUserName error', err);
+        });
     };
 
     const getFilesList = (username, currentPath) => {
