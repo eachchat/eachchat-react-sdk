@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, notification, ConfigProvider, theme, Popover } from 'antd';
 
-import { createShareLink, getForceNextCloudUserName, getNextCloudFilesList, getNextCloudUserName, uploadNextCloudFile } from '../request';
+import { createShareLink, getForceNextCloudUserName, getNextCloudFilesList, getNextCloudUserName, getShareInfo, uploadNextCloudFile } from '../request';
 import NextCloudFilesTable from './NextCloudFilesTable';
 import NextCloudNavBar from './NextCloudNavBar';
 import { MatrixClientPeg } from '../../../../../MatrixClientPeg';
@@ -166,7 +166,7 @@ const NextCloudShareModel= (props: any) => {
                 });
             })
             .catch(err => {
-                showNotification("error", err.message);
+                showNotification("error", err?.response?.data?.ocs?.meta?.message || err.message);
             })
             .finally(()=>setShareLoading(false));
     };
@@ -179,7 +179,20 @@ const NextCloudShareModel= (props: any) => {
         const successAddShareUser = [];
         const failAddShareUser = [];
         Promise.all(data.map((item:any)=>{
-            return createShareLink({currentPath, fileName: selectFileName, permissions:1, ...item} as any).then(res=>successAddShareUser.push({...item,res})).catch(err=>failAddShareUser.push({...item,err}))
+            return createShareLink({currentPath, fileName: selectFileName, permissions:1, ...item} as any)
+            .then(res=>{
+                if(item?.shareWith){
+                    const {file_target} = res?.data?.ocs?.data;
+                    // getShareInfo(file_target).then(res=>{
+                    //     console.log(res)
+                    // }).catch(err=>{
+                    //     console.log(err)
+                    // })
+                }else{
+                    successAddShareUser.push({...item,res})
+                }
+            })
+            .catch(err=>failAddShareUser.push({...item,err}))
         })).then(res=>{
             console.log('handleCreateShareUser', res)
         }).catch(err=>{
@@ -196,8 +209,10 @@ const NextCloudShareModel= (props: any) => {
             }
 
            if(failAddShareUser.length){
+                const errMsg = failAddShareUser?.[0]?.err?.response?.data?.ocs?.meta?.message;
+                console.log('failAddShareUser',failAddShareUser[0]);
                 failAddShareUser.length === data?.length ? 
-                showNotification("error", `共享人添加失败`) : 
+                showNotification("error", errMsg ? `共享人添加失败, ${errMsg}` : '共享人添加失败') : 
                 showNotification("error", `以下共享人添加失败:${failAddShareUser.map(item=>item.name)?.join(",")}`);
             }
         })

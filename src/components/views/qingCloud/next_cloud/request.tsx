@@ -359,7 +359,17 @@ export const createShareLink = async ({
 
         if (shareLink) {
             return Promise.resolve({ shareLink, isFolder });
+        }else{
+            return Promise.resolve(res);
         }
+    });
+};
+
+// 获取文件分享信息
+export const getShareInfo = async (filePath) => {
+    return requestNextCloud()({
+        "method": 'GET',
+        "url": `ocs/v2.php/apps/files_sharing/api/v1/shares??path=${filePath}`,
     });
 };
 
