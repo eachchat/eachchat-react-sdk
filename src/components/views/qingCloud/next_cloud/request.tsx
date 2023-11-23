@@ -5,6 +5,7 @@ import { notification } from 'antd';
 import { downFlowFiles, formatFilesXmlObj } from "./utils";
 import { elementBaseURL, nextCloudBaseURL } from "../constant";
 import SdkConfig from "../../../../SdkConfig";
+import { MatrixClientPeg } from "../../../../MatrixClientPeg";
 
 export const requestElement =() => {
     const MatrixID = localStorage.getItem("mx_user_id");
@@ -70,10 +71,13 @@ export const getNextCloudUserName = () => {
     // }
     // sessionStorage.setItem('NextCloudEmail',email);
     // return  Promise.resolve(data);
+
     const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
     const mx_user_id = localStorage.getItem('mx_user_id');
     const name = mx_user_id.split(':')?.[0]?.replace('@','');
-    const email = `${name}${next_cloud_email_suffix}`
+    const matrixID ='@' + MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1];
+    // const email = `${name}${next_cloud_email_suffix}`
+    const email = `${name}${matrixID}`
     return requestNextcloud()({
         method: 'GET',
         url: `/api/v1/nextcloud/apppassword?email=${email}`,
@@ -84,7 +88,8 @@ export const getNextCloudUserName = () => {
              const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
                 const mx_user_id = localStorage.getItem('mx_user_id');
                 const name = mx_user_id.split(':')?.[0]?.replace('@','');
-                const email =  `${name}${next_cloud_email_suffix}`;
+                const matrixID ='@' + MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1];
+                const email =  `${name}${matrixID}`;
                 const data = {
                     username: email,
                     appPassword: appPassword,
@@ -122,7 +127,9 @@ export const getForceNextCloudUserName = () => {
     const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
     const mx_user_id = localStorage.getItem('mx_user_id');
     const name = mx_user_id.split(':')?.[0]?.replace('@','');
-    const email = `${name}${next_cloud_email_suffix}`
+    const matrixID ='@' + MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1];
+    // const email = `${name}${next_cloud_email_suffix}`
+    const email = `${name}${matrixID}`
     return requestNextcloud()({
         method: 'GET',
         url: `/api/v1/nextcloud/apppassword?email=${email}&forceRefresh=true`,
@@ -133,7 +140,9 @@ export const getForceNextCloudUserName = () => {
              const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
                 const mx_user_id = localStorage.getItem('mx_user_id');
                 const name = mx_user_id.split(':')?.[0]?.replace('@','');
-                const email =  `${name}${next_cloud_email_suffix}`;
+                const matrixID ='@' + MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1];
+                // const email =  `${name}${next_cloud_email_suffix}`;
+                const email =  `${name}${matrixID}`;
                 const data = {
                     username: email,
                     appPassword: appPassword,

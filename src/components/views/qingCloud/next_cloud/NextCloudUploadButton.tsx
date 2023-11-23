@@ -110,7 +110,15 @@ export default class NextCloudUploadButton extends React.PureComponent<IProps, I
             'mx_MessageActionBar_saveToNextCloudButton': true,
             'mx_MessageActionBar_downloadSpinnerButton': !!spinner,
         });
-        const showButton = MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1]?.includes('yunify.com');
+        const next_cloud_url = SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_url;
+        const next_cloud_email_suffix = SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
+        const matrixID ='@' + MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1];
+        let showButton = false;
+        if(next_cloud_url && next_cloud_email_suffix===matrixID){
+            showButton = true;
+        }else{
+            showButton = false;
+        }
         return showButton ? <>
             <RovingAccessibleTooltipButton
                 className={classes}
