@@ -70,7 +70,7 @@ function matrixOpaqueIdLinkifyParser({
     } = scanner.tokens;
 
     const S_START = parser.start;
-    const matrixSymbol = utils.createTokenClass(name, { isLink: true });
+    const matrixSymbol = utils?.createTokenClass(name, { isLink: true });
 
     const localpartTokens = [domain, TLD, DOT, LOCALHOST, SYM, SLASH, EQUALS, UNDERSCORE, HYPHEN];
     const domainpartTokens = [domain, TLD, LOCALHOST, HYPHEN];

@@ -5,6 +5,7 @@ import { notification } from 'antd';
 import { downFlowFiles, formatFilesXmlObj } from "./utils";
 import { elementBaseURL, nextCloudBaseURL } from "../constant";
 import SdkConfig from "../../../../SdkConfig";
+import { MatrixClientPeg } from "../../../../MatrixClientPeg";
 
 export const requestElement =() => {
     const MatrixID = localStorage.getItem("mx_user_id");
@@ -26,14 +27,14 @@ export const requestNextcloud =() => {
 };
 
 
-export const requestNextCloud = () => {
+export const requestNextCloud = (data?: string) => {
     const MatrixID = localStorage.getItem("mx_user_id");
     // const Authorization = `Bearer ${window?.mxMatrixClientPeg?.matrixClient.getAccessToken()}`;
     // const NextCloudUserName = localStorage.getItem('mx_next_cloud_username');
     // const NextCloudAuthorization ='Basic ' + btoa(`${NextCloudUserName}:${MatrixID}|${Authorization}`);
     const appPassword = sessionStorage.getItem('appPassword');
     const  NextCloudEmail = sessionStorage.getItem('NextCloudEmail');
-    const NextCloudAuthorization ='Basic ' + btoa(`${NextCloudEmail}:${appPassword}`);
+    const NextCloudAuthorization ='Basic ' + btoa(`${NextCloudEmail}:${data || appPassword}`);
     return axios.create({
         baseURL: nextCloudBaseURL,
         headers: {
@@ -70,10 +71,13 @@ export const getNextCloudUserName = () => {
     // }
     // sessionStorage.setItem('NextCloudEmail',email);
     // return  Promise.resolve(data);
+
     const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
     const mx_user_id = localStorage.getItem('mx_user_id');
     const name = mx_user_id.split(':')?.[0]?.replace('@','');
-    const email = `${name}${next_cloud_email_suffix}`
+    const matrixID ='@' + MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1];
+    // const email = `${name}${next_cloud_email_suffix}`
+    const email = `${name}${matrixID}`
     return requestNextcloud()({
         method: 'GET',
         url: `/api/v1/nextcloud/apppassword?email=${email}`,
@@ -84,9 +88,11 @@ export const getNextCloudUserName = () => {
              const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
                 const mx_user_id = localStorage.getItem('mx_user_id');
                 const name = mx_user_id.split(':')?.[0]?.replace('@','');
-                const email =  `${name}${next_cloud_email_suffix}`;
+                const matrixID ='@' + MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1];
+                const email =  `${name}${matrixID}`;
                 const data = {
-                    username: email
+                    username: email,
+                    appPassword: appPassword,
                 }
                 sessionStorage.setItem('NextCloudEmail',email);
             return data;
@@ -96,29 +102,9 @@ export const getNextCloudUserName = () => {
         });
 };
 
-// 查询nextcloud app password
-export const getNextCloudPassword = () => {
-    const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
-    const mx_user_id = localStorage.getItem('mx_user_id');
-    const name = mx_user_id.split(':')?.[0]?.replace('@','');
-    const email = `${name}${next_cloud_email_suffix}`
-    return requestNextcloud()({
-        method: 'GET',
-        url: `/api/v1/nextcloud/apppassword?email=${email}`,
-    })
-        .then((res: any) => {
-            const {appPassword}=res?.data ||{};
-            sessionStorage.setItem('appPassword',appPassword);
-            return res?.data;
-        })
-        .catch(err => {
-            console.log(err)
-        });
-};
-
 // 获取文件列表
-export const getNextCloudFilesList = (username, currentPath) => {
-    return requestNextCloud()({
+export const getNextCloudFilesList = (username, currentPath, appPassword) => {
+    return requestNextCloud(appPassword)({
         method: 'PROPFIND',
         url: `remote.php/dav/files/${username}/${currentPath}`,
     }).then((res: any) => {
@@ -127,10 +113,46 @@ export const getNextCloudFilesList = (username, currentPath) => {
             formatXmlObj = formatFilesXmlObj(username, result);
         });
         return formatXmlObj;
-    }).catch(err => {
-        console.log('formatFilesXmlObj error', err);
-        errorNotification(err?.message);
+    })
+    .catch(err => {
+        console.log('formatFilesXmlObj error', err, err?.response?.status);
+        // errorNotification(err?.message);
+        return err;
+
     });
+};
+
+// 强制刷新 getNextCloudUserName
+export const getForceNextCloudUserName = () => {
+    const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
+    const mx_user_id = localStorage.getItem('mx_user_id');
+    const name = mx_user_id.split(':')?.[0]?.replace('@','');
+    const matrixID ='@' + MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1];
+    // const email = `${name}${next_cloud_email_suffix}`
+    const email = `${name}${matrixID}`
+    return requestNextcloud()({
+        method: 'GET',
+        url: `/api/v1/nextcloud/apppassword?email=${email}&forceRefresh=true`,
+    })
+        .then((res: any) => {
+            const {appPassword}=res?.data ||{};
+            sessionStorage.setItem('appPassword',appPassword);
+             const next_cloud_email_suffix=SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
+                const mx_user_id = localStorage.getItem('mx_user_id');
+                const name = mx_user_id.split(':')?.[0]?.replace('@','');
+                const matrixID ='@' + MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1];
+                // const email =  `${name}${next_cloud_email_suffix}`;
+                const email =  `${name}${matrixID}`;
+                const data = {
+                    username: email,
+                    appPassword: appPassword,
+                }
+                sessionStorage.setItem('NextCloudEmail',email);
+            return data;
+        })
+        .catch(err => {
+            console.log(err)
+        });
 };
 
 // 下载文件
@@ -346,7 +368,17 @@ export const createShareLink = async ({
 
         if (shareLink) {
             return Promise.resolve({ shareLink, isFolder });
+        }else{
+            return Promise.resolve(res);
         }
+    });
+};
+
+// 获取文件分享信息
+export const getShareInfo = async (filePath) => {
+    return requestNextCloud()({
+        "method": 'GET',
+        "url": `ocs/v2.php/apps/files_sharing/api/v1/shares??path=${filePath}`,
     });
 };
 

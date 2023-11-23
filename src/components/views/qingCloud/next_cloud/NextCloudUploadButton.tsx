@@ -26,6 +26,8 @@ import { _t, _td } from "../../../../languageHandler";
 import { FileDownloader } from "../../../../utils/FileDownloader";
 import { uploadNextCloudRootFile } from "./request";
 import NextCloudShareModel from "./nextCloudShareModel";
+import SdkConfig from "../../../../SdkConfig";
+import { MatrixClientPeg } from "../../../../MatrixClientPeg";
 
 interface IProps {
     mxEvent: MatrixEvent;
@@ -108,7 +110,16 @@ export default class NextCloudUploadButton extends React.PureComponent<IProps, I
             'mx_MessageActionBar_saveToNextCloudButton': true,
             'mx_MessageActionBar_downloadSpinnerButton': !!spinner,
         });
-        return <>
+        const next_cloud_url = SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_url;
+        const next_cloud_email_suffix = SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
+        const matrixID ='@' + MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1];
+        let showButton = false;
+        if(next_cloud_url && next_cloud_email_suffix===matrixID){
+            showButton = true;
+        }else{
+            showButton = false;
+        }
+        return showButton ? <>
             <RovingAccessibleTooltipButton
                 className={classes}
                 title={spinner ? _t(this.state.tooltip) : '保存到网盘'}
@@ -132,6 +143,6 @@ export default class NextCloudUploadButton extends React.PureComponent<IProps, I
                     file: this.state.file,
                 }}
             />
-        </>;
+        </> : null;
     }
 }
