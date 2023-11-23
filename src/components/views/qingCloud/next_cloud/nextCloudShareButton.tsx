@@ -19,8 +19,11 @@ import React, { useContext, useState } from 'react';
 import { CollapsibleButton } from '../../rooms/CollapsibleButton';
 import { OverflowMenuContext } from '../../rooms/MessageComposerButtons';
 import NextCloudShareModel from './nextCloudShareModel';
+import SdkConfig from '../../../../SdkConfig';
 
 const ShareNextCloudButton = (props) => {
+    const next_cloud_url = SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_url;
+
     const [open, setOpen]=useState(false);
     const overflowMenuCloser = useContext(OverflowMenuContext);
     const title="网盘共享";
@@ -34,7 +37,7 @@ const ShareNextCloudButton = (props) => {
         setOpen(true);
         overflowMenuCloser?.();
     };
-    return <>
+    return next_cloud_url ? <>
         <CollapsibleButton
             className="mx_MessageComposer_button"
             iconClassName="mx_MessageComposer_nextCloud_share"
@@ -53,7 +56,7 @@ const ShareNextCloudButton = (props) => {
             {...props}
         />
 
-    </>
+    </> : null
     ;
 };
 
