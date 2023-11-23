@@ -114,7 +114,7 @@ export default class NextCloudUploadButton extends React.PureComponent<IProps, I
         const next_cloud_email_suffix = SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_email_suffix;
         const matrixID ='@' + MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1];
         let showButton = false;
-        if(next_cloud_url && next_cloud_email_suffix===matrixID){
+        if(next_cloud_url && next_cloud_email_suffix?.includes(matrixID)){
             showButton = true;
         }else{
             showButton = false;
