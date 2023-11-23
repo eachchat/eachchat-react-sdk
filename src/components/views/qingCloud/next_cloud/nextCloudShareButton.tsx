@@ -19,11 +19,10 @@ import React, { useContext, useState } from 'react';
 import { CollapsibleButton } from '../../rooms/CollapsibleButton';
 import { OverflowMenuContext } from '../../rooms/MessageComposerButtons';
 import NextCloudShareModel from './nextCloudShareModel';
-import SdkConfig from '../../../../SdkConfig';
+import { MatrixClientPeg } from '../../../../MatrixClientPeg';
 
 const ShareNextCloudButton = (props) => {
-    const next_cloud_url = SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_url;
-
+    const showButton = MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1]?.includes('yunify.com');
     const [open, setOpen]=useState(false);
     const overflowMenuCloser = useContext(OverflowMenuContext);
     const title="网盘共享";
@@ -37,7 +36,7 @@ const ShareNextCloudButton = (props) => {
         setOpen(true);
         overflowMenuCloser?.();
     };
-    return next_cloud_url ? <>
+    return showButton ? <>
         <CollapsibleButton
             className="mx_MessageComposer_button"
             iconClassName="mx_MessageComposer_nextCloud_share"

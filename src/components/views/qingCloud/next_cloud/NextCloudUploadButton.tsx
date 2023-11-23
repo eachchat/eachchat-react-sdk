@@ -27,6 +27,7 @@ import { FileDownloader } from "../../../../utils/FileDownloader";
 import { uploadNextCloudRootFile } from "./request";
 import NextCloudShareModel from "./nextCloudShareModel";
 import SdkConfig from "../../../../SdkConfig";
+import { MatrixClientPeg } from "../../../../MatrixClientPeg";
 
 interface IProps {
     mxEvent: MatrixEvent;
@@ -109,9 +110,8 @@ export default class NextCloudUploadButton extends React.PureComponent<IProps, I
             'mx_MessageActionBar_saveToNextCloudButton': true,
             'mx_MessageActionBar_downloadSpinnerButton': !!spinner,
         });
-        const next_cloud_url = SdkConfig.get("setting_defaults")?.QingCloud?.next_cloud_url;
-
-        return next_cloud_url ? <>
+        const showButton = MatrixClientPeg.get().getSafeUserId()?.split(':')?.[1]?.includes('yunify.com');
+        return showButton ? <>
             <RovingAccessibleTooltipButton
                 className={classes}
                 title={spinner ? _t(this.state.tooltip) : '保存到网盘'}
